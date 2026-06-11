@@ -270,21 +270,21 @@ export default function AuditLogPage() {
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
           label="إجمالي الأحداث"
-          value={(kpis?.total_logs ?? pagination?.total ?? 0).toLocaleString("ar-EG")}
+          value={(kpis?.total_logs ?? pagination?.total ?? 0).toLocaleString("")}
           icon={Activity}
           tone="primary"
           hint="إجمالي السجلات"
         />
         <KpiCard
           label="أحداث اليوم"
-          value={(kpis?.today_logs ?? 0).toLocaleString("ar-EG")}
+          value={(kpis?.today_logs ?? 0).toLocaleString("")}
           icon={ShieldAlert}
           tone="warning"
           hint="آخر 24 ساعة"
         />
         <KpiCard
           label="أحداث أمنية اليوم"
-          value={(kpis?.security_events_today ?? 0).toLocaleString("ar-EG")}
+          value={(kpis?.security_events_today ?? 0).toLocaleString("")}
           icon={AlertTriangle}
           tone="warning"
         />
@@ -396,8 +396,8 @@ export default function AuditLogPage() {
         <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
           <Filter className="h-3.5 w-3.5" />
           <span>
-            عرض {entries.length.toLocaleString("ar-EG")} من{" "}
-            {(pagination?.total ?? 0).toLocaleString("ar-EG")} حدث
+            عرض {entries.length.toLocaleString("")} من {(pagination?.total ?? 0).toLocaleString("")}{" "}
+            حدث
           </span>
           {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
         </div>
@@ -500,8 +500,8 @@ export default function AuditLogPage() {
       {pagination && pagination.last_page > 1 && (
         <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
           <span>
-            الصفحة {pagination.current_page.toLocaleString("ar-EG")} من{" "}
-            {pagination.last_page.toLocaleString("ar-EG")}
+            الصفحة {pagination.current_page.toLocaleString("")} من{" "}
+            {pagination.last_page.toLocaleString("")}
           </span>
           <div className="flex items-center gap-2">
             <Button

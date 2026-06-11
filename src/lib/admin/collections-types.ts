@@ -39,11 +39,12 @@ export type AgentCollectionSummary = {
   pending_handoff_amount: number;
 };
 
-export const COLLECTION_TYPE_OPTIONS: { value: string; label: string; code: CollectionTypeCode }[] = [
-  { value: "1", label: "تحصيل كامل (COD)", code: 1 },
-  { value: "2", label: "رسوم شحن فقط", code: 2 },
-  { value: "3", label: "تحصيل جزئي", code: 3 },
-];
+export const COLLECTION_TYPE_OPTIONS: { value: string; label: string; code: CollectionTypeCode }[] =
+  [
+    { value: "1", label: "تحصيل كامل (COD)", code: 1 },
+    { value: "2", label: "رسوم شحن فقط", code: 2 },
+    { value: "3", label: "تحصيل جزئي", code: 3 },
+  ];
 
 export function collectionTypeLabel(type: CollectionTypeCode): string {
   return COLLECTION_TYPE_OPTIONS.find((o) => o.code === type)?.label ?? String(type);
@@ -55,7 +56,7 @@ export function formatAmount(value: number): string {
 
 export function formatDateTime(value: string | null): string {
   if (!value) return "—";
-  return new Date(value).toLocaleString("ar-EG", {
+  return new Date(value).toLocaleString("", {
     day: "numeric",
     month: "short",
     year: "numeric",

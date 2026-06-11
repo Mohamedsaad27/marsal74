@@ -54,12 +54,13 @@ export const APPROVAL_TYPE_OPTIONS: { value: string; label: string; code: Approv
   { value: "3", label: "تحصيل جزئي", code: 3 },
 ];
 
-export const APPROVAL_STATUS_OPTIONS: { value: string; label: string; code: ApprovalStatusCode }[] = [
-  { value: "1", label: "بانتظار الرد", code: 1 },
-  { value: "2", label: "تمت الموافقة", code: 2 },
-  { value: "3", label: "مرفوضة", code: 3 },
-  { value: "4", label: "منتهية", code: 4 },
-];
+export const APPROVAL_STATUS_OPTIONS: { value: string; label: string; code: ApprovalStatusCode }[] =
+  [
+    { value: "1", label: "بانتظار الرد", code: 1 },
+    { value: "2", label: "تمت الموافقة", code: 2 },
+    { value: "3", label: "مرفوضة", code: 3 },
+    { value: "4", label: "منتهية", code: 4 },
+  ];
 
 export function approvalTypeLabel(type: ApprovalTypeCode): string {
   return APPROVAL_TYPE_OPTIONS.find((o) => o.code === type)?.label ?? String(type);
@@ -111,7 +112,7 @@ export function formatExpiryCountdown(expiresAt: string | null): string {
 
 export function formatDateTime(value: string | null): string {
   if (!value) return "—";
-  return new Date(value).toLocaleString("ar-EG", {
+  return new Date(value).toLocaleString("", {
     day: "numeric",
     month: "short",
     year: "numeric",

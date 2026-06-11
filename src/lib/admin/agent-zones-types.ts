@@ -34,7 +34,7 @@ export type UpdateAgentZonePayload = CreateAgentZonePayload & {
 
 export function formatDateTime(value: string | null): string {
   if (!value) return "—";
-  return new Date(value).toLocaleString("ar-EG", {
+  return new Date(value).toLocaleString("", {
     day: "numeric",
     month: "short",
     year: "numeric",

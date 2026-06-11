@@ -50,7 +50,11 @@ export function AgentFinanceDialog({ open, onOpenChange, agent, onSave, loading 
       size="lg"
       footer={
         <>
-          <Button className="rounded-xl gradient-brand px-6 shadow-glow" onClick={handleSave} disabled={loading || !agent}>
+          <Button
+            className="rounded-xl gradient-brand px-6 shadow-glow"
+            onClick={handleSave}
+            disabled={loading || !agent}
+          >
             {loading && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
             حفظ إعدادات العمولة
           </Button>
@@ -66,7 +70,10 @@ export function AgentFinanceDialog({ open, onOpenChange, agent, onSave, loading 
             <div className="rounded-2xl border border-warning/30 bg-warning/5 p-4">
               <p className="text-xs font-bold text-muted-foreground">الرصيد الحالي</p>
               <p className="mt-2 text-3xl font-extrabold tabular-nums text-warning">
-                {agent.balance.toLocaleString("ar-EG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {agent.balance.toLocaleString("", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
                 <span className="ms-1 text-sm font-medium text-muted-foreground">ج.م</span>
               </p>
               <p className="mt-2 text-xs text-muted-foreground">يُحدّث من التحصيلات والتسويات</p>
@@ -77,7 +84,9 @@ export function AgentFinanceDialog({ open, onOpenChange, agent, onSave, loading 
                 <Badge variant="secondary" className="rounded-md">
                   {COMMISSION_TYPE_LABELS[agent.commission_type]}
                 </Badge>
-                <span className="text-xl font-bold">{formatCommission(agent.commission_type, agent.commission_value)}</span>
+                <span className="text-xl font-bold">
+                  {formatCommission(agent.commission_type, agent.commission_value)}
+                </span>
               </div>
             </div>
           </div>

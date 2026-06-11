@@ -5,7 +5,11 @@ import { AdminDialogShell } from "@/components/admin/AdminDialogShell";
 import { FormInput, FormSelect } from "@/components/admin/AdminFormFields";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import type { CommissionType, ShippingCompany, UpdateCompanyFinancePayload } from "@/lib/admin/shipping-companies-types";
+import type {
+  CommissionType,
+  ShippingCompany,
+  UpdateCompanyFinancePayload,
+} from "@/lib/admin/shipping-companies-types";
 import { COMMISSION_TYPE_LABELS, formatCommission } from "@/lib/admin/shipping-companies-types";
 
 type Props = {
@@ -16,7 +20,13 @@ type Props = {
   loading?: boolean;
 };
 
-export function CompanyFinanceDialog({ open, onOpenChange, company, onSave, loading = false }: Props) {
+export function CompanyFinanceDialog({
+  open,
+  onOpenChange,
+  company,
+  onSave,
+  loading = false,
+}: Props) {
   const [commissionType, setCommissionType] = useState<CommissionType>(1);
   const [commissionValue, setCommissionValue] = useState("");
 
@@ -50,7 +60,11 @@ export function CompanyFinanceDialog({ open, onOpenChange, company, onSave, load
       size="lg"
       footer={
         <>
-          <Button className="rounded-xl gradient-brand px-6 shadow-glow" onClick={handleSave} disabled={loading || !company}>
+          <Button
+            className="rounded-xl gradient-brand px-6 shadow-glow"
+            onClick={handleSave}
+            disabled={loading || !company}
+          >
             {loading && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
             حفظ إعدادات العمولة
           </Button>
@@ -66,10 +80,15 @@ export function CompanyFinanceDialog({ open, onOpenChange, company, onSave, load
             <div className="rounded-2xl border border-warning/30 bg-warning/5 p-4">
               <p className="text-xs font-bold text-muted-foreground">الرصيد الحالي</p>
               <p className="mt-2 text-3xl font-extrabold tabular-nums text-warning">
-                {company.balance.toLocaleString("ar-EG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {company.balance.toLocaleString("", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
                 <span className="ms-1 text-sm font-medium text-muted-foreground">ج.م</span>
               </p>
-              <p className="mt-2 text-xs text-muted-foreground">يُحدّث تلقائياً من التحصيلات والتسويات</p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                يُحدّث تلقائياً من التحصيلات والتسويات
+              </p>
             </div>
 
             <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-soft">
@@ -78,7 +97,9 @@ export function CompanyFinanceDialog({ open, onOpenChange, company, onSave, load
                 <Badge variant="secondary" className="rounded-md">
                   {COMMISSION_TYPE_LABELS[company.commission_type]}
                 </Badge>
-                <span className="text-xl font-bold">{formatCommission(company.commission_type, company.commission_value)}</span>
+                <span className="text-xl font-bold">
+                  {formatCommission(company.commission_type, company.commission_value)}
+                </span>
               </div>
               <p className="mt-3 text-xs text-muted-foreground">{company.active_orders} طلب نشط</p>
             </div>

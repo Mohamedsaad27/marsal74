@@ -76,7 +76,7 @@ export function pushStatusLabel(status: PushDeliveryStatus): string {
 
 export function formatDateTime(value: string | null): string {
   if (!value) return "—";
-  return new Date(value).toLocaleString("ar-EG", {
+  return new Date(value).toLocaleString("", {
     day: "numeric",
     month: "short",
     hour: "2-digit",
@@ -106,7 +106,10 @@ export const notificationTypeStyles: Record<
   3: { iconTone: "bg-success text-white", badge: "bg-success/10 text-success" },
   4: { iconTone: "bg-warning text-warning-foreground", badge: "bg-warning/15 text-warning" },
   5: { iconTone: "bg-accent text-accent-foreground", badge: "bg-accent text-accent-foreground" },
-  6: { iconTone: "bg-destructive/90 text-destructive-foreground", badge: "bg-destructive/10 text-destructive" },
+  6: {
+    iconTone: "bg-destructive/90 text-destructive-foreground",
+    badge: "bg-destructive/10 text-destructive",
+  },
   7: { iconTone: "bg-muted-foreground text-white", badge: "bg-muted text-muted-foreground" },
 };
 

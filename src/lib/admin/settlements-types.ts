@@ -49,12 +49,17 @@ export type MarkSettlementPaidInput = {
   payment_reference: string;
 };
 
-export const SETTLEMENT_TYPE_OPTIONS: { value: string; label: string; code: SettlementTypeCode }[] = [
-  { value: "1", label: "تسوية مندوب", code: 1 },
-  { value: "2", label: "تسوية شركة شحن", code: 2 },
-];
+export const SETTLEMENT_TYPE_OPTIONS: { value: string; label: string; code: SettlementTypeCode }[] =
+  [
+    { value: "1", label: "تسوية مندوب", code: 1 },
+    { value: "2", label: "تسوية شركة شحن", code: 2 },
+  ];
 
-export const SETTLEMENT_STATUS_OPTIONS: { value: string; label: string; code: SettlementStatusCode }[] = [
+export const SETTLEMENT_STATUS_OPTIONS: {
+  value: string;
+  label: string;
+  code: SettlementStatusCode;
+}[] = [
   { value: "1", label: "مسودة", code: 1 },
   { value: "2", label: "معتمدة", code: 2 },
   { value: "3", label: "مدفوعة", code: 3 },
@@ -86,7 +91,7 @@ export function formatAmount(value: number): string {
 
 export function formatDate(value: string | null): string {
   if (!value) return "—";
-  return new Date(value).toLocaleDateString("ar-EG", {
+  return new Date(value).toLocaleDateString("", {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -95,7 +100,7 @@ export function formatDate(value: string | null): string {
 
 export function formatDateTime(value: string | null): string {
   if (!value) return "—";
-  return new Date(value).toLocaleString("ar-EG", {
+  return new Date(value).toLocaleString("", {
     day: "numeric",
     month: "short",
     year: "numeric",
