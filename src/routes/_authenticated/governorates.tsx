@@ -110,7 +110,7 @@ function GovernoratesPage() {
   };
 
   const handleSave = async () => {
-    if (!form.name_ar.trim() || !form.name_en.trim() || !form.code.trim()) {
+    if (!form.name_ar.trim() || !form.name_en.trim()) {
       toast.error("يرجى إكمال جميع الحقول المطلوبة");
       return;
     }
@@ -257,7 +257,7 @@ function GovernoratesPage() {
           columns={[
             { key: "ar", label: "المحافظة" },
             { key: "en", label: "governorate" },
-            { key: "code", label: "code" },
+            // { key: "code", label: "code" },
             { key: "cities", label: "المدن" },
             { key: "status", label: "الحالة" },
             { key: "actions", label: "" },
@@ -271,9 +271,9 @@ function GovernoratesPage() {
               <span key="en" className="text-muted-foreground" dir="ltr">
                 {item.name_en}
               </span>,
-              <span key="code" className="font-mono text-xs font-bold text-primary" dir="ltr">
-                {item.code}
-              </span>,
+              // <span key="code" className="font-mono text-xs font-bold text-primary" dir="ltr">
+              //   {item.code}
+              // </span>,
               <Link
                 key="cities"
                 to="/cities"
@@ -334,7 +334,7 @@ function GovernoratesPage() {
           onChange={(e) => setForm({ ...form, name_en: e.target.value })}
           dir="ltr"
         />
-        <FormInput
+        {/* <FormInput
           label="الكود (code)"
           required
           value={form.code}
@@ -342,7 +342,7 @@ function GovernoratesPage() {
           placeholder="cai"
           dir="ltr"
           className="font-mono lowercase"
-        />
+        /> */}
       </AdminEntityDialog>
 
       <ConfirmActionDialog action={confirmAction} onOpenChange={() => setConfirmAction(null)} />

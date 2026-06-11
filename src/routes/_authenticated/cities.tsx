@@ -130,7 +130,7 @@ function CitiesPage() {
   };
 
   const handleSave = async () => {
-    if (!form.name_ar.trim() || !form.name_en.trim() || !form.code.trim() || !form.governorate_id) {
+    if (!form.name_ar.trim() || !form.name_en.trim() || !form.governorate_id) {
       toast.error("يرجى إكمال جميع الحقول المطلوبة");
       return;
     }
@@ -282,7 +282,7 @@ function CitiesPage() {
           columns={[
             { key: "ar", label: "المدينة " },
             { key: "en", label: "city" },
-            { key: "code", label: "code" },
+            // { key: "code", label: "code" },
             { key: "status", label: "الحالة" },
             { key: "actions", label: "" },
           ]}
@@ -295,9 +295,9 @@ function CitiesPage() {
               <span key="en" className="text-muted-foreground" dir="ltr">
                 {item.name_en}
               </span>,
-              <span key="code" className="font-mono text-xs font-bold text-primary" dir="ltr">
-                {item.code}
-              </span>,
+              // <span key="code" className="font-mono text-xs font-bold text-primary" dir="ltr">
+              //   {item.code}
+              // </span>,
 
               <AdminStatusBadge key="status" variant={activeBadge(item.is_active)} />,
               <RowActions
@@ -352,14 +352,14 @@ function CitiesPage() {
           onChange={(e) => setForm({ ...form, name_en: e.target.value })}
           dir="ltr"
         />
-        <FormInput
+        {/* <FormInput
           label="الكود (code)"
           required
           value={form.code}
           onChange={(e) => setForm({ ...form, code: e.target.value.toLowerCase() })}
           dir="ltr"
           className="font-mono lowercase"
-        />
+        /> */}
         <FormSelect
           label="المحافظة "
           required
