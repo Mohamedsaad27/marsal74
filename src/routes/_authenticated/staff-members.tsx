@@ -24,6 +24,9 @@ import type { ConfirmAction, CrudMode } from "@/components/admin/use-admin-crud"
 import { Briefcase, Building2, Loader2, Power, UserCog, Users } from "lucide-react";
 import { fetchCities } from "@/lib/admin/locations-api";
 import { City } from "@/lib/admin/locations-types";
+import { fetchRoles } from "@/lib/admin/rbac-api";
+import type { Role } from "@/lib/admin/rbac-types";
+import { formatRoleName } from "@/lib/admin/rbac-utils";
 
 export const Route = createFileRoute("/_authenticated/staff-members")({
   component: StaffMembersPage,
@@ -43,6 +46,8 @@ function StaffMembersPage() {
   const [dialogMode, setDialogMode] = useState<CrudMode>(null);
   const [form, setForm] = useState<CreateStaffMemberFormState>(emptyForm());
   const [counts, setCounts] = useState({ total: 0, active: 0, inactive: 0 });
+  const [fieldAccountType, setFieldAccountType] = useState("staff_member");
+  const [roles, setRoles] = useState<Role[]>([]);
 
   const pageSize = 10;
 
@@ -109,7 +114,20 @@ function StaffMembersPage() {
     () => cities.map((c) => ({ value: String(c.city_id), label: c.name_ar })),
     [cities],
   );
+  const fetchRolesList = useCallback(async () => {
+    try {
+      const res = await fetchRoles();
+      if (res.isSuccess) {
+        setRoles(res.data);
+      }
+    } catch (err) {
+      toast.error((err as Error).message ?? "فشل تحميل الأدوار");
+    }
+  }, []);
 
+  useEffect(() => {
+    void fetchRolesList();
+  }, [fetchRolesList]);
   // ── Filtering ─────────────────────────────────────────────────────────────
   const filtered = useMemo(() => {
     return members.filter((member) => {
@@ -163,6 +181,7 @@ function StaffMembersPage() {
       id: member.id,
       name: member.name,
       // store the department id for the select
+
       department_id: String(member.staff_member?.department?.id ?? ""),
       job_title: member.staff_member?.job_title ?? "",
       notes: member.staff_member?.notes ?? "",
@@ -208,9 +227,9 @@ function StaffMembersPage() {
           email: form.email.trim(),
           phone: form.phone.trim(),
           password: form.password,
-          roles: ["staff_member"],
+          roles: [fieldAccountType],
           profile: {
-            department: form.department_id,
+            department_id: form.department_id,
             job_title: form.job_title.trim(),
             notes: form.notes.trim(),
           },
@@ -233,9 +252,9 @@ function StaffMembersPage() {
           name: form.name.trim(),
           email: form.email.trim(),
           phone: form.phone.trim(),
-          roles: ["staff_member"],
+          roles: [fieldAccountType],
           profile: {
-            department: form.department_id,
+            department_id: form.department_id,
             job_title: form.job_title.trim(),
             notes: form.notes.trim(),
           },
@@ -488,13 +507,14 @@ function StaffMembersPage() {
               onChange={(e) => setForm({ ...form, password: e.target.value })}
             />
           )}
-          <FormTextarea
-            label="ملاحظات"
-            value={form.notes}
-            onChange={(e) => setForm({ ...form, notes: e.target.value })}
-            placeholder="ملاحظات داخلية عن العضو، مسؤوليات إضافية، أو تفاصيل للفريق..."
-            className="sm:col-span-2 min-h-[100px]"
-          />
+          {dialogMode === "create" && (
+            <FormSelect
+              label="الدور  "
+              value={fieldAccountType}
+              onValueChange={setFieldAccountType}
+              options={roles.map((r) => ({ value: r.name, label: formatRoleName(r.name) }))}
+            />
+          )}
 
           <FormSelect
             label="المدينة"
@@ -533,6 +553,13 @@ function StaffMembersPage() {
             label="علامة مميزة"
             value={form.landmark}
             onChange={(e) => setForm({ ...form, landmark: e.target.value })}
+          />
+          <FormTextarea
+            label="ملاحظات"
+            value={form.notes}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            placeholder="ملاحظات داخلية عن العضو، مسؤوليات إضافية، أو تفاصيل للفريق..."
+            className="sm:col-span-2 min-h-[100px]"
           />
           <FormSwitch
             label="العنوان الافتراضي"

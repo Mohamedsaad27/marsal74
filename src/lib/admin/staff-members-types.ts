@@ -76,9 +76,9 @@ export interface CreateStaffMemberPayload {
   email: string;
   phone: string;
   password: string;
-  roles: ["staff_member"];
+  roles: string[];
   profile: {
-    department: string;
+    department_id: string;
     job_title: string;
     notes: string;
   };
