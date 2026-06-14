@@ -150,7 +150,7 @@ function StaffMembersPage() {
         (member.staff_member?.job_title ?? "").toLowerCase().includes(query) ||
         (member.staff_member?.notes ?? "").toLowerCase().includes(query) ||
         member.phone.includes(query) ||
-        member.email.toLowerCase().includes(query)
+        (member.email ?? "").toLowerCase().includes(query)
       );
     });
   }, [members, search, departmentFilter, statusFilter]);
@@ -196,7 +196,7 @@ function StaffMembersPage() {
       building_number: address?.building_number ?? "",
       floor_number: address?.floor_number ?? "",
       apartment_number: address?.apartment_number ?? "",
-      is_default: address?.is_default ?? 1,
+      is_default: address?.is_default ?? true,
     });
     setDialogOpen(true);
   };
@@ -204,7 +204,6 @@ function StaffMembersPage() {
   const handleSave = async () => {
     if (
       !form.name.trim() ||
-      !form.email.trim() ||
       !form.phone.trim() ||
       !form.department_id ||
       !form.job_title.trim() ||
@@ -227,7 +226,7 @@ function StaffMembersPage() {
           email: form.email.trim(),
           phone: form.phone.trim(),
           password: form.password,
-          roles: [fieldAccountType],
+          role: fieldAccountType,
           profile: {
             department_id: form.department_id,
             job_title: form.job_title.trim(),
@@ -241,7 +240,7 @@ function StaffMembersPage() {
             building_number: form.building_number.trim(),
             floor_number: form.floor_number.trim(),
             apartment_number: form.apartment_number.trim(),
-            is_default: form.is_default ? 1 : 0,
+            is_default: form.is_default ? true : false,
           },
         });
         if (!response.isSuccess) throw new Error(response.message);
@@ -266,7 +265,7 @@ function StaffMembersPage() {
             building_number: form.building_number.trim(),
             floor_number: form.floor_number.trim(),
             apartment_number: form.apartment_number.trim(),
-            is_default: form.is_default ? 1 : 0,
+            is_default: form.is_default ? true : false,
           },
         });
         if (!response.isSuccess) throw new Error(response.message);
@@ -564,7 +563,7 @@ function StaffMembersPage() {
           <FormSwitch
             label="العنوان الافتراضي"
             checked={Boolean(form.is_default)}
-            onCheckedChange={(checked) => setForm({ ...form, is_default: checked ? 1 : 0 })}
+            onCheckedChange={(checked) => setForm({ ...form, is_default: checked ? true : false })}
           />
         </div>
       </AdminEntityDialog>
@@ -593,7 +592,7 @@ type CreateStaffMemberFormState = {
   building_number: string;
   floor_number: string;
   apartment_number: string;
-  is_default: number;
+  is_default: boolean;
   is_active: boolean;
 };
 
@@ -613,7 +612,7 @@ function emptyForm(): CreateStaffMemberFormState {
     building_number: "",
     floor_number: "",
     apartment_number: "",
-    is_default: 1,
+    is_default: true,
     is_active: true,
   };
 }

@@ -157,7 +157,7 @@ export function AgentCreateDialog({ open, onOpenChange, onSave, loading }: Props
       payload = {
         ...base,
         mode: "supervisor",
-        roles: ["delivery_agent"],
+        role: "delivery_agent",
         profile: {
           national_id: nationalId,
           vehicle_type: Number(vehicleType) as 1 | 2 | 3 | 4 | 5,
@@ -168,7 +168,7 @@ export function AgentCreateDialog({ open, onOpenChange, onSave, loading }: Props
       payload = {
         ...base,
         mode: "agent",
-        roles: ["delivery_agent"],
+        role: "delivery_agent",
         profile: {
           supervisor_agent_id: supervisorAgentId,
           national_id: nationalId,
@@ -180,7 +180,7 @@ export function AgentCreateDialog({ open, onOpenChange, onSave, loading }: Props
       payload = {
         ...base,
         mode: "other",
-        roles: selectedRole ? [selectedRole] : [],
+        role: selectedRole ? [selectedRole] : [],
         profile: {
           ...(supervisorAgentId ? { supervisor_agent_id: supervisorAgentId } : {}),
         },

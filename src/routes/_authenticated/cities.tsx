@@ -53,6 +53,7 @@ function CitiesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounced(search, 400);
   const [govFilter, setGovFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
@@ -78,7 +79,7 @@ function CitiesPage() {
       const govId = govFilter === "all" ? undefined : govFilter;
 
       const [citiesRes, kpisRes, governoratesRes] = await Promise.all([
-        fetchCities(govId, page, pageSize, search, isActive),
+        fetchCities(govId, page, pageSize, debouncedSearch, isActive),
         fetchCitiesKpis(),
         fetchGovernorates(),
       ]);
@@ -100,11 +101,13 @@ function CitiesPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, search, statusFilter, govFilter]);
+  }, [page, pageSize, debouncedSearch, statusFilter, govFilter]);
   useEffect(() => {
     void loadData();
   }, [loadData]);
-
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, statusFilter, govFilter]);
   const governorateOptions = useMemo(
     () => governorates.map((item) => ({ value: String(item.governorate_id), label: item.name_ar })),
     [governorates],
@@ -240,96 +243,94 @@ function CitiesPage() {
         />
       </div>
 
-      {loading ? (
-        <div className="flex min-h-[280px] items-center justify-center rounded-2xl border border-border bg-card shadow-soft">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : (
-        <AdminDataTable
-          search={search}
-          onSearchChange={(value) => {
-            setSearch(value);
-            setPage(1);
-          }}
-          searchPlaceholder="بحث بالاسم أو الكود أو المحافظة..."
-          filters={[
-            {
-              id: "gov",
-              label: "المحافظة",
-              icon: Map,
-              value: govFilter,
-              onChange: (value) => {
-                setGovFilter(value);
-                setPage(1);
-              },
-              options: governorateOptions,
+      <AdminDataTable
+        search={search}
+        onSearchChange={(value) => {
+          setSearch(value);
+          setPage(1);
+        }}
+        searchPlaceholder="بحث بالاسم أو الكود أو المحافظة..."
+        filters={[
+          {
+            id: "gov",
+            label: "المحافظة",
+            icon: Map,
+            value: govFilter,
+            onChange: (value) => {
+              setGovFilter(value);
+              setPage(1);
             },
-            {
-              id: "status",
-              label: "الحالة",
-              icon: Power,
-              value: statusFilter,
-              onChange: (value) => {
-                setStatusFilter(value);
-                setPage(1);
-              },
-              options: [
-                { value: "active", label: "نشطة" },
-                { value: "inactive", label: "غير نشطة" },
-              ],
+            options: governorateOptions,
+          },
+          {
+            id: "status",
+            label: "الحالة",
+            icon: Power,
+            value: statusFilter,
+            onChange: (value) => {
+              setStatusFilter(value);
+              setPage(1);
             },
-          ]}
-          columns={[
-            { key: "ar", label: "المدينة " },
-            { key: "en", label: "city" },
-            // { key: "code", label: "code" },
-            { key: "status", label: "الحالة" },
-            { key: "actions", label: "" },
-          ]}
-          rows={cities.map((item) => ({
-            id: item.city_id,
-            cells: [
-              <span key="ar" className="font-semibold">
-                {item.name_ar}
-              </span>,
-              <span key="en" className="text-muted-foreground" dir="ltr">
-                {item.name_en}
-              </span>,
-              // <span key="code" className="font-mono text-xs font-bold text-primary" dir="ltr">
-              //   {item.code}
-              // </span>,
-
-              <AdminStatusBadge key="status" variant={activeBadge(item.is_active)} />,
-              <RowActions
-                key="actions"
-                isActive={item.is_active === true}
-                activeLabel="تعطيل"
-                inactiveLabel="تفعيل"
-                onEdit={() => openEdit(item)}
-                onDelete={() => handleDelete(item)}
-                onToggleActive={() => handleToggle(item)}
-              />,
+            options: [
+              { value: "active", label: "نشطة" },
+              { value: "inactive", label: "غير نشطة" },
             ],
-          }))}
-          selectedIds={selectedIds}
-          onToggleSelect={(id) => {
-            setSelectedIds((prev) => {
-              const next = new Set(prev);
-              if (next.has(id)) next.delete(id);
-              else next.add(id);
-              return next;
-            });
-          }}
-          onToggleSelectAll={(ids) =>
-            setSelectedIds((prev) => (prev.size === ids.length ? new Set() : new Set(ids)))
-          }
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          totalCount={totalCount}
-        />
-      )}
+          },
+        ]}
+        columns={[
+          { key: "ar", label: "المدينة " },
+          { key: "en", label: "city" },
+          // { key: "code", label: "code" },
+          { key: "status", label: "الحالة" },
+          { key: "actions", label: "" },
+        ]}
+        rows={cities.map((item) => ({
+          id: item.city_id,
+          cells: [
+            <span key="ar" className="font-semibold">
+              {item.name_ar}
+            </span>,
+            <span key="en" className="text-muted-foreground" dir="ltr">
+              {item.name_en}
+            </span>,
+            // <span key="code" className="font-mono text-xs font-bold text-primary" dir="ltr">
+            //   {item.code}
+            // </span>,
 
+            <AdminStatusBadge key="status" variant={activeBadge(item.is_active)} />,
+            <RowActions
+              key="actions"
+              isActive={item.is_active === true}
+              activeLabel="تعطيل"
+              inactiveLabel="تفعيل"
+              onEdit={() => openEdit(item)}
+              onDelete={() => handleDelete(item)}
+              onToggleActive={() => handleToggle(item)}
+            />,
+          ],
+        }))}
+        selectedIds={selectedIds}
+        onToggleSelect={(id) => {
+          setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+          });
+        }}
+        onToggleSelectAll={(ids) =>
+          setSelectedIds((prev) => (prev.size === ids.length ? new Set() : new Set(ids)))
+        }
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        totalCount={totalCount}
+      />
+      {loading && (
+        <div className="flex justify-center py-4">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      )}
       <AdminEntityDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
@@ -340,13 +341,13 @@ function CitiesPage() {
         loading={saving}
       >
         <FormInput
-          label="الاسم بالعربية (name_ar)"
+          label="الاسم بالعربية "
           required
           value={form.name_ar}
           onChange={(e) => setForm({ ...form, name_ar: e.target.value })}
         />
         <FormInput
-          label="الاسم بالإنجليزية (name_en)"
+          label="الاسم بالإنجليزية "
           required
           value={form.name_en}
           onChange={(e) => setForm({ ...form, name_en: e.target.value })}
@@ -372,4 +373,12 @@ function CitiesPage() {
       <ConfirmActionDialog action={confirmAction} onOpenChange={() => setConfirmAction(null)} />
     </AppShell>
   );
+}
+function useDebounced<T>(value: T, delay = 400): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(id);
+  }, [value, delay]);
+  return debounced;
 }

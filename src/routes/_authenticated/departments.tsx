@@ -278,7 +278,6 @@ function DepartmentsPage() {
           columns={[
             { key: "name", label: "القسم" },
             { key: "code", label: "الرمز" },
-            { key: "manager", label: "المسؤول" },
             { key: "description", label: "الوصف" },
             { key: "members", label: "الأعضاء" },
             { key: "status", label: "الحالة" },
@@ -296,10 +295,10 @@ function DepartmentsPage() {
               >
                 {d.name_en.toUpperCase()}
               </span>,
-              <div key="manager" className="flex items-center gap-1.5">
-                <UserCog className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                <span>{d.manager?.name ?? "—"}</span>
-              </div>,
+              // <div key="manager" className="flex items-center gap-1.5">
+              //   <UserCog className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              //   <span>{d.manager?.name ?? "—"}</span>
+              // </div>,
               <p
                 key="description"
                 className="max-w-xs text-sm leading-relaxed text-muted-foreground"

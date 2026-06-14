@@ -226,92 +226,90 @@ function GovernoratesPage() {
         />
       </div>
 
-      {loading ? (
-        <div className="flex min-h-[280px] items-center justify-center rounded-2xl border border-border bg-card shadow-soft">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : (
-        <AdminDataTable
-          search={search}
-          onSearchChange={(value) => {
-            setSearch(value);
-            setPage(1);
-          }}
-          searchPlaceholder="بحث بالاسم العربي أو الإنجليزي أو الكود..."
-          filters={[
-            {
-              id: "status",
-              label: "الحالة",
-              icon: Power,
-              value: statusFilter,
-              onChange: (value) => {
-                setStatusFilter(value);
-                setPage(1);
-              },
-              options: [
-                { value: "active", label: "نشطة" },
-                { value: "inactive", label: "غير نشطة" },
-              ],
+      <AdminDataTable
+        search={search}
+        onSearchChange={(value) => {
+          setSearch(value);
+          setPage(1);
+        }}
+        searchPlaceholder="بحث بالاسم العربي أو الإنجليزي أو الكود..."
+        filters={[
+          {
+            id: "status",
+            label: "الحالة",
+            icon: Power,
+            value: statusFilter,
+            onChange: (value) => {
+              setStatusFilter(value);
+              setPage(1);
             },
-          ]}
-          columns={[
-            { key: "ar", label: "المحافظة" },
-            { key: "en", label: "governorate" },
-            // { key: "code", label: "code" },
-            { key: "cities", label: "المدن" },
-            { key: "status", label: "الحالة" },
-            { key: "actions", label: "" },
-          ]}
-          rows={governorates.map((item) => ({
-            id: item.governorate_id,
-            cells: [
-              <span key="ar" className="font-semibold">
-                {item.name_ar}
-              </span>,
-              <span key="en" className="text-muted-foreground" dir="ltr">
-                {item.name_en}
-              </span>,
-              // <span key="code" className="font-mono text-xs font-bold text-primary" dir="ltr">
-              //   {item.code}
-              // </span>,
-              <Link
-                key="cities"
-                to="/cities"
-                className="tabular-nums font-semibold text-primary hover:underline"
-              >
-                {item.cities_count} مدينة
-              </Link>,
-              <AdminStatusBadge key="status" variant={activeBadge(item.is_active)} />,
-              <RowActions
-                key="actions"
-                isActive={item.is_active === true}
-                activeLabel="تعطيل"
-                inactiveLabel="تفعيل"
-                onEdit={() => openEdit(item)}
-                onDelete={() => handleDelete(item)}
-                onToggleActive={() => handleToggle(item)}
-              />,
+            options: [
+              { value: "active", label: "نشطة" },
+              { value: "inactive", label: "غير نشطة" },
             ],
-          }))}
-          selectedIds={selectedIds}
-          onToggleSelect={(id) => {
-            setSelectedIds((prev) => {
-              const next = new Set(prev);
-              if (next.has(id)) next.delete(id);
-              else next.add(id);
-              return next;
-            });
-          }}
-          onToggleSelectAll={(ids) =>
-            setSelectedIds((prev) => (prev.size === ids.length ? new Set() : new Set(ids)))
-          }
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          totalCount={totalCount}
-        />
+          },
+        ]}
+        columns={[
+          { key: "ar", label: "المحافظة" },
+          { key: "en", label: "governorate" },
+          // { key: "code", label: "code" },
+          { key: "cities", label: "المدن" },
+          { key: "status", label: "الحالة" },
+          { key: "actions", label: "" },
+        ]}
+        rows={governorates.map((item) => ({
+          id: item.governorate_id,
+          cells: [
+            <span key="ar" className="font-semibold">
+              {item.name_ar}
+            </span>,
+            <span key="en" className="text-muted-foreground" dir="ltr">
+              {item.name_en}
+            </span>,
+            // <span key="code" className="font-mono text-xs font-bold text-primary" dir="ltr">
+            //   {item.code}
+            // </span>,
+            <Link
+              key="cities"
+              to="/cities"
+              className="tabular-nums font-semibold text-primary hover:underline"
+            >
+              {item.cities_count} مدينة
+            </Link>,
+            <AdminStatusBadge key="status" variant={activeBadge(item.is_active)} />,
+            <RowActions
+              key="actions"
+              isActive={item.is_active === true}
+              activeLabel="تعطيل"
+              inactiveLabel="تفعيل"
+              onEdit={() => openEdit(item)}
+              onDelete={() => handleDelete(item)}
+              onToggleActive={() => handleToggle(item)}
+            />,
+          ],
+        }))}
+        selectedIds={selectedIds}
+        onToggleSelect={(id) => {
+          setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+          });
+        }}
+        onToggleSelectAll={(ids) =>
+          setSelectedIds((prev) => (prev.size === ids.length ? new Set() : new Set(ids)))
+        }
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        totalCount={totalCount}
+      />
+      {loading && (
+        <div className="flex justify-center py-4">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
       )}
-
       <AdminEntityDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
@@ -322,13 +320,13 @@ function GovernoratesPage() {
         loading={saving}
       >
         <FormInput
-          label="الاسم بالعربية (name_ar)"
+          label="الاسم بالعربية "
           required
           value={form.name_ar}
           onChange={(e) => setForm({ ...form, name_ar: e.target.value })}
         />
         <FormInput
-          label="الاسم بالإنجليزية (name_en)"
+          label="الاسم بالإنجليزية "
           required
           value={form.name_en}
           onChange={(e) => setForm({ ...form, name_en: e.target.value })}

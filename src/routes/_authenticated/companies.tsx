@@ -38,7 +38,7 @@ type ShippingCompanyFormState = {
   landmark: string;
   street: string;
   building_number: string;
-  is_default: number;
+  is_default: boolean;
 
   is_active: boolean;
 };
@@ -58,7 +58,7 @@ function emptyForm(): ShippingCompanyFormState {
     landmark: "",
     street: "",
     building_number: "",
-    is_default: 1,
+    is_default: true,
 
     is_active: true,
   };
@@ -163,7 +163,7 @@ function ShippingCompaniesPage() {
       landmark: company.addresses[0]?.landmark ?? "",
       street: company.addresses[0]?.street ?? "",
       building_number: company.addresses[0]?.building_number ?? "",
-      is_default: Number(company.addresses[0]?.is_default ?? 1),
+      is_default: company.addresses[0]?.is_default ?? true,
     });
     setDialogOpen(true);
   };
@@ -173,7 +173,6 @@ function ShippingCompaniesPage() {
   const handleSave = async () => {
     if (
       !form.name.trim() ||
-      !form.email.trim() ||
       !form.phone.trim() ||
       !form.company_name.trim() ||
       !form.city_id ||
@@ -195,7 +194,7 @@ function ShippingCompaniesPage() {
           email: form.email.trim(),
           phone: form.phone.trim(),
           password: form.password.trim(),
-          roles: ["shipping_company"],
+          role: "shipping_company",
 
           profile: {
             company_name: form.company_name.trim(),
@@ -235,7 +234,7 @@ function ShippingCompaniesPage() {
             landmark: form.landmark.trim(),
             street: form.street.trim(),
             building_number: form.building_number.trim(),
-            is_default: Number(form.is_default),
+            is_default: form.is_default,
             floor_number: "",
             apartment_number: "",
           },
@@ -327,119 +326,118 @@ function ShippingCompaniesPage() {
       </div>
 
       {/* Table */}
-      {loading ? (
-        <div className="flex min-h-[280px] items-center justify-center rounded-2xl border border-border bg-card shadow-soft">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : (
-        <AdminDataTable
-          search={search}
-          onSearchChange={(value) => {
-            setSearch(value);
-            setPage(1);
-          }}
-          searchPlaceholder="بحث بالاسم، البريد، أو الهاتف..."
-          filters={[
-            {
-              id: "status",
-              label: "الحالة",
-              icon: Power,
-              value: statusFilter === "" ? "all" : statusFilter === "1" ? "active" : "inactive",
-              onChange: (value) => {
-                setStatusFilter(value === "all" ? "" : value === "active" ? "1" : "0");
-                setPage(1);
-              },
-              options: [
-                { value: "active", label: "نشط" },
-                { value: "inactive", label: "غير نشط" },
-              ],
+
+      <AdminDataTable
+        search={search}
+        onSearchChange={(value) => {
+          setSearch(value);
+          setPage(1);
+        }}
+        searchPlaceholder="بحث بالاسم، البريد، أو الهاتف..."
+        filters={[
+          {
+            id: "status",
+            label: "الحالة",
+            icon: Power,
+            value: statusFilter === "" ? "all" : statusFilter === "1" ? "active" : "inactive",
+            onChange: (value) => {
+              setStatusFilter(value === "all" ? "" : value === "active" ? "1" : "0");
+              setPage(1);
             },
-          ]}
-          columns={[
-            { key: "company_name", label: "اسم الشركة" },
-            { key: "contact", label: "التواصل" },
-            { key: "commercial_reg", label: "السجل التجاري" },
-            { key: "commission", label: "العمولة" },
-            { key: "balance", label: "الرصيد" },
-            { key: "status", label: "الحالة" },
-            { key: "actions", label: "" },
-          ]}
-          rows={companies.map((company) => ({
-            id: company.id,
-            cells: [
-              // Company name
-              <div key="company_name" className="flex items-center gap-2">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                  <Truck className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="font-semibold leading-tight">
-                    {company.shipping_company.company_name}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{company.name}</p>
-                </div>
-              </div>,
-
-              // Contact
-              <div key="contact">
-                <p className="tabular-nums text-sm" dir="ltr">
-                  {company.phone}
-                </p>
-                <p className="text-[11px] text-muted-foreground" dir="ltr">
-                  {company.email}
-                </p>
-              </div>,
-
-              // Commercial reg
-              <span key="commercial_reg" className="text-sm text-muted-foreground">
-                {company.shipping_company.commercial_reg ?? "—"}
-              </span>,
-
-              // Commission
-              <CommissionBadge key="commission" commission={company.shipping_company.commission} />,
-
-              // Balance
-              <div key="balance" className="flex items-center gap-1">
-                <Wallet className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                <span className="tabular-nums text-sm font-medium">
-                  {Number(company.shipping_company.balance).toLocaleString("")}
-                </span>
-              </div>,
-
-              // Status
-              <AdminStatusBadge key="status" variant={activeBadge(company.is_active)} />,
-
-              // Actions
-              <RowActions
-                key="actions"
-                isActive={company.is_active}
-                activeLabel="تعطيل"
-                inactiveLabel="تفعيل"
-                onEdit={() => openEdit(company)}
-                onDelete={() => handleDelete(company)}
-                onToggleActive={() => handleToggleActive(company)}
-              />,
+            options: [
+              { value: "active", label: "نشط" },
+              { value: "inactive", label: "غير نشط" },
             ],
-          }))}
-          selectedIds={selectedIds}
-          onToggleSelect={(id) => {
-            setSelectedIds((prev) => {
-              const next = new Set(prev);
-              if (next.has(id)) next.delete(id);
-              else next.add(id);
-              return next;
-            });
-          }}
-          onToggleSelectAll={(ids) => {
-            setSelectedIds((prev) => (prev.size === ids.length ? new Set() : new Set(ids)));
-          }}
-          page={page}
-          totalPages={lastPage}
-          onPageChange={setPage}
-          totalCount={totalCount}
-        />
-      )}
+          },
+        ]}
+        columns={[
+          { key: "company_name", label: "اسم الشركة" },
+          { key: "contact", label: "التواصل" },
+          { key: "commercial_reg", label: "السجل التجاري" },
+          { key: "commission", label: "العمولة" },
+          { key: "balance", label: "الرصيد" },
+          { key: "status", label: "الحالة" },
+          { key: "actions", label: "" },
+        ]}
+        rows={companies.map((company) => ({
+          id: company.id,
+          cells: [
+            // Company name
+            <div key="company_name" className="flex items-center gap-2">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <Truck className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold leading-tight">
+                  {company.shipping_company.company_name}
+                </p>
+                <p className="text-xs text-muted-foreground">{company.name}</p>
+              </div>
+            </div>,
 
+            // Contact
+            <div key="contact">
+              <p className="tabular-nums text-sm" dir="ltr">
+                {company.phone}
+              </p>
+              <p className="text-[11px] text-muted-foreground" dir="ltr">
+                {company.email}
+              </p>
+            </div>,
+
+            // Commercial reg
+            <span key="commercial_reg" className="text-sm text-muted-foreground">
+              {company.shipping_company.commercial_reg ?? "—"}
+            </span>,
+
+            // Commission
+            <CommissionBadge key="commission" commission={company.shipping_company.commission} />,
+
+            // Balance
+            <div key="balance" className="flex items-center gap-1">
+              <Wallet className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              <span className="tabular-nums text-sm font-medium">
+                {Number(company.shipping_company.balance).toLocaleString("")}
+              </span>
+            </div>,
+
+            // Status
+            <AdminStatusBadge key="status" variant={activeBadge(company.is_active)} />,
+
+            // Actions
+            <RowActions
+              key="actions"
+              isActive={company.is_active}
+              activeLabel="تعطيل"
+              inactiveLabel="تفعيل"
+              onEdit={() => openEdit(company)}
+              onDelete={() => handleDelete(company)}
+              onToggleActive={() => handleToggleActive(company)}
+            />,
+          ],
+        }))}
+        selectedIds={selectedIds}
+        onToggleSelect={(id) => {
+          setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+          });
+        }}
+        onToggleSelectAll={(ids) => {
+          setSelectedIds((prev) => (prev.size === ids.length ? new Set() : new Set(ids)));
+        }}
+        page={page}
+        totalPages={lastPage}
+        onPageChange={setPage}
+        totalCount={totalCount}
+      />
+      {loading && (
+        <div className="flex justify-center py-4">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      )}
       {/* Create / Edit dialog */}
       <AdminEntityDialog
         open={dialogOpen}
@@ -540,8 +538,8 @@ function ShippingCompaniesPage() {
 
           <FormSwitch
             label="العنوان الافتراضي"
-            checked={form.is_default === 1}
-            onCheckedChange={(checked) => setForm({ ...form, is_default: checked ? 1 : 0 })}
+            checked={form.is_default === true}
+            onCheckedChange={(checked) => setForm({ ...form, is_default: checked ? true : false })}
           />
         </div>
       </AdminEntityDialog>

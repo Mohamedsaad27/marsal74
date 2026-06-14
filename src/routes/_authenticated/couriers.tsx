@@ -54,7 +54,7 @@ export const Route = createFileRoute("/_authenticated/couriers")({
 function getAgentCityId(agent: DeliveryAgent): string | null {
   const addr =
     (agent as unknown as { addresses?: ApiDeliveryAgentItem["addresses"] }).addresses?.find(
-      (a) => a.is_default === 1,
+      (a) => a.is_default === true,
     ) ?? (agent as unknown as { addresses?: ApiDeliveryAgentItem["addresses"] }).addresses?.[0];
   return addr?.city_id ?? null;
 }
@@ -82,13 +82,13 @@ interface EditForm {
   street: string;
   building_number: string;
   landmark: string;
-  is_default: 0 | 1;
+  is_default: boolean;
 }
 
 function agentToEditForm(agent: DeliveryAgent): EditForm {
   const rawAddresses = (agent as unknown as { addresses?: ApiDeliveryAgentItem["addresses"] })
     .addresses;
-  const addr = rawAddresses?.find((a) => a.is_default === 1) ?? rawAddresses?.[0];
+  const addr = rawAddresses?.find((a) => a.is_default === true) ?? rawAddresses?.[0];
 
   return {
     name: agent.name,
@@ -102,7 +102,7 @@ function agentToEditForm(agent: DeliveryAgent): EditForm {
     street: addr?.street ?? "",
     building_number: addr?.building_number ?? "",
     landmark: addr?.landmark ?? "",
-    is_default: addr?.is_default ?? 1,
+    is_default: addr?.is_default ?? true,
   };
 }
 
@@ -228,10 +228,10 @@ function CouriersPage() {
       const q = search.toLowerCase();
       return (
         agent.name.toLowerCase().includes(q) ||
-        agent.national_id.includes(q) ||
+        (agent.national_id ?? "").includes(q) ||
         agent.phone.includes(q) ||
-        agent.vehicle_plate_number.toLowerCase().includes(q) ||
-        agent.email.toLowerCase().includes(q)
+        (agent.vehicle_plate_number ?? "").toLowerCase().includes(q) ||
+        (agent.email ?? "").toLowerCase().includes(q)
       );
     });
   }, [agents, addressMap, search, statusFilter, cityFilter]);
@@ -464,9 +464,9 @@ function CouriersPage() {
                 /* vehicle */
                 <div key="vehicle">
                   <Badge variant="secondary" className="rounded-md text-[10px]">
-                    {VEHICLE_TYPE_LABELS[agent.vehicle_type]}
+                    {VEHICLE_TYPE_LABELS[agent.vehicle_type] ?? "—"}
                   </Badge>
-                  <p className="mt-1 text-sm font-medium">{agent.vehicle_plate_number}</p>
+                  <p className="mt-1 text-sm font-medium">{agent.vehicle_plate_number || "—"}</p>
                 </div>,
 
                 /* commission */
@@ -676,9 +676,9 @@ function CouriersPage() {
             />
             <FormSwitch
               label="العنوان الافتراضي"
-              checked={editForm.is_default === 1}
+              checked={editForm.is_default === true}
               onCheckedChange={(checked) =>
-                setEditForm({ ...editForm, is_default: checked ? 1 : 0 })
+                setEditForm({ ...editForm, is_default: checked ? true : false })
               }
             />
           </div>

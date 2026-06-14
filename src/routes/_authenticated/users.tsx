@@ -116,9 +116,16 @@ function UsersPage() {
   const [fieldGender, setFieldGender] = useState("male");
   const [fieldIsActive, setFieldIsActive] = useState(true);
   const [fieldPassword, setFieldPassword] = useState("");
-  const [fieldAccountType, setFieldAccountType] = useState("staff_member");
+  const [fieldType, setFieldType] = useState("staff_member");
+  const [fieldRole, setFieldRole] = useState("staff_member"); // only used for staff
+
   const [fieldRoles, setFieldRoles] = useState<string[]>([]);
   const [fieldPermissions, setFieldPermissions] = useState<string[]>([]);
+  const TYPE_OPTIONS = [
+    { value: "staff_member", label: "موظف" },
+    { value: "delivery_agent", label: "مندوب توصيل" },
+    { value: "shipping_company", label: "شركة شحن" },
+  ];
   const [form, setForm] = useState({
     city_id: "",
     address_line: "",
@@ -127,7 +134,7 @@ function UsersPage() {
     building_number: "",
     floor_number: "",
     apartment_number: "",
-    is_default: 1,
+    is_default: true,
   });
   // ── fetch ────────────────────────────────────────────────────────────────────
   const fetchRolesList = useCallback(async () => {
@@ -200,6 +207,26 @@ function UsersPage() {
       })),
     [cities],
   );
+  const [globalCounts, setGlobalCounts] = useState<UserCounts>({
+    total: 0,
+    super_admin: 0,
+    staff_member: 0,
+    shipping_company: 0,
+    delivery_agent: 0,
+  });
+
+  // Fetch once on mount (no filters)
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const res = await usersApi.list({ page: 1, per_page: 1 }); // minimal fetch, just for counts
+        if (res.isSuccess) setGlobalCounts(res.data.counts);
+      } catch {
+        return;
+      }
+    };
+    void fetchCounts();
+  }, []);
   // ── open create / edit dialogs ───────────────────────────────────────────────
   const openCreate = () => {
     setEditingUser(null);
@@ -209,7 +236,8 @@ function UsersPage() {
     setFieldGender("male");
     setFieldIsActive(true);
     setFieldPassword("");
-    setFieldAccountType("staff_member");
+    setFieldType("staff_member");
+    setFieldRole("staff_member");
     setForm({
       city_id: "",
       address_line: "",
@@ -218,7 +246,7 @@ function UsersPage() {
       building_number: "",
       floor_number: "",
       apartment_number: "",
-      is_default: 1,
+      is_default: true,
     });
     setFieldRoles([]);
     setFieldPermissions([]);
@@ -234,7 +262,8 @@ function UsersPage() {
     setFieldGender(u.gender ?? "male");
     setFieldIsActive(u.is_active);
     setFieldPassword("");
-    setFieldAccountType(u.role.name);
+    setFieldType(u.role.name);
+    setFieldRole(u.role.name);
     setFieldRoles([u.role.name]);
     setForm({
       city_id: u.addresses[0]?.city_id ?? "",
@@ -244,7 +273,7 @@ function UsersPage() {
       building_number: u.addresses[0]?.building_number ?? "",
       floor_number: u.addresses[0]?.floor_number ?? "",
       apartment_number: u.addresses[0]?.apartment_number ?? "",
-      is_default: u.addresses[0]?.is_default ?? 1,
+      is_default: u.addresses[0]?.is_default ?? true,
     });
     setFieldPermissions([]);
     setCrudMode("edit");
@@ -261,8 +290,8 @@ function UsersPage() {
           email: fieldEmail,
           phone: fieldPhone,
           password: fieldPassword,
-          account_type: fieldAccountType,
-          roles: [fieldAccountType],
+          type: fieldType,
+          role: fieldRole,
           profile: {},
           address: {
             city_id: form.city_id,
@@ -272,7 +301,7 @@ function UsersPage() {
             building_number: form.building_number.trim(),
             floor_number: form.floor_number.trim(),
             apartment_number: form.apartment_number.trim(),
-            is_default: form.is_default === 1 ? 1 : 0,
+            is_default: form.is_default === true ? true : false,
           },
         };
         const res = await usersApi.create(payload);
@@ -287,7 +316,7 @@ function UsersPage() {
           email: fieldEmail,
           phone: fieldPhone,
           gender: fieldGender,
-          roles: [fieldAccountType],
+          roles: [fieldType],
           profile: {},
           address: {
             city_id: form.city_id,
@@ -297,7 +326,7 @@ function UsersPage() {
             building_number: form.building_number.trim(),
             floor_number: form.floor_number.trim(),
             apartment_number: form.apartment_number.trim(),
-            is_default: form.is_default === 1 ? 1 : 0,
+            is_default: form.is_default === true ? true : false,
           },
         };
         const res = await usersApi.update(editingUser.id, payload);
@@ -421,25 +450,25 @@ function UsersPage() {
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
           label="إجمالي المستخدمين"
-          value={String(counts.total)}
+          value={String(globalCounts.total)}
           icon={Users}
           tone="primary"
         />
         <KpiCard
           label="مناديب التوصيل"
-          value={String(counts.delivery_agent)}
+          value={String(globalCounts.delivery_agent)}
           icon={Truck}
           tone="success"
         />
         <KpiCard
           label="شركات الشحن"
-          value={String(counts.shipping_company)}
+          value={String(globalCounts.shipping_company)}
           icon={Building2}
           tone="info"
         />
         <KpiCard
           label="أعضاء الفريق"
-          value={String(counts.staff_member)}
+          value={String(globalCounts.staff_member)}
           icon={UserCog}
           tone="warning"
         />
@@ -507,7 +536,7 @@ function UsersPage() {
                     ? "ذكر"
                     : u.gender === "female" || u.gender === "أنثى"
                       ? "أنثى"
-                      : u.role.label}
+                      : (u.role?.label ?? "—")}{" "}
                 </p>
               </div>
             </div>,
@@ -519,7 +548,7 @@ function UsersPage() {
 
             <div key="roles" className="flex flex-wrap gap-1">
               <Badge variant="secondary" className="rounded-md font-mono text-[10px]">
-                {u.role.label}
+                {u.role?.label ?? "بدون دور"}
               </Badge>
             </div>,
 
@@ -626,8 +655,21 @@ function UsersPage() {
           {crudMode === "create" && (
             <FormSelect
               label="نوع الحساب"
-              value={fieldAccountType}
-              onValueChange={setFieldAccountType}
+              value={fieldType}
+              onValueChange={(v) => {
+                setFieldType(v);
+                setFieldRole(v); // auto-set role to match type
+              }}
+              options={TYPE_OPTIONS}
+            />
+          )}
+
+          {/* Role selector — only visible for staff_member */}
+          {crudMode === "create" && fieldType === "staff_member" && (
+            <FormSelect
+              label="الدور الوظيفي"
+              value={fieldRole}
+              onValueChange={setFieldRole}
               options={roles.map((r) => ({ value: r.name, label: formatRoleName(r.name) }))}
             />
           )}
@@ -666,8 +708,8 @@ function UsersPage() {
 
           <FormSwitch
             label="العنوان الافتراضي"
-            checked={form.is_default === 1}
-            onCheckedChange={(checked) => setForm({ ...form, is_default: checked ? 1 : 0 })}
+            checked={form.is_default === true}
+            onCheckedChange={(checked) => setForm({ ...form, is_default: checked ? true : false })}
           />
         </div>
       </AdminEntityDialog>

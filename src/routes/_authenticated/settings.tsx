@@ -18,7 +18,7 @@ function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
+  const [isEditing, setIsEditing] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
 
@@ -87,14 +87,6 @@ function SettingsPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <AppShell>
-        <div className="flex items-center justify-center py-20">جاري تحميل البيانات...</div>
-      </AppShell>
-    );
-  }
-
   return (
     <AppShell>
       <div className="mb-6">
@@ -111,6 +103,7 @@ function SettingsPage() {
             <div className="space-y-1.5">
               <Label>اسم المنصة</Label>
               <Input
+                readOnly={!isEditing}
                 value={form.platform_name}
                 onChange={(e) =>
                   setForm((prev) => ({
@@ -118,13 +111,14 @@ function SettingsPage() {
                     platform_name: e.target.value,
                   }))
                 }
-                className="h-11 rounded-xl"
+                className={`h-11 rounded-xl ${!isEditing ? " cursor-default" : ""}`}
               />
             </div>
 
             <div className="space-y-1.5">
               <Label>اسم المنشأة</Label>
               <Input
+                readOnly={!isEditing}
                 value={form.org_name}
                 onChange={(e) =>
                   setForm((prev) => ({
@@ -132,13 +126,14 @@ function SettingsPage() {
                     org_name: e.target.value,
                   }))
                 }
-                className="h-11 rounded-xl"
+                className={`h-11 rounded-xl ${!isEditing ? " cursor-default" : ""}`}
               />
             </div>
 
             <div className="space-y-1.5">
               <Label>السجل التجاري</Label>
               <Input
+                readOnly={!isEditing}
                 value={form.commercial_reg}
                 onChange={(e) =>
                   setForm((prev) => ({
@@ -146,13 +141,14 @@ function SettingsPage() {
                     commercial_reg: e.target.value,
                   }))
                 }
-                className="h-11 rounded-xl"
+                className={`h-11 rounded-xl ${!isEditing ? " cursor-default" : ""}`}
               />
             </div>
 
             <div className="space-y-1.5">
               <Label>البريد الرسمي</Label>
               <Input
+                readOnly={!isEditing}
                 type="email"
                 value={form.official_email}
                 onChange={(e) =>
@@ -161,13 +157,14 @@ function SettingsPage() {
                     official_email: e.target.value,
                   }))
                 }
-                className="h-11 rounded-xl"
+                className={`h-11 rounded-xl ${!isEditing ? " cursor-default" : ""}`}
               />
             </div>
 
             <div className="space-y-1.5">
               <Label>رقم التواصل</Label>
               <Input
+                readOnly={!isEditing}
                 value={form.contact_phone}
                 onChange={(e) =>
                   setForm((prev) => ({
@@ -175,13 +172,14 @@ function SettingsPage() {
                     contact_phone: e.target.value,
                   }))
                 }
-                className="h-11 rounded-xl"
+                className={`h-11 rounded-xl ${!isEditing ? " cursor-default" : ""}`}
               />
             </div>
 
             <div className="space-y-1.5 sm:col-span-2">
               <Label>العنوان</Label>
               <Input
+                readOnly={!isEditing}
                 value={form.address}
                 onChange={(e) =>
                   setForm((prev) => ({
@@ -189,23 +187,43 @@ function SettingsPage() {
                     address: e.target.value,
                   }))
                 }
-                className="h-11 rounded-xl"
+                className={`h-11 rounded-xl ${!isEditing ? " cursor-default" : ""}`}
               />
             </div>
           </div>
 
           <div className="mt-6 flex justify-end gap-2">
-            <Button variant="outline" className="rounded-xl" onClick={loadSettings}>
-              إعادة تعيين
-            </Button>
+            {!isEditing ? (
+              <Button
+                onClick={() => setIsEditing(true)}
+                className="rounded-xl gradient-brand shadow-glow"
+              >
+                تعديل
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    loadSettings();
+                    setIsEditing(false);
+                  }}
+                >
+                  إلغاء
+                </Button>
 
-            <Button
-              onClick={handleSave}
-              disabled={saving}
-              className="rounded-xl gradient-brand shadow-glow"
-            >
-              {saving ? "جاري الحفظ..." : "حفظ التغييرات"}
-            </Button>
+                <Button
+                  onClick={async () => {
+                    await handleSave();
+                    setIsEditing(false);
+                  }}
+                  disabled={saving}
+                  className="rounded-xl gradient-brand shadow-glow"
+                >
+                  {saving ? "جاري الحفظ..." : "حفظ التغييرات"}
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
@@ -242,6 +260,7 @@ function SettingsPage() {
           <Button
             variant="outline"
             className="mt-4 w-full rounded-xl"
+            disabled={!isEditing}
             onClick={() => fileInputRef.current?.click()}
           >
             تحديث الشعار

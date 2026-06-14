@@ -1,5 +1,3 @@
-import type { ActiveFlag } from "@/lib/admin/mock-data";
-
 export type VehicleType = 1 | 2 | 3 | 4 | 5;
 export type CommissionType = 1 | 2;
 
@@ -24,7 +22,7 @@ export interface ApiAddress {
   building_number: string | null;
   floor_number: string | null;
   apartment_number: string | null;
-  is_default: ActiveFlag;
+  is_default: boolean;
 }
 
 export interface ApiDeliveryAgentProfile {
@@ -99,7 +97,7 @@ export interface AgentZone {
   governorate_name: string;
   city_id: number;
   city_name: string;
-  is_primary: ActiveFlag;
+  is_primary: boolean;
 }
 
 export interface AgentSubordinateRef {
@@ -155,7 +153,7 @@ export interface CreateSupervisorAgentPayload {
   email: string;
   phone: string;
   password: string;
-  roles: ["delivery_agent"];
+  role: "delivery_agent";
   profile: {
     national_id: string;
     vehicle_type: VehicleType;
@@ -171,7 +169,7 @@ export interface CreateRegularAgentPayload {
   email: string;
   phone: string;
   password: string;
-  roles: ["delivery_agent"];
+  role: "delivery_agent";
   profile: {
     supervisor_agent_id: string;
     national_id: string;
@@ -188,7 +186,7 @@ export interface CreateOtherRolePayload {
   email: string;
   phone: string;
   password: string;
-  roles: string[];
+  role: string[];
   profile: {
     supervisor_agent_id?: string;
     [key: string]: unknown;
@@ -235,11 +233,11 @@ export function formatCommission(type: CommissionType, value: number): string {
   return type === 1 ? `${value}%` : `${value.toFixed(2)} ج.م`;
 }
 
-export function getPrimaryZoneLabel(agent: DeliveryAgent): string {
-  const primary = agent.zones.find((z) => z.is_primary === 1) ?? agent.zones[0];
-  if (!primary) return "—";
-  return `${primary.governorate_name} / ${primary.city_name}`;
-}
+// export function getPrimaryZoneLabel(agent: DeliveryAgent): string {
+//   const primary = agent.zones.find((z) => z.is_primary === 1) ?? agent.zones[0];
+//   if (!primary) return "—";
+//   return `${primary.governorate_name} / ${primary.city_name}`;
+// }
 
 // ─── Normaliser ───────────────────────────────────────────────────────────────
 
@@ -260,10 +258,10 @@ export function normaliseAgent(raw: ApiDeliveryAgentItem): DeliveryAgent {
 
     id: da.id,
     national_id: da.national_id,
-    vehicle_type: da.vehicle.type.code,
-    vehicle_plate_number: da.vehicle.plate_number,
-    commission_type: da.commission.type.code,
-    commission_value: parseFloat(da.commission.value),
+    vehicle_type: da.vehicle?.type?.code ?? 1, // ← guard against null
+    vehicle_plate_number: da.vehicle?.plate_number ?? "", // ← already might be null
+    commission_type: da.commission?.type?.code ?? 1, // ← guard this too
+    commission_value: parseFloat(da.commission?.value ?? "0"),
     balance: parseFloat(da.balance),
     is_available: da.is_available,
     is_supervisor: da.is_supervisor,

@@ -60,7 +60,7 @@ export interface CreateShippingCompanyPayload {
   email: string;
   phone: string;
   password: string;
-  roles: string[];
+  role: "shipping_company";
   profile: {
     company_name: string;
     commercial_reg?: string;
@@ -71,7 +71,7 @@ export interface CreateShippingCompanyPayload {
     landmark: string;
     street: string;
     building_number: string;
-    is_default: number;
+    is_default: boolean;
   };
 }
 export interface CommissionType {

@@ -74,8 +74,8 @@ export interface CreateUserPayload {
   email: string;
   phone: string;
   password: string;
-  account_type: string;
-  roles: string[];
+  type: string; // "staff_member" | "delivery_agent" | "shipping_company"
+  role: string; // same value as type
   profile: Record<string, unknown>;
   address: StaffMemberAddress;
 }

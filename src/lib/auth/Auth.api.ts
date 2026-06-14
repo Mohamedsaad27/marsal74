@@ -89,11 +89,7 @@ export function isSessionValid(): boolean {
   try {
     const token = safeStorage.getItem("access_token");
     const expiresAt = safeStorage.getItem("token_expires_at");
-    console.log({
-      token,
-      expiresAt,
-      now: Date.now(),
-    });
+
     if (!token || !expiresAt) {
       clearSession();
       return false;

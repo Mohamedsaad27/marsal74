@@ -76,7 +76,7 @@ export interface CreateStaffMemberPayload {
   email: string;
   phone: string;
   password: string;
-  roles: string[];
+  role: string;
   profile: {
     department_id: string;
     job_title: string;
@@ -103,5 +103,5 @@ export interface StaffMemberAddress {
   building_number: string;
   floor_number: string;
   apartment_number: string;
-  is_default: number; // 0 or 1
+  is_default: boolean;
 }
