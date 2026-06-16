@@ -211,8 +211,8 @@ export function AgentCreateDialog({ open, onOpenChange, onSave, loading }: Props
   const supervisorOptions = useMemo(
     () =>
       supervisors.map((supervisor) => ({
-        value: String(supervisor.supervisor_agent_id),
-        label: `${supervisor.name} (${supervisor.email})`,
+        value: String(supervisor.id),
+        label: `${supervisor.name} `,
       })),
     [supervisors],
   );

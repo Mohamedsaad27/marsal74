@@ -12,7 +12,12 @@ import { ImportUsersDialog } from "@/components/admin/ImportUsersDialog";
 import { AdminStatusBadge, activeBadge } from "@/components/admin/AdminStatusBadge";
 import { RowActions } from "@/components/admin/RowActions";
 import { formatRoleName } from "@/lib/admin/rbac-utils";
-
+import type { Department } from "@/lib/admin/departments-types";
+import type { DeliveryAgent } from "@/lib/admin/delivery-agents-types";
+import { BASE_URL } from "@/lib/utils";
+import { getAccessToken } from "@/lib/auth/Auth.api";
+import { VEHICLE_TYPE_LABELS } from "@/lib/admin/delivery-agents-types";
+import { fetchDepartments } from "../../lib/admin/departments-api";
 import { FormInput, FormSelect, FormSwitch } from "@/components/admin/AdminFormFields";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -127,6 +132,69 @@ function UsersPage() {
     { value: "delivery_agent", label: "مندوب توصيل" },
     { value: "shipping_company", label: "شركة شحن" },
   ];
+  // Shipping company profile
+  const [fieldCompanyName, setFieldCompanyName] = useState("");
+  const [fieldCommercialReg, setFieldCommercialReg] = useState("");
+
+  // Staff member profile
+  const [fieldDepartmentId, setFieldDepartmentId] = useState("");
+  const [fieldJobTitle, setFieldJobTitle] = useState("");
+
+  // Delivery agent profile
+  const [fieldNationalId, setFieldNationalId] = useState("");
+  const [fieldVehicleType, setFieldVehicleType] = useState("1");
+  const [fieldPlateNumber, setFieldPlateNumber] = useState("");
+  const [fieldSupervisorId, setFieldSupervisorId] = useState("");
+  const [hasSupervisor, setHasSupervisor] = useState(false);
+
+  // Departments & supervisors lists
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [supervisors, setSupervisors] = useState<DeliveryAgent[]>([]);
+  // Fetch departments (for staff_member)
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetchDepartments();
+        if (res.isSuccess) setDepartments(res.data.items);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    void load();
+  }, []);
+
+  const departmentOptions = useMemo(
+    () => departments.map((d) => ({ value: String(d.id), label: d.name_ar })),
+    [departments],
+  );
+
+  // Fetch delivery supervisors (for delivery_agent)
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch(
+          `${BASE_URL}/admin/delivery-agents/supervisors?search=&is_active=`,
+          {
+            headers: { Authorization: `Bearer ${getAccessToken()}` },
+          },
+        );
+        const json = await res.json();
+        setSupervisors(json.data ?? []);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    void load();
+  }, []);
+
+  const supervisorOptions = useMemo(
+    () =>
+      supervisors.map((s) => ({
+        value: String(s.id),
+        label: `${s.name}`,
+      })),
+    [supervisors],
+  );
   const [form, setForm] = useState({
     city_id: "",
     address_line: "",
@@ -239,6 +307,15 @@ function UsersPage() {
     setFieldPassword("");
     setFieldType("staff_member");
     setFieldRole("staff_member");
+    setFieldCompanyName("");
+    setFieldCommercialReg("");
+    setFieldDepartmentId("");
+    setFieldJobTitle("");
+    setFieldNationalId("");
+    setFieldVehicleType("1");
+    setFieldPlateNumber("");
+    setFieldSupervisorId("");
+    setHasSupervisor(false);
     setForm({
       city_id: "",
       address_line: "",
@@ -283,6 +360,23 @@ function UsersPage() {
 
   // ── save (create or update) ──────────────────────────────────────────────────
   const handleSave = async () => {
+    const buildProfile = () => {
+      if (fieldType === "shipping_company") {
+        return { company_name: fieldCompanyName, commercial_reg: fieldCommercialReg };
+      }
+      if (fieldType === "staff_member") {
+        return { department_id: fieldDepartmentId, job_title: fieldJobTitle };
+      }
+      if (fieldType === "delivery_agent") {
+        return {
+          ...(hasSupervisor && fieldSupervisorId ? { supervisor_agent_id: fieldSupervisorId } : {}),
+          national_id: fieldNationalId,
+          vehicle_type: Number(fieldVehicleType) as 1 | 2 | 3 | 4 | 5,
+          vehicle_plate_number: fieldPlateNumber,
+        };
+      }
+      return {};
+    };
     setFormLoading(true);
     try {
       if (crudMode === "create") {
@@ -293,7 +387,7 @@ function UsersPage() {
           password: fieldPassword,
           type: fieldType,
           role: fieldRole,
-          profile: {},
+          profile: buildProfile(),
           address: {
             city_id: form.city_id,
             address_line: form.address_line.trim(),
@@ -689,6 +783,87 @@ function UsersPage() {
               onValueChange={setFieldRole}
               options={roles.map((r) => ({ value: r.name, label: formatRoleName(r.name) }))}
             />
+          )}
+          {/* ── Shipping company profile ── */}
+          {crudMode === "create" && fieldType === "shipping_company" && (
+            <>
+              <FormInput
+                label="اسم الشركة"
+                required
+                value={fieldCompanyName}
+                onChange={(e) => setFieldCompanyName(e.target.value)}
+              />
+              <FormInput
+                label="السجل التجاري"
+                dir="ltr"
+                value={fieldCommercialReg}
+                onChange={(e) => setFieldCommercialReg(e.target.value)}
+              />
+            </>
+          )}
+
+          {/* ── Staff member profile ── */}
+          {crudMode === "create" && fieldType === "staff_member" && (
+            <>
+              <FormSelect
+                label="القسم"
+                required
+                value={fieldDepartmentId}
+                onValueChange={setFieldDepartmentId}
+                options={departmentOptions}
+              />
+              <FormInput
+                label="المسمى الوظيفي"
+                required
+                value={fieldJobTitle}
+                onChange={(e) => setFieldJobTitle(e.target.value)}
+              />
+            </>
+          )}
+
+          {/* ── Delivery agent profile ── */}
+          {crudMode === "create" && fieldType === "delivery_agent" && (
+            <>
+              <FormSwitch
+                label="يتبع مشرفاً"
+                checked={hasSupervisor}
+                onCheckedChange={setHasSupervisor}
+              />
+              {hasSupervisor && (
+                <FormSelect
+                  label="المشرف المسؤول"
+                  required
+                  value={fieldSupervisorId}
+                  onValueChange={setFieldSupervisorId}
+                  options={supervisorOptions}
+                  placeholder="اختر المشرف..."
+                />
+              )}
+              <FormInput
+                label="الرقم القومي"
+                required
+                dir="ltr"
+                className="tabular-nums"
+                value={fieldNationalId}
+                onChange={(e) => setFieldNationalId(e.target.value)}
+              />
+              <FormSelect
+                label="نوع المركبة"
+                value={fieldVehicleType}
+                onValueChange={setFieldVehicleType}
+                options={Object.entries(VEHICLE_TYPE_LABELS).map(([value, label]) => ({
+                  value,
+                  label,
+                }))}
+              />
+              <FormInput
+                label="لوحة المركبة"
+                required
+                dir="ltr"
+                value={fieldPlateNumber}
+                onChange={(e) => setFieldPlateNumber(e.target.value)}
+              />
+            </>
           )}
           <FormSelect
             label="المدينة "
