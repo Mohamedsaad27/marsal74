@@ -30,6 +30,7 @@ import {
   Shield,
   Power,
 } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 import { AdminDialogShell } from "@/components/admin/AdminDialogShell";
 import {
   usersApi,
@@ -507,6 +508,7 @@ function UsersPage() {
         columns={[
           { key: "user", label: "المستخدم" },
           { key: "contact", label: "التواصل" },
+          { key: "whatsapp", label: "واتساب" },
           { key: "roles", label: "الأدوار" },
           { key: "profile", label: "الملف المرتبط" },
           { key: "status", label: "الحالة" },
@@ -544,6 +546,21 @@ function UsersPage() {
             <div key="contact">
               <p className="text-xs">{u.email}</p>
               <p className="text-xs tabular-nums text-muted-foreground">{u.phone}</p>
+            </div>,
+            <div key="whatsapp" className="flex justify-center">
+              {u.welcome_whatsapp_url ? (
+                <a
+                  href={u.welcome_whatsapp_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center rounded-lg p-2 text-green-600 hover:bg-green-50"
+                  title="فتح رسالة الواتساب"
+                >
+                  <FaWhatsapp size={20} />
+                </a>
+              ) : (
+                <span className="text-muted-foreground">—</span>
+              )}
             </div>,
 
             <div key="roles" className="flex flex-wrap gap-1">

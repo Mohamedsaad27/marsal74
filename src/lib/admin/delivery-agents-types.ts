@@ -51,6 +51,7 @@ export interface ApiDeliveryAgentItem {
   phone: string;
   gender: string | null;
   avatar: string | null;
+  welcome_whatsapp_url: string | null;
   is_active: boolean;
   last_login_at: string | null;
   created_at: string;
@@ -114,7 +115,7 @@ export interface DeliveryAgent {
   phone: string;
   avatar: string | null;
   is_active: boolean;
-
+  welcome_whatsapp_url: string | null;
   // agent-level
   id: string; // delivery_agent.id (profile UUID)
   national_id: string;
@@ -255,7 +256,7 @@ export function normaliseAgent(raw: ApiDeliveryAgentItem): DeliveryAgent {
     phone: raw.phone,
     avatar: raw.avatar,
     is_active: raw.is_active,
-
+    welcome_whatsapp_url: raw.welcome_whatsapp_url,
     id: da.id,
     national_id: da.national_id,
     vehicle_type: da.vehicle?.type?.code ?? 1, // ← guard against null

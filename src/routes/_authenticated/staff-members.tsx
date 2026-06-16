@@ -16,6 +16,7 @@ import {
 } from "@/components/admin/AdminFormFields";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { staffMembersApi } from "@/lib/admin/staff-members-api";
+import { FaWhatsapp } from "react-icons/fa";
 import { usersApi } from "@/lib/admin/users.api";
 import type { Department } from "@/lib/admin/departments-types";
 import { fetchDepartments } from "../../lib/admin/departments-api";
@@ -391,6 +392,7 @@ function StaffMembersPage() {
             { key: "job_title", label: "المسمى الوظيفي" },
             { key: "notes", label: "ملاحظات" },
             { key: "contact", label: "التواصل" },
+            { key: "whatsapp", label: "واتساب" },
             { key: "status", label: "الحالة" },
             { key: "actions", label: "" },
           ]}
@@ -416,6 +418,21 @@ function StaffMembersPage() {
                 <p className="text-[11px] text-muted-foreground" dir="ltr">
                   {member.email}
                 </p>
+              </div>,
+              <div key="whatsapp" className="flex justify-center">
+                {member.welcome_whatsapp_url ? (
+                  <a
+                    href={member.welcome_whatsapp_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center rounded-lg p-2 text-green-600 hover:bg-green-50"
+                    title="فتح رسالة الواتساب"
+                  >
+                    <FaWhatsapp size={20} />
+                  </a>
+                ) : (
+                  <span className="text-muted-foreground">—</span>
+                )}
               </div>,
               <AdminStatusBadge key="status" variant={activeBadge(member.is_active)} />,
               <RowActions

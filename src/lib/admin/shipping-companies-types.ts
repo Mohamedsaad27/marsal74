@@ -23,6 +23,7 @@ export interface ShippingCompanyUser {
   phone: string;
   gender: string | null;
   avatar: string | null;
+  welcome_whatsapp_url: string | null;
   is_active: boolean;
   last_login_at: string | null;
   created_at: string;
@@ -103,6 +104,7 @@ export interface ShippingCompany {
   phone: string;
   gender: string | null;
   avatar: string | null;
+  welcome_whatsapp_url: string | null;
   is_active: boolean;
   last_login_at: string | null;
   created_at: string;

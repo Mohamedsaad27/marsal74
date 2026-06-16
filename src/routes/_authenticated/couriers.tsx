@@ -39,7 +39,7 @@ import type { City } from "@/lib/admin/locations-types";
 import { fetchCities } from "@/lib/admin/locations-api";
 import { usersApi } from "@/lib/admin/users.api";
 import type { UpdateUserPayload } from "@/lib/admin/users.api";
-
+import { FaWhatsapp } from "react-icons/fa";
 export const Route = createFileRoute("/_authenticated/couriers")({
   component: CouriersPage,
 });
@@ -432,6 +432,7 @@ function CouriersPage() {
           ]}
           columns={[
             { key: "agent", label: "المندوب" },
+            { key: "whatsapp", label: "واتساب" },
             { key: "vehicle", label: "المركبة" },
             { key: "commission", label: "العمولة" },
             { key: "city", label: "المدينة" },
@@ -459,6 +460,21 @@ function CouriersPage() {
                   <p className="text-[11px] tabular-nums text-muted-foreground" dir="ltr">
                     {agent.phone}
                   </p>
+                </div>,
+                <div key="whatsapp" className="flex justify-center">
+                  {agent.welcome_whatsapp_url ? (
+                    <a
+                      href={agent.welcome_whatsapp_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center rounded-lg p-2 text-green-600 hover:bg-green-50"
+                      title="فتح رسالة الواتساب"
+                    >
+                      <FaWhatsapp size={20} />
+                    </a>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
                 </div>,
 
                 /* vehicle */

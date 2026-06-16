@@ -17,6 +17,7 @@ import { Building2, Loader2, Power, Truck, TrendingUp, Wallet, CheckCircle2 } fr
 import { FormInput, FormSelect, FormSwitch } from "@/components/admin/AdminFormFields";
 import { City } from "@/lib/admin/locations-types";
 import { fetchCities } from "@/lib/admin/locations-api";
+import { FaWhatsapp } from "react-icons/fa";
 export const Route = createFileRoute("/_authenticated/companies")({
   component: ShippingCompaniesPage,
 });
@@ -353,6 +354,7 @@ function ShippingCompaniesPage() {
         columns={[
           { key: "company_name", label: "اسم الشركة" },
           { key: "contact", label: "التواصل" },
+          { key: "whatsapp", label: "واتساب" },
           { key: "commercial_reg", label: "السجل التجاري" },
           { key: "commission", label: "العمولة" },
           { key: "balance", label: "الرصيد" },
@@ -383,6 +385,21 @@ function ShippingCompaniesPage() {
               <p className="text-[11px] text-muted-foreground" dir="ltr">
                 {company.email}
               </p>
+            </div>,
+            <div key="whatsapp" className="flex justify-center">
+              {company.welcome_whatsapp_url ? (
+                <a
+                  href={company.welcome_whatsapp_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center rounded-lg p-2 text-green-600 hover:bg-green-50"
+                  title="فتح رسالة الواتساب"
+                >
+                  <FaWhatsapp size={20} />
+                </a>
+              ) : (
+                <span className="text-muted-foreground">—</span>
+              )}
             </div>,
 
             // Commercial reg
