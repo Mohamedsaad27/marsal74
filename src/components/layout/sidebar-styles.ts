@@ -9,8 +9,7 @@ export const sidebarStandaloneBtn =
 export const sidebarSubBtn =
   "h-9 rounded-md px-2 text-[13px] font-normal text-sidebar-foreground/65 shadow-none hover:bg-transparent hover:text-sidebar-foreground data-[active=true]:bg-transparent data-[active=true]:font-semibold data-[active=true]:text-sidebar-foreground";
 
-export const sidebarIcon =
-  "h-[18px] w-[18px] shrink-0 stroke-[1.75] text-sidebar-foreground/70";
+export const sidebarIcon = "h-[18px] w-[18px] shrink-0 stroke-[1.75] text-sidebar-foreground/70";
 
 export const sidebarChevron =
   "h-4 w-4 shrink-0 stroke-[2] text-sidebar-foreground/50 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180";
