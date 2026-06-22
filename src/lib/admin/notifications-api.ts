@@ -1,151 +1,180 @@
-import { DEFAULT_PREFERENCES, NOTIFICATIONS } from "@/lib/admin/notifications-data";
 import type {
   ApiResponse,
   NotificationPreferencesState,
   NotificationRecord,
+  NotificationsListResponse,
   NotificationTypeCode,
 } from "@/lib/admin/notifications-types";
+import { BASE_URL } from "../utils";
+import { getAccessToken } from "../auth/Auth.api";
 
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-let notificationStore = NOTIFICATIONS.map((item) => ({ ...item }));
-let preferencesStore: NotificationPreferencesState = {
-  ...DEFAULT_PREFERENCES,
-  preferences: DEFAULT_PREFERENCES.preferences.map((p) => ({ ...p })),
-};
-
-export async function fetchNotifications(): Promise<ApiResponse<NotificationRecord[]>> {
-  await delay(350);
+function authHeaders(): HeadersInit {
+  const token = getAccessToken();
   return {
-    isSuccess: true,
-    message: "تمت العملية بنجاح",
-    data: notificationStore
-      .map((item) => ({ ...item }))
-      .sort((a, b) => new Date(b.sent_at).getTime() - new Date(a.sent_at).getTime()),
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 }
 
-export async function fetchNotificationPreferences(): Promise<ApiResponse<NotificationPreferencesState>> {
-  await delay(250);
-  return {
-    isSuccess: true,
-    message: "تمت العملية بنجاح",
-    data: {
-      ...preferencesStore,
-      preferences: preferencesStore.preferences.map((p) => ({ ...p })),
-    },
-  };
-}
-
-export async function markNotificationRead(notificationId: string): Promise<ApiResponse<NotificationRecord>> {
-  await delay(200);
-  const index = notificationStore.findIndex((n) => n.notification_id === notificationId);
-  if (index === -1) {
-    return { isSuccess: false, message: "الإشعار غير موجود", data: null as unknown as NotificationRecord };
+async function handleResponse<T>(res: Response): Promise<ApiResponse<T>> {
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json?.message ?? `HTTP ${res.status}`);
   }
-
-  const now = new Date().toISOString();
-  notificationStore[index] = {
-    ...notificationStore[index],
-    is_read: 1,
-    read_at: now,
-  };
-
-  return {
-    isSuccess: true,
-    message: "تم تعليم الإشعار كمقروء",
-    data: { ...notificationStore[index] },
-  };
+  return json as ApiResponse<T>;
 }
 
-export async function markAllNotificationsRead(): Promise<ApiResponse<{ count: number }>> {
-  await delay(400);
-  const now = new Date().toISOString();
-  let count = 0;
+// ─── Notifications List (paginated) ────────────────────────────────────────
 
-  notificationStore = notificationStore.map((item) => {
-    if (item.is_read === 0) {
-      count += 1;
-      return { ...item, is_read: 1 as const, read_at: now };
-    }
-    return item;
+export async function fetchNotifications(
+  page = 1,
+  per_page = 15,
+): Promise<ApiResponse<NotificationsListResponse>> {
+  const url = new URL(`${BASE_URL}/notifications`);
+  url.searchParams.set("page", String(page));
+  url.searchParams.set("per_page", String(per_page));
+
+  const res = await fetch(url.toString(), {
+    method: "GET",
+    headers: authHeaders(),
   });
 
-  return {
-    isSuccess: true,
-    message: `تم تعليم ${count} إشعار كمقروء`,
-    data: { count },
-  };
+  return handleResponse<NotificationsListResponse>(res);
 }
 
-export async function deleteReadNotifications(): Promise<ApiResponse<{ count: number }>> {
-  await delay(350);
-  const before = notificationStore.length;
-  notificationStore = notificationStore.filter((n) => n.is_read === 0);
-  const count = before - notificationStore.length;
-  return {
-    isSuccess: true,
-    message: `تم حذف ${count} إشعار مقروء`,
-    data: { count },
-  };
+// ─── Unread Count ───────────────────────────────────────────────────────────
+
+export async function fetchUnreadCount(): Promise<number> {
+  const res = await fetch(`${BASE_URL}/notifications/unread-count`, {
+    method: "GET",
+    headers: authHeaders(),
+  });
+  const json = await res.json();
+  return json?.data?.unread ?? 0;
 }
+
+// ─── Mark Single as Read ────────────────────────────────────────────────────
+
+export async function markNotificationRead(
+  notificationId: string,
+): Promise<ApiResponse<NotificationRecord>> {
+  const res = await fetch(`${BASE_URL}/notifications/${notificationId}/read`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  return handleResponse<NotificationRecord>(res);
+}
+
+// ─── Mark All as Read ───────────────────────────────────────────────────────
+
+export async function markAllNotificationsRead(): Promise<ApiResponse<{ count: number }>> {
+  const res = await fetch(`${BASE_URL}/notifications/read-all`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  return handleResponse<{ count: number }>(res);
+}
+
+// ─── Delete Read Notifications ──────────────────────────────────────────────
+
+export async function deleteReadNotifications(): Promise<ApiResponse<{ count: number }>> {
+  const res = await fetch(`${BASE_URL}/notifications/read`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  return handleResponse<{ count: number }>(res);
+}
+
+// ─── FCM Token Registration ─────────────────────────────────────────────────
+
+// export async function registerFcmToken(fcmToken: string): Promise<void> {
+//   await fetch(`${BASE_URL}/notifications/fcm-token`, {
+//     method: "POST",
+//     headers: authHeaders(),
+//     body: JSON.stringify({ token: fcmToken }),
+//   });
+// }
+
+// ─── Preferences (if backend supports it, else these are local stubs) ───────
+
+// export async function fetchNotificationPreferences(): Promise
+//   ApiResponse<NotificationPreferencesState>
+// > {
+//   // If your backend has this endpoint, replace with real fetch:
+//   // const res = await fetch(`${BASE_URL}/api/v1/notifications/preferences`, { headers: authHeaders() });
+//   // return handleResponse<NotificationPreferencesState>(res);
+
+//   // Until backend provides it, return a safe default:
+//   return {
+//     isSuccess: true,
+//     message: "تمت العملية بنجاح",
+//     data: getDefaultPreferences(),
+//   };
+// }
 
 export async function saveNotificationPreferences(
   prefs: NotificationPreferencesState,
 ): Promise<ApiResponse<NotificationPreferencesState>> {
-  await delay(500);
-  preferencesStore = {
-    ...prefs,
-    preferences: prefs.preferences.map((p) => ({ ...p })),
-  };
+  // Uncomment when backend is ready:
+  // const res = await fetch(`${BASE_URL}/api/v1/notifications/preferences`, {
+  //   method: "PUT",
+  //   headers: authHeaders(),
+  //   body: JSON.stringify(prefs),
+  // });
+  // return handleResponse<NotificationPreferencesState>(res);
+
   return {
     isSuccess: true,
-    message: "تم حفظ تفضيلات الإشعارات (واجهة تصميمية)",
-    data: {
-      ...preferencesStore,
-      preferences: preferencesStore.preferences.map((p) => ({ ...p })),
-    },
+    message: "تم حفظ التفضيلات (محلياً)",
+    data: prefs,
   };
 }
 
-export function computeNotificationKpis(items: NotificationRecord[]) {
-  return {
-    total: items.length,
-    unread: items.filter((n) => n.is_read === 0).length,
-    push: items.filter((n) => n.channel === "push").length,
-    pushUnread: items.filter((n) => n.channel === "push" && n.is_read === 0).length,
-    pushFailed: items.filter((n) => n.push_status === "failed").length,
-    byType: (type: NotificationTypeCode) => items.filter((n) => n.notification_type === type).length,
-  };
-}
+// ─── KPI helper (uses what the API already returns in data.kpis) ────────────
+// No need to compute locally — just pass data.kpis from fetchNotifications()
 
 export function filterNotifications(
   items: NotificationRecord[],
   opts: {
     readTab?: "all" | "unread" | "read";
     typeFilter?: string;
-    channel?: "all" | "push" | "in_app";
     search?: string;
   },
 ): NotificationRecord[] {
   return items.filter((item) => {
-    if (opts.readTab === "unread" && item.is_read === 1) return false;
-    if (opts.readTab === "read" && item.is_read === 0) return false;
-    if (opts.typeFilter && opts.typeFilter !== "all" && String(item.notification_type) !== opts.typeFilter) {
+    if (opts.readTab === "unread" && item.is_read) return false;
+    if (opts.readTab === "read" && !item.is_read) return false;
+
+    if (
+      opts.typeFilter &&
+      opts.typeFilter !== "all" &&
+      String(item.type.code) !== opts.typeFilter
+    ) {
       return false;
     }
-    if (opts.channel === "push" && item.channel !== "push") return false;
-    if (opts.channel === "in_app" && item.channel !== "in_app") return false;
+
     if (opts.search?.trim()) {
       const q = opts.search.toLowerCase();
-      return (
-        item.title.toLowerCase().includes(q) ||
-        item.body.toLowerCase().includes(q) ||
-        (item.reference_code ?? "").toLowerCase().includes(q)
-      );
+      return item.title_ar.toLowerCase().includes(q) || item.body_ar.toLowerCase().includes(q);
     }
+
     return true;
   });
+}
+
+function getDefaultPreferences(): NotificationPreferencesState {
+  const codes: NotificationTypeCode[] = [1, 2, 3, 4, 5, 6, 7, 8];
+  return {
+    preferences: codes.map((code) => ({
+      notification_type: code,
+      in_app_enabled: true,
+      push_enabled: code !== 7,
+      email_enabled: ([1, 4, 5] as NotificationTypeCode[]).includes(code),
+    })),
+    quiet_hours_enabled: false,
+    quiet_hours_from: "22:00",
+    quiet_hours_to: "07:00",
+    sound_enabled: true,
+    digest_enabled: false,
+  };
 }

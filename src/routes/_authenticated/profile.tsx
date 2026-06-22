@@ -182,7 +182,7 @@ function ProfilePage() {
               </div>
               <div>
                 <h3 className="font-bold">البيانات الأساسية</h3>
-                <p className="text-xs text-muted-foreground">الاسم، البريد، الهاتف، والجنس</p>
+                <p className="text-xs text-muted-foreground">الاسم، البريد و الهاتف </p>
               </div>
             </div>
 

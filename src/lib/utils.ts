@@ -4,8 +4,8 @@ import { twMerge } from "tailwind-merge";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
-export const BASE_URL: string = "https://mersal.sabiq-educational.com/api/v1";
-export const PROFILE_BASE_URL: string = "https://mersal.sabiq-educational.com";
+export const BASE_URL: string = "https://api.expres-pro.com/api/v1";
+export const PROFILE_BASE_URL: string = "https://api.expres-pro.com";
 export const safeStorage = {
   getItem(key: string) {
     if (typeof window === "undefined") return null;

@@ -3,13 +3,15 @@ import {
   Search,
   Moon,
   Sun,
-  Languages,
-  UserCircle,
+  ChevronDown,
   Settings,
   LogOut,
-  ChevronDown,
+  UserCircle,
+  CheckCheck,
+  Loader2,
+  BellOff,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "@tanstack/react-router";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -23,40 +25,112 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { getCurrentUser, logout } from "@/lib/auth/Auth.api";
+import { logout } from "@/lib/auth/Auth.api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import {
+  fetchNotifications,
+  fetchUnreadCount,
+  markNotificationRead,
+  markAllNotificationsRead,
+} from "@/lib/admin/notifications-api";
+import type { NotificationRecord } from "@/lib/admin/notifications-types";
+import { formatRelativeTime } from "@/lib/admin/notifications-types";
+import { cn } from "@/lib/utils";
 
-const notifications = [
-  {
-    title: "شحنة جديدة #SHP-2841",
-    desc: "تم استلام شحنة من شركة العالمية",
-    time: "الآن",
-    color: "bg-info",
-  },
-  {
-    title: "تم تسليم #SHP-2790",
-    desc: "المندوب: خالد العتيبي",
-    time: "قبل 5د",
-    color: "bg-success",
-  },
-  {
-    title: "تأخر شحنة #SHP-2755",
-    desc: "تجاوزت المدة المتوقعة",
-    time: "قبل 12د",
-    color: "bg-warning",
-  },
-  { title: "تحصيل جديد", desc: "تم استلام 4,250 ر.س", time: "قبل ساعة", color: "bg-primary" },
-];
+// Color dot per type group
+const typeDotColor: Record<number, string> = {
+  1: "bg-info", // new order
+  2: "bg-primary", // status update
+  3: "bg-success", // price approval
+  4: "bg-warning", // timer start
+  5: "bg-warning", // timer expired
+  6: "bg-destructive", // new message
+  7: "bg-muted-foreground", // phone updated
+  8: "bg-orange-500", // postpone reminder
+};
 
 export function Topbar() {
   const [dark, setDark] = useState(false);
-  const { user, hydrated } = useCurrentUser();
-  const initial = hydrated ? (user?.name?.[0] ?? "") : "";
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState<NotificationRecord[]>([]);
+  const [unread, setUnread] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [markingAll, setMarkingAll] = useState(false);
+  const fetchedOnce = useRef(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const { user } = useCurrentUser();
 
   const toggleDark = () => {
     document.documentElement.classList.toggle("dark");
     setDark((d) => !d);
+  };
+
+  // Poll unread count every 60s (lightweight)
+  const refreshUnreadCount = useCallback(async () => {
+    try {
+      const count = await fetchUnreadCount();
+      setUnread(count);
+    } catch {
+      // silently fail — don't toast on background poll
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshUnreadCount();
+    pollRef.current = setInterval(refreshUnreadCount, 60_000);
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [refreshUnreadCount]);
+
+  // Fetch first page of notifications when dropdown opens (once per open)
+  const loadNotifications = useCallback(async () => {
+    if (fetchedOnce.current) return;
+    setLoading(true);
+    try {
+      const res = await fetchNotifications(1, 10);
+      if (res.isSuccess) {
+        setItems(res.data.items);
+        setUnread(res.data.kpis.unread);
+        fetchedOnce.current = true;
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next);
+    if (next) void loadNotifications();
+    else fetchedOnce.current = false; // re-fetch on next open
+  };
+
+  const handleMarkRead = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await markNotificationRead(id);
+      setItems((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+      setUnread((c) => Math.max(0, c - 1));
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    setMarkingAll(true);
+    try {
+      await markAllNotificationsRead();
+      setItems((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      setUnread(0);
+    } catch {
+      // ignore
+    } finally {
+      setMarkingAll(false);
+    }
   };
 
   return (
@@ -84,7 +158,8 @@ export function Topbar() {
           {dark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
         </Button>
 
-        <DropdownMenu>
+        {/* ── Notifications dropdown ── */}
+        <DropdownMenu open={open} onOpenChange={handleOpenChange}>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
@@ -92,31 +167,104 @@ export function Topbar() {
               className="relative rounded-xl text-muted-foreground hover:text-foreground"
             >
               <Bell className="h-[18px] w-[18px]" />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive ring-2 ring-background animate-pulse" />
+              {unread > 0 && (
+                <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground ring-2 ring-background">
+                  {unread > 99 ? "99" : unread}
+                </span>
+              )}
             </Button>
           </DropdownMenuTrigger>
+
           <DropdownMenuContent align="end" className="w-[360px] rounded-2xl p-2 shadow-elevated">
+            {/* Header */}
             <DropdownMenuLabel className="flex items-center justify-between px-2 py-1.5">
-              <span className="text-base font-bold">الإشعارات</span>
-              <Badge variant="secondary" className="rounded-full">
-                4 جديدة
-              </Badge>
+              <div className="flex items-center gap-2">
+                <span className="text-base font-bold">الإشعارات</span>
+                {unread > 0 && (
+                  <Badge variant="secondary" className="rounded-full">
+                    {unread} جديدة
+                  </Badge>
+                )}
+              </div>
+              {unread > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 gap-1 rounded-lg px-2 text-xs text-muted-foreground hover:text-foreground"
+                  onClick={handleMarkAllRead}
+                  disabled={markingAll}
+                >
+                  {markingAll ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <CheckCheck className="h-3 w-3" />
+                  )}
+                  تعليم الكل
+                </Button>
+              )}
             </DropdownMenuLabel>
+
             <DropdownMenuSeparator />
-            {notifications.map((n, i) => (
-              <DropdownMenuItem
-                key={i}
-                className="flex items-start gap-3 rounded-xl p-3 focus:bg-accent"
-              >
-                <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${n.color}`} />
-                <div className="flex-1">
-                  <p className="text-sm font-semibold">{n.title}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{n.desc}</p>
-                </div>
-                <span className="text-[11px] text-muted-foreground">{n.time}</span>
-              </DropdownMenuItem>
-            ))}
+
+            {/* Body */}
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : items.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 py-8 text-muted-foreground">
+                <BellOff className="h-8 w-8 opacity-40" />
+                <p className="text-sm">لا توجد إشعارات</p>
+              </div>
+            ) : (
+              items.map((n) => (
+                <DropdownMenuItem
+                  key={n.id}
+                  className={cn(
+                    "flex items-start gap-3 rounded-xl p-3 focus:bg-accent",
+                    !n.is_read && "bg-primary/5",
+                  )}
+                  onSelect={(e) => e.preventDefault()} // keep open on click
+                >
+                  <span
+                    className={cn(
+                      "mt-1.5 h-2 w-2 shrink-0 rounded-full",
+                      !n.is_read
+                        ? (typeDotColor[n.type.code] ?? "bg-primary")
+                        : "bg-muted-foreground/30",
+                    )}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className={cn(
+                        "truncate text-sm",
+                        !n.is_read ? "font-semibold" : "font-normal text-muted-foreground",
+                      )}
+                    >
+                      {n.title_ar}
+                    </p>
+                    <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{n.body_ar}</p>
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <span className="text-[11px] text-muted-foreground">
+                        {formatRelativeTime(n.created_at)}
+                      </span>
+                      {!n.is_read && (
+                        <button
+                          className="text-[11px] text-primary hover:underline"
+                          onClick={(e) => handleMarkRead(n.id, e)}
+                        >
+                          تعليم كمقروء
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </DropdownMenuItem>
+              ))
+            )}
+
             <DropdownMenuSeparator />
+
+            {/* Footer */}
             <DropdownMenuItem
               className="justify-center rounded-xl p-0 focus:bg-transparent"
               asChild
@@ -124,6 +272,7 @@ export function Topbar() {
               <Link
                 to="/notifications"
                 className="flex w-full justify-center rounded-xl py-2.5 text-sm font-semibold text-primary hover:bg-accent"
+                onClick={() => setOpen(false)}
               >
                 عرض كل الإشعارات
               </Link>
@@ -133,6 +282,7 @@ export function Topbar() {
 
         <div className="mx-1 h-8 w-px bg-border" />
 
+        {/* User menu — unchanged */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
@@ -141,7 +291,7 @@ export function Topbar() {
             >
               <Avatar className="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm font-bold text-sidebar-primary-foreground">
                 {user?.avatar && (
-                  <AvatarImage src={user?.avatar} className="rounded-lg object-cover" />
+                  <AvatarImage src={user.avatar} className="rounded-lg object-cover" />
                 )}
                 <AvatarFallback className="rounded-2xl gradient-brand text-3xl font-bold text-white">
                   {user?.name.charAt(0)}
@@ -160,13 +310,13 @@ export function Topbar() {
               <p className="text-xs text-muted-foreground">{user?.email}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer rounded-xl gap-2" asChild>
+            <DropdownMenuItem className="cursor-pointer gap-2 rounded-xl" asChild>
               <Link to="/profile">
                 <UserCircle className="h-4 w-4" />
                 الملف الشخصي
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer rounded-xl gap-2" asChild>
+            <DropdownMenuItem className="cursor-pointer gap-2 rounded-xl" asChild>
               <Link to="/settings">
                 <Settings className="h-4 w-4" />
                 الإعدادات
@@ -174,15 +324,10 @@ export function Topbar() {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              className="cursor-pointer rounded-xl gap-2 text-destructive focus:text-destructive"
+              className="cursor-pointer gap-2 rounded-xl text-destructive focus:text-destructive"
               asChild
             >
-              <Link
-                to="/login"
-                onClick={() => {
-                  logout();
-                }}
-              >
+              <Link to="/login" onClick={logout}>
                 <LogOut className="h-4 w-4" />
                 تسجيل الخروج
               </Link>

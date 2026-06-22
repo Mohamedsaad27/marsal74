@@ -4,29 +4,34 @@ export type ApiResponse<T> = {
   data: T;
 };
 
-/** notifications.notification_type */
-export type NotificationTypeCode = 1 | 2 | 3 | 4 | 5 | 6 | 7;
-
-/** notifications.channel */
-export type NotificationChannel = "in_app" | "push";
-
-export type PushDeliveryStatus = "queued" | "sent" | "delivered" | "failed";
+export type NotificationTypeCode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 export type NotificationRecord = {
-  notification_id: string;
-  notification_type: NotificationTypeCode;
-  channel: NotificationChannel;
-  title: string;
-  body: string;
-  reference_code: string | null;
-  action_url: string | null;
-  action_label: string | null;
-  is_read: 0 | 1;
-  read_at: string | null;
-  sent_at: string;
-  push_status: PushDeliveryStatus | null;
-  device_hint: string | null;
+  id: string; // real API uses "id"
+  type: { code: NotificationTypeCode; label: string };
+  title_ar: string;
+  body_ar: string;
+  data: { order_id?: string } | null;
+  is_read: boolean; // real API: boolean, not 0|1
+  sent_via_fcm: boolean;
   created_at: string;
+};
+
+export type NotificationKpis = {
+  approvals: number;
+  collections: number;
+  shipments: number;
+  unread: number;
+};
+
+export type NotificationsListResponse = {
+  kpis: NotificationKpis;
+  items: NotificationRecord[];
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+  has_more: boolean;
 };
 
 export type NotificationPreference = {
@@ -49,34 +54,24 @@ export const NOTIFICATION_TYPE_OPTIONS: {
   value: string;
   label: string;
   code: NotificationTypeCode;
-  filterKey: string;
 }[] = [
-  { value: "1", label: "شحنات", code: 1, filterKey: "shipment" },
-  { value: "2", label: "مناديب", code: 2, filterKey: "courier" },
-  { value: "3", label: "تحصيلات", code: 3, filterKey: "payment" },
-  { value: "4", label: "موافقات", code: 4, filterKey: "approval" },
-  { value: "5", label: "تسويات", code: 5, filterKey: "settlement" },
-  { value: "6", label: "مرتجعات", code: 6, filterKey: "return" },
-  { value: "7", label: "نظام", code: 7, filterKey: "system" },
+  { value: "1", label: "طلب توصيل جديد", code: 1 },
+  { value: "2", label: "تحديث حالة الطلب", code: 2 },
+  { value: "3", label: "طلب موافقة على تغيير السعر", code: 3 },
+  { value: "4", label: "بدأ توقيت رفض الاستلام", code: 4 },
+  { value: "5", label: "انتهى وقت رفض الاستلام", code: 5 },
+  { value: "6", label: "رسالة جديدة", code: 6 },
+  { value: "7", label: "تم تحديث رقم الهاتف", code: 7 },
+  { value: "8", label: "تذكير بموعد تأجيل التسليم", code: 8 },
 ];
 
-export function notificationTypeLabel(type: NotificationTypeCode): string {
-  return NOTIFICATION_TYPE_OPTIONS.find((o) => o.code === type)?.label ?? String(type);
-}
-
-export function pushStatusLabel(status: PushDeliveryStatus): string {
-  const map: Record<PushDeliveryStatus, string> = {
-    queued: "في الانتظار",
-    sent: "تم الإرسال",
-    delivered: "تم التسليم",
-    failed: "فشل الإرسال",
-  };
-  return map[status];
+export function notificationTypeLabel(code: NotificationTypeCode): string {
+  return NOTIFICATION_TYPE_OPTIONS.find((o) => o.code === code)?.label ?? String(code);
 }
 
 export function formatDateTime(value: string | null): string {
   if (!value) return "—";
-  return new Date(value).toLocaleString("", {
+  return new Date(value).toLocaleString("en-US", {
     day: "numeric",
     month: "short",
     hour: "2-digit",
@@ -111,27 +106,5 @@ export const notificationTypeStyles: Record<
     badge: "bg-destructive/10 text-destructive",
   },
   7: { iconTone: "bg-muted-foreground text-white", badge: "bg-muted text-muted-foreground" },
+  8: { iconTone: "bg-orange-500 text-white", badge: "bg-orange-100 text-orange-600" },
 };
-
-export const pushStatusStyles: Record<PushDeliveryStatus, string> = {
-  queued: "bg-muted text-muted-foreground",
-  sent: "bg-info/10 text-info",
-  delivered: "bg-success/10 text-success",
-  failed: "bg-destructive/10 text-destructive",
-};
-
-export function getDefaultPreferences(): NotificationPreferencesState {
-  return {
-    preferences: NOTIFICATION_TYPE_OPTIONS.map((o) => ({
-      notification_type: o.code,
-      in_app_enabled: true,
-      push_enabled: o.code !== 7,
-      email_enabled: o.code === 1 || o.code === 4 || o.code === 5,
-    })),
-    quiet_hours_enabled: false,
-    quiet_hours_from: "22:00",
-    quiet_hours_to: "07:00",
-    sound_enabled: true,
-    digest_enabled: false,
-  };
-}

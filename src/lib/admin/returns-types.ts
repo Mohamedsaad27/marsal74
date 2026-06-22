@@ -37,7 +37,7 @@ export function returnStatusLabel(status: ReturnStatusCode): string {
 
 export function formatDateTime(value: string | null): string {
   if (!value) return "—";
-  return new Date(value).toLocaleString("", {
+  return new Date(value).toLocaleString("en-US", {
     day: "numeric",
     month: "short",
     year: "numeric",

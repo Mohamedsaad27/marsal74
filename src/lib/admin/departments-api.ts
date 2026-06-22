@@ -6,7 +6,7 @@ import type {
 } from "./departments-types";
 import { getAccessToken } from "../../lib/auth/Auth.api";
 
-const BASE_URL = "https://mersal.sabiq-educational.com";
+const BASE_URL = "https://api.expres-pro.com";
 
 function getHeaders() {
   const token = getAccessToken();

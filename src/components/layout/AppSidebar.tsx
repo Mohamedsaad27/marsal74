@@ -26,6 +26,7 @@ import {
 import { logout } from "@/lib/auth/Auth.api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { useSettings } from "@/hooks/useSettings";
 
 export function AppSidebar() {
   const { user, hydrated } = useCurrentUser();
@@ -34,12 +35,24 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const isActive = (url: string) => (url === "/" ? pathname === "/" : pathname.startsWith(url));
+  const { settings, hydratedset } = useSettings();
 
   return (
     <Sidebar collapsible="icon" side="right" className="border-l-0">
-      <SidebarHeader className="border-b border-sidebar-border/60 px-3 py-4">
-        <Link to="/" className="flex items-center gap-2.5">
-          <Logo variant={collapsed ? "icon" : "wordmark"} onDark />
+      <SidebarHeader className="border-b border-sidebar-border/60 px-4 py-4">
+        <Link
+          to="/"
+          className="flex items-center justify-end gap-3 transition-opacity hover:opacity-90"
+        >
+          <h1 className="max-w-[180px] truncate text-lg font-bold tracking-tight text-sidebar-foreground">
+            {settings?.identity.platform_name}
+          </h1>
+
+          <img
+            src={settings?.identity.logo_url}
+            alt={settings?.identity.platform_name}
+            className="h-12 w-12 rounded-lg object-contain"
+          />
         </Link>
       </SidebarHeader>
 
