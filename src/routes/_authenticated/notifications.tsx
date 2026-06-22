@@ -4,20 +4,19 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { NotificationListItem } from "@/components/admin/NotificationListItem";
-import { NotificationPreferencesPanel } from "@/components/admin/NotificationPreferencesPanel";
-import { PushNotificationInbox } from "@/components/admin/PushNotificationInbox";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import {
-  computeNotificationKpis,
   deleteReadNotifications,
-  fetchNotificationPreferences,
   fetchNotifications,
   filterNotifications,
   markAllNotificationsRead,
   markNotificationRead,
   saveNotificationPreferences,
 } from "@/lib/admin/notifications-api";
-import type { NotificationPreferencesState, NotificationRecord } from "@/lib/admin/notifications-types";
+import type {
+  NotificationPreferencesState,
+  NotificationRecord,
+} from "@/lib/admin/notifications-types";
 import { NOTIFICATION_TYPE_OPTIONS } from "@/lib/admin/notifications-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,36 +57,27 @@ function NotificationsPage() {
   const [readTab, setReadTab] = useState<"all" | "unread" | "read">("all");
   const [mainTab, setMainTab] = useState("inbox");
 
-  const loadNotifications = useCallback(async () => {
+  const [kpis, setKpis] = useState({ approvals: 0, collections: 0, shipments: 0, unread: 0 });
+  const [hasMore, setHasMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const loadNotifications = useCallback(async (p = 1) => {
     setLoading(true);
     try {
-      const response = await fetchNotifications();
+      const response = await fetchNotifications(p);
       if (!response.isSuccess) throw new Error(response.message);
-      setItems(response.data);
+      setKpis(response.data.kpis); // ← from API
+      setHasMore(response.data.has_more);
+      setPage(response.data.current_page);
+      setItems((prev) => (p === 1 ? response.data.items : [...prev, ...response.data.items]));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "فشل تحميل الإشعارات");
     } finally {
       setLoading(false);
     }
   }, []);
-
-  const loadPreferences = useCallback(async () => {
-    setPrefsLoading(true);
-    try {
-      const response = await fetchNotificationPreferences();
-      if (!response.isSuccess) throw new Error(response.message);
-      setPreferences(response.data);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "فشل تحميل التفضيلات");
-    } finally {
-      setPrefsLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
     void loadNotifications();
-    void loadPreferences();
-  }, [loadNotifications, loadPreferences]);
+  }, [loadNotifications]);
 
   const filtered = useMemo(
     () =>
@@ -99,20 +89,14 @@ function NotificationsPage() {
     [items, readTab, typeFilter, search],
   );
 
-  const kpis = useMemo(() => computeNotificationKpis(items), [items]);
-
   const handleMarkRead = async (id: string) => {
     try {
-      const response = await markNotificationRead(id);
-      if (!response.isSuccess) throw new Error(response.message);
-      setItems((list) =>
-        list.map((n) => (n.notification_id === id ? { ...n, is_read: 1, read_at: response.data.read_at } : n)),
-      );
+      await markNotificationRead(id);
+      setItems((list) => list.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "فشل التحديث");
     }
   };
-
   const handleMarkAllRead = async () => {
     if (kpis.unread === 0) return;
     setSaving(true);
@@ -159,7 +143,7 @@ function NotificationsPage() {
       <AdminPageHeader
         title="الإشعارات"
         tableName="notifications"
-        description="صندوق الوارد، Push، وتفضيلات التنبيهات — شحنات، تحصيلات، موافقات، وتسويات"
+        description="صندوق الوارد  — شحنات، تحصيلات، موافقات، وتسويات"
         addLabel="إرسال إشعار"
         showAdd={false}
         onAdd={() => toast.message("إرسال إشعار يدوي — واجهة تصميمية")}
@@ -172,7 +156,11 @@ function NotificationsPage() {
                 onClick={handleMarkAllRead}
                 disabled={kpis.unread === 0 || saving}
               >
-                {saving ? <Loader2 className="ms-2 h-4 w-4 animate-spin" /> : <CheckCheck className="ms-2 h-4 w-4" />}
+                {saving ? (
+                  <Loader2 className="ms-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCheck className="ms-2 h-4 w-4" />
+                )}
                 تعليم الكل كمقروء
               </Button>
               <Button
@@ -191,26 +179,22 @@ function NotificationsPage() {
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <KpiCard label="غير مقروءة" value={String(kpis.unread)} icon={Bell} tone="warning" />
-        <KpiCard label="Push" value={String(kpis.push)} icon={Smartphone} tone="primary" />
-        <KpiCard label="شحنات" value={String(kpis.byType(1))} icon={Package} tone="info" />
-        <KpiCard label="تحصيلات" value={String(kpis.byType(3))} icon={Wallet} tone="success" />
-        <KpiCard label="موافقات" value={String(kpis.byType(4))} icon={ShieldCheck} tone="info" />
+        <KpiCard label="شحنات" value={String(kpis.shipments)} icon={Package} tone="info" />
+        <KpiCard label="تحصيلات" value={String(kpis.collections)} icon={Wallet} tone="success" />
+        <KpiCard label="موافقات" value={String(kpis.approvals)} icon={ShieldCheck} tone="info" />
       </div>
 
-      <Tabs value={mainTab} onValueChange={setMainTab} dir="rtl" className="rounded-2xl border border-border bg-card shadow-soft">
+      <Tabs
+        value={mainTab}
+        onValueChange={setMainTab}
+        dir="rtl"
+        className="rounded-2xl border border-border bg-card shadow-soft"
+      >
         <div className="border-b border-border p-4 pb-0">
           <TabsList className="mb-0 h-10 w-full justify-start rounded-xl bg-muted/50 p-1 sm:w-auto">
             <TabsTrigger value="inbox" className="rounded-lg px-4">
               <Bell className="ms-1.5 h-3.5 w-3.5" />
               صندوق الوارد
-            </TabsTrigger>
-            <TabsTrigger value="push" className="rounded-lg px-4">
-              <Smartphone className="ms-1.5 h-3.5 w-3.5" />
-              Push ({kpis.pushUnread})
-            </TabsTrigger>
-            <TabsTrigger value="preferences" className="rounded-lg px-4">
-              <Settings2 className="ms-1.5 h-3.5 w-3.5" />
-              التفضيلات
             </TabsTrigger>
           </TabsList>
         </div>
@@ -243,15 +227,9 @@ function NotificationsPage() {
 
           <Tabs value={readTab} onValueChange={(v) => setReadTab(v as typeof readTab)} dir="rtl">
             <TabsList className="mb-4 h-10 w-full justify-start rounded-xl bg-muted/50 p-1 sm:w-auto">
-              <TabsTrigger value="all" className="rounded-lg px-4">
-                الكل ({items.length})
-              </TabsTrigger>
-              <TabsTrigger value="unread" className="rounded-lg px-4">
-                غير مقروءة ({kpis.unread})
-              </TabsTrigger>
-              <TabsTrigger value="read" className="rounded-lg px-4">
-                مقروءة ({items.length - kpis.unread})
-              </TabsTrigger>
+              <TabsTrigger value="all">الكل ({items.length})</TabsTrigger>
+              <TabsTrigger value="unread">غير مقروءة ({kpis.unread})</TabsTrigger>
+              <TabsTrigger value="read">مقروءة ({items.length - kpis.unread})</TabsTrigger>
             </TabsList>
 
             <TabsContent value={readTab} className="mt-0 space-y-2">
@@ -266,30 +244,23 @@ function NotificationsPage() {
                 </div>
               ) : (
                 filtered.map((item) => (
-                  <NotificationListItem key={item.notification_id} item={item} onMarkRead={handleMarkRead} />
+                  <NotificationListItem key={item.id} item={item} onMarkRead={handleMarkRead} />
                 ))
               )}
             </TabsContent>
           </Tabs>
-        </TabsContent>
-
-        <TabsContent value="push" className="mt-0 p-4">
-          {loading ? (
-            <div className="flex justify-center py-16">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          {hasMore && (
+            <div className="flex justify-center pt-4">
+              <Button
+                variant="outline"
+                onClick={() => loadNotifications(page + 1)}
+                disabled={loading}
+                className="rounded-xl"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "تحميل المزيد"}
+              </Button>
             </div>
-          ) : (
-            <PushNotificationInbox items={items} onMarkRead={handleMarkRead} />
           )}
-        </TabsContent>
-
-        <TabsContent value="preferences" className="mt-0 p-4">
-          <NotificationPreferencesPanel
-            preferences={preferences}
-            onSave={handleSavePreferences}
-            loading={prefsLoading}
-            saving={saving}
-          />
         </TabsContent>
       </Tabs>
     </AppShell>

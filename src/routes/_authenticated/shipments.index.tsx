@@ -90,9 +90,13 @@ function ShipmentsPage() {
     const now = new Date();
     return orders.filter((item) => {
       if (statusFilter !== "all") {
-        const isKpiBucket = ["pending_assignment", "in_delivery", "delivered", "delayed_rejected", "returned"].includes(
-          statusFilter,
-        );
+        const isKpiBucket = [
+          "pending_assignment",
+          "in_delivery",
+          "delivered",
+          "delayed_rejected",
+          "returned",
+        ].includes(statusFilter);
         if (isKpiBucket) {
           if (!statusMatchesKpiFilter(item.order.status, statusFilter)) return false;
         } else if (String(item.order.status) !== statusFilter) {
@@ -101,9 +105,16 @@ function ShipmentsPage() {
       }
       if (companyFilter !== "all" && item.order.shipping_company_id !== companyFilter) return false;
       if (agentFilter === "unassigned" && item.order.delivery_agent_id) return false;
-      if (agentFilter !== "all" && agentFilter !== "unassigned" && item.order.delivery_agent_id !== agentFilter) return false;
+      if (
+        agentFilter !== "all" &&
+        agentFilter !== "unassigned" &&
+        item.order.delivery_agent_id !== agentFilter
+      )
+        return false;
       if (zoneFilter !== "all") {
-        const cityName = ZONE_OPTIONS.find((z) => z.value === zoneFilter)?.label.split(" — ")[0]?.trim();
+        const cityName = ZONE_OPTIONS.find((z) => z.value === zoneFilter)
+          ?.label.split(" — ")[0]
+          ?.trim();
         if (cityName && item.city_name !== cityName) return false;
       }
 
@@ -196,10 +207,6 @@ function ShipmentsPage() {
               <FileSpreadsheet className="ms-2 h-4 w-4" />
               استيراد CSV
             </Button>
-            <Button variant="outline" className="rounded-xl" onClick={handleExport}>
-              <Download className="ms-2 h-4 w-4" />
-              تصدير Excel
-            </Button>
           </>
         }
       />
@@ -278,7 +285,10 @@ function ShipmentsPage() {
                 setZoneFilter(v);
                 setPage(1);
               },
-              options: [{ value: "all", label: "الكل" }, ...ZONE_OPTIONS.map((z) => ({ value: z.value, label: z.label }))],
+              options: [
+                { value: "all", label: "الكل" },
+                ...ZONE_OPTIONS.map((z) => ({ value: z.value, label: z.label })),
+              ],
               allLabel: "كل المناطق",
             },
             {
@@ -321,11 +331,15 @@ function ShipmentsPage() {
                 >
                   {item.order.internal_code}
                 </Link>
-                <p className="font-mono text-[10px] text-muted-foreground">{item.order.reference_no}</p>
+                <p className="font-mono text-[10px] text-muted-foreground">
+                  {item.order.reference_no}
+                </p>
               </div>,
               <div key="customer">
                 <p className="font-medium">{item.customer_name}</p>
-                <p className="text-[11px] tabular-nums text-muted-foreground">{item.customer_phone}</p>
+                <p className="text-[11px] tabular-nums text-muted-foreground">
+                  {item.customer_phone}
+                </p>
               </div>,
               <span key="zone" className="text-muted-foreground">
                 {item.governorate_name} / {item.city_name}
@@ -333,7 +347,8 @@ function ShipmentsPage() {
               item.company_name,
               item.agent_name ?? <span className="text-warning">غير معيّن</span>,
               <span key="amount" className="tabular-nums">
-                {formatAmount(item.original_amount)} <span className="text-[10px] text-muted-foreground">ج.م</span>
+                {formatAmount(item.original_amount)}{" "}
+                <span className="text-[10px] text-muted-foreground">ج.م</span>
               </span>,
               <StatusBadge key="status" status={item.status_key} />,
               <span key="created" className="text-xs text-muted-foreground">
@@ -389,10 +404,31 @@ function ShipmentsPage() {
         />
       )}
 
-      <ImportExcelDialog open={importOpen} onOpenChange={setImportOpen} config={shipmentsImportConfig} />
-      <OrderCreateDialog open={createOpen} onOpenChange={setCreateOpen} onSave={handleCreate} loading={saving} />
-      <OrderAssignDialog open={assignOpen} onOpenChange={setAssignOpen} order={activeOrder} onSave={handleAssign} loading={saving} />
-      <OrderStatusDialog open={statusOpen} onOpenChange={setStatusOpen} order={activeOrder} onSave={handleStatusChange} loading={saving} />
+      <ImportExcelDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        config={shipmentsImportConfig}
+      />
+      <OrderCreateDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onSave={handleCreate}
+        loading={saving}
+      />
+      <OrderAssignDialog
+        open={assignOpen}
+        onOpenChange={setAssignOpen}
+        order={activeOrder}
+        onSave={handleAssign}
+        loading={saving}
+      />
+      <OrderStatusDialog
+        open={statusOpen}
+        onOpenChange={setStatusOpen}
+        order={activeOrder}
+        onSave={handleStatusChange}
+        loading={saving}
+      />
     </AppShell>
   );
 }

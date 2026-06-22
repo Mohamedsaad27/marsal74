@@ -70,7 +70,7 @@ export function AgentFinanceDialog({ open, onOpenChange, agent, onSave, loading 
             <div className="rounded-2xl border border-warning/30 bg-warning/5 p-4">
               <p className="text-xs font-bold text-muted-foreground">الرصيد الحالي</p>
               <p className="mt-2 text-3xl font-extrabold tabular-nums text-warning">
-                {agent.balance.toLocaleString("", {
+                {agent.balance.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}

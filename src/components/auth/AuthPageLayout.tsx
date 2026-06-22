@@ -1,8 +1,4 @@
-import {
-  BarChart3,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
+import { BarChart3, ShieldCheck, Sparkles } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 
 const features = [
@@ -25,7 +21,13 @@ interface AuthPageLayoutProps {
   footer?: React.ReactNode;
 }
 
-export function AuthPageLayout({ badge, title, description, children, footer }: AuthPageLayoutProps) {
+export function AuthPageLayout({
+  badge,
+  title,
+  description,
+  children,
+  footer,
+}: AuthPageLayoutProps) {
   return (
     <div dir="rtl" className="fixed inset-0 h-svh overflow-hidden bg-background">
       <div className="pointer-events-none absolute inset-0 lg:left-0 lg:right-[42%]">
@@ -98,7 +100,8 @@ export function AuthPageLayout({ badge, title, description, children, footer }: 
                 <span className="text-white/90">الأذكى في المنطقة</span>
               </h2>
               <p className="mt-5 text-base leading-relaxed text-white/75">
-                أدر الطلبات والمناديب وشركات الشحن والتحصيلات مع تتبع مباشر وتقارير تشغيلية جاهزة للقرار.
+                أدر الطلبات والمناديب وشركات الشحن والتحصيلات مع تتبع مباشر وتقارير تشغيلية جاهزة
+                للقرار.
               </p>
 
               <div className="mt-8 grid grid-cols-3 gap-3">
@@ -132,7 +135,7 @@ export function AuthPageLayout({ badge, title, description, children, footer }: 
             </div>
 
             <p className="mt-6 text-center text-xs text-white/50 xl:text-right">
-              © 2026 مرسال. جميع الحقوق محفوظة.
+              © 2026 Express Pro. جميع الحقوق محفوظة.
             </p>
           </div>
         </div>

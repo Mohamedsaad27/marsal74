@@ -2,7 +2,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Outlet, Link, createRootRouteWithContext, useRouter } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/providers/AuthProvider";
-
+import { useFavicon } from "@/hooks/useFavicon";
+import faviconUrl from "@/assets/6-removebg-preview.png";
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -57,7 +58,7 @@ export const Route = createRootRouteWithContext<{
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-
+  useFavicon(faviconUrl);
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

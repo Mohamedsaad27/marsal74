@@ -414,7 +414,7 @@ function ShippingCompaniesPage() {
             <div key="balance" className="flex items-center gap-1">
               <Wallet className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               <span className="tabular-nums text-sm font-medium">
-                {Number(company.shipping_company.balance).toLocaleString("")}
+                {Number(company.shipping_company.balance).toLocaleString("en-US")}
               </span>
             </div>,
 
@@ -576,7 +576,7 @@ function CommissionBadge({
   const isPercent = commission.type.code === 1;
   const formatted = isPercent
     ? `${Number(commission.value).toFixed(1)}%`
-    : `${Number(commission.value).toLocaleString("")} ج.م`;
+    : `${Number(commission.value).toLocaleString("en-US")} ج.م`;
 
   return (
     <span className="inline-flex items-center gap-1 rounded-lg bg-muted/50 px-2.5 py-1 text-xs font-medium tabular-nums">

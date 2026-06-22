@@ -91,7 +91,7 @@ export function formatAmount(value: number): string {
 
 export function formatDate(value: string | null): string {
   if (!value) return "—";
-  return new Date(value).toLocaleDateString("", {
+  return new Date(value).toLocaleDateString("en-US", {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -100,7 +100,7 @@ export function formatDate(value: string | null): string {
 
 export function formatDateTime(value: string | null): string {
   if (!value) return "—";
-  return new Date(value).toLocaleString("", {
+  return new Date(value).toLocaleString("en-US", {
     day: "numeric",
     month: "short",
     year: "numeric",

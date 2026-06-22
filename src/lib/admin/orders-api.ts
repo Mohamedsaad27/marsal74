@@ -1,5 +1,10 @@
 import { ORDER_DETAILS } from "@/lib/admin/orders-data";
-import type { ApiResponse, CreateOrderPayload, OrderDetail, OrderListItem } from "@/lib/admin/orders-types";
+import type {
+  ApiResponse,
+  CreateOrderPayload,
+  OrderDetail,
+  OrderListItem,
+} from "@/lib/admin/orders-types";
 import { ORDER_STATUS_TO_KEY } from "@/lib/admin/orders-types";
 
 function delay(ms: number) {
@@ -64,7 +69,10 @@ export async function createOrder(_payload: CreateOrderPayload): Promise<ApiResp
   return { isSuccess: true, message: "تم إنشاء الطلب (واجهة تصميمية)", data: null };
 }
 
-export async function assignOrderAgent(_orderId: string, _agentId: string): Promise<ApiResponse<null>> {
+export async function assignOrderAgent(
+  _orderId: string,
+  _agentId: string,
+): Promise<ApiResponse<null>> {
   await delay(400);
   return { isSuccess: true, message: "تم تعيين المندوب (واجهة تصميمية)", data: null };
 }

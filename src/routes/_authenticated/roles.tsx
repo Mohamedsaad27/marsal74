@@ -162,7 +162,6 @@ function RolesPage() {
           searchPlaceholder="بحث باسم الدور أو الصلاحية..."
           columns={[
             { key: "name", label: "الدور" },
-            { key: "guard", label: "Guard" },
             { key: "perms", label: "الصلاحيات" },
             { key: "actions", label: "" },
           ]}

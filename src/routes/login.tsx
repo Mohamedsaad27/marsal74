@@ -59,7 +59,11 @@ function LoginPage() {
       <div className="login-split">
         {/* Left section (illustration / branding) */}
         <aside className="login-illustration">
-          <img src={loginHero} alt="مرسال — خدمات شحن وتوصيل" className="login-illustrationImg" />
+          <img
+            src={loginHero}
+            alt="Express Pro — خدمات شحن وتوصيل"
+            className="login-illustrationImg"
+          />
         </aside>
 
         {/* Right section (login form) */}
