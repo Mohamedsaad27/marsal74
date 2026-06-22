@@ -13,6 +13,7 @@ import {
   FileCheck2,
   Copy,
   Check,
+  ClockIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +33,7 @@ export function ImportExcelDialog({ open, onOpenChange, config, onImportComplete
   const [success, setSuccess] = useState(false);
   const [importedUsers, setImportedUsers] = useState<ImportedUser[]>([]);
   const [importCount, setImportCount] = useState(0);
+  const [batchId, setBatchId] = useState<string | null>(null);
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
 
   // ── reset ──────────────────────────────────────────────────────────────────
@@ -44,6 +46,7 @@ export function ImportExcelDialog({ open, onOpenChange, config, onImportComplete
     setSuccess(false);
     setImportedUsers([]);
     setImportCount(0);
+    setBatchId(null);
     setCopiedEmail(null);
     if (inputRef.current) inputRef.current.value = "";
   };
@@ -62,6 +65,7 @@ export function ImportExcelDialog({ open, onOpenChange, config, onImportComplete
     setFileReady(false);
     setImportedUsers([]);
     setImportCount(0);
+    setBatchId(null);
 
     if (!file) {
       setFileName(null);
@@ -114,16 +118,26 @@ export function ImportExcelDialog({ open, onOpenChange, config, onImportComplete
 
     setImporting(true);
     try {
+      // ── Batch / background flow (e.g. shipments) ───────────────────────────
+      if (config.onImportBatch) {
+        const result = await config.onImportBatch(file);
+        setBatchId(result.batch_id);
+        setSuccess(true);
+        onImportComplete?.(0); // count unknown at dispatch time
+        return;
+      }
+
+      // ── Synchronous flow (e.g. users) ──────────────────────────────────────
       if (config.onImport) {
         const result = await config.onImport(file);
         setImportedUsers(result.imported);
         setImportCount(result.count);
         setSuccess(true);
         onImportComplete?.(result.count);
-      } else {
-        // No API wired yet for this config (e.g. shipments)
-        setValidationError("لم يتم ربط API الاستيراد بعد لهذا النوع.");
+        return;
       }
+
+      setValidationError("لم يتم ربط API الاستيراد بعد لهذا النوع.");
     } catch (err) {
       setValidationError((err as Error).message ?? "فشل الاستيراد");
     } finally {
@@ -266,8 +280,18 @@ export function ImportExcelDialog({ open, onOpenChange, config, onImportComplete
         </Alert>
       )}
 
-      {/* ── Success alert ── */}
-      {success && (
+      {/* ── Batch / background success (shipments) ── */}
+      {success && batchId && config.batchSuccessMessage && (
+        <Alert className="mt-4 rounded-xl border-warning/40 bg-warning/10 text-success">
+          <ClockIcon className="h-4 w-4" />
+          <AlertDescription className="font-medium">
+            {config.batchSuccessMessage(batchId)}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* ── Synchronous success alert (users) ── */}
+      {success && !batchId && config.successMessage && (
         <Alert className="mt-4 rounded-xl border-success/40 bg-success/10 text-success">
           <CheckCircle2 className="h-4 w-4" />
           <AlertDescription className="font-medium">
@@ -276,8 +300,8 @@ export function ImportExcelDialog({ open, onOpenChange, config, onImportComplete
         </Alert>
       )}
 
-      {/* ── Generated passwords table ── */}
-      {success && importedUsers.length > 0 && (
+      {/* ── Generated passwords table (users only) ── */}
+      {success && !batchId && importedUsers.length > 0 && (
         <div className="mt-4 overflow-hidden rounded-2xl border border-border/70 bg-card shadow-soft">
           <div className="flex items-center justify-between border-b border-border/60 bg-muted/40 px-4 py-3">
             <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">

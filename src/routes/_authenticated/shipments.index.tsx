@@ -205,7 +205,7 @@ function ShipmentsPage() {
           <>
             <Button variant="outline" className="rounded-xl" onClick={() => setImportOpen(true)}>
               <FileSpreadsheet className="ms-2 h-4 w-4" />
-              استيراد CSV
+              استيراد من ملف Excel
             </Button>
           </>
         }
