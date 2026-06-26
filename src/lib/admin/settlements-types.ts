@@ -40,7 +40,6 @@ export type CreateSettlementInput = {
   party_id: string;
   period_from: string;
   period_to: string;
-  collection_ids: string[];
   notes?: string;
 };
 

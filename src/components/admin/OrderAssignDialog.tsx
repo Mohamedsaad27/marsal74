@@ -54,7 +54,7 @@ export function OrderAssignDialog({ open, onOpenChange, order, onSave, loading =
       open={open}
       onOpenChange={onOpenChange}
       title={order.order.delivery_agent_id ? "إعادة تعيين المندوب" : "تعيين مندوب"}
-      description={`orders.delivery_agent_id — الطلب ${order.order.internal_code}`}
+      description={` الطلب ${order.order.internal_code}`}
       icon={UserCheck}
       badge="assign / reassign"
       size="md"
@@ -86,7 +86,7 @@ export function OrderAssignDialog({ open, onOpenChange, order, onSave, loading =
           </p>
         </div>
         <FormSelect
-          label="delivery_agent_id"
+          label="مندوب التوصيل"
           required
           value={agentId}
           onValueChange={setAgentId}

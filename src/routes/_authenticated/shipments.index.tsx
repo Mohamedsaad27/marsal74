@@ -537,8 +537,8 @@ function ShipmentsPage() {
                 </span>,
                 <RowActions
                   key="actions"
-                  onEdit={() => goToOrder(item.order.order_id)}
-                  onDelete={() => toast.message("حذف الطلب — واجهة تصميمية")}
+                  // onEdit={() => goToOrder(item.order.order_id)}
+                  // onDelete={() => toast.message("حذف الطلب — واجهة تصميمية")}
                   extra={[
                     {
                       label: "عرض التفاصيل",
@@ -553,14 +553,14 @@ function ShipmentsPage() {
                         setAssignOpen(true);
                       },
                     },
-                    {
-                      label: "تغيير الحالة",
-                      icon: <RefreshCw className="ml-2 h-4 w-4" />,
-                      onClick: () => {
-                        setActiveOrder(item);
-                        setStatusOpen(true);
-                      },
-                    },
+                    // {
+                    //   label: "تغيير الحالة",
+                    //   icon: <RefreshCw className="ml-2 h-4 w-4" />,
+                    //   onClick: () => {
+                    //     setActiveOrder(item);
+                    //     setStatusOpen(true);
+                    //   },
+                    // },
                   ]}
                 />,
               ],

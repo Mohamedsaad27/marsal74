@@ -137,7 +137,7 @@ export async function approveSettlement(
 ): Promise<ApiResponse<SettlementRecord>> {
   const res = await apiFetch<{ isSuccess: boolean; message: string; data: SettlementApiItem }>(
     `${BASE}/${settlementId}/approve`,
-    { method: "POST" },
+    { method: "PATCH" },
   );
 
   return {
@@ -155,7 +155,7 @@ export async function markSettlementPaid(
 ): Promise<ApiResponse<SettlementRecord>> {
   const res = await apiFetch<{ isSuccess: boolean; message: string; data: SettlementApiItem }>(
     `${BASE}/${settlementId}/mark-paid`,
-    { method: "POST", body: JSON.stringify(input) },
+    { method: "PATCH", body: JSON.stringify(input) },
   );
 
   return {

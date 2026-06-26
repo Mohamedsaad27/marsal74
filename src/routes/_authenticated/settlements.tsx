@@ -284,19 +284,13 @@ function SettlementsPage() {
       <SettlementStatusBadge key="status" status={item.settlement_status} />,
       <RowActions
         key="actions"
-        onEdit={() => openDetail(item)}
-        onDelete={() => toast.message("حذف التسوية — واجهة تصميمية")}
         extra={[
           {
             label: "عرض التفاصيل",
             icon: <Eye className="ml-2 h-4 w-4" />,
             onClick: () => openDetail(item),
           },
-          {
-            label: "طباعة كشف",
-            icon: <Printer className="ml-2 h-4 w-4" />,
-            onClick: () => openPrint(item),
-          },
+
           ...(!isCompanyView && item.settlement_status === 1
             ? [
                 {
@@ -332,14 +326,14 @@ function SettlementsPage() {
         addLabel="إنشاء تسوية"
         showAdd={!isCompanyView}
         onAdd={() => setCreateOpen(true)}
-        extra={
-          !isCompanyView ? (
-            <Button variant="outline" className="rounded-xl" onClick={handleExport}>
-              <Download className="ms-2 h-4 w-4" />
-              تصدير Excel
-            </Button>
-          ) : undefined
-        }
+        // extra={
+        //   !isCompanyView ? (
+        //     <Button variant="outline" className="rounded-xl" onClick={handleExport}>
+        //       <Download className="ms-2 h-4 w-4" />
+        //       تصدير Excel
+        //     </Button>
+        //   ) : undefined
+        // }
       />
 
       <Tabs
@@ -352,22 +346,6 @@ function SettlementsPage() {
         dir="rtl"
         className="mb-6"
       >
-        <TabsList className="h-10 w-full justify-start rounded-xl bg-muted/50 p-1 sm:w-auto">
-          <TabsTrigger value="admin" className="rounded-lg px-4">
-            إدارة التسويات
-          </TabsTrigger>
-          <TabsTrigger value="company" className="rounded-lg px-4 gap-1.5">
-            <Building2 className="h-3.5 w-3.5" />
-            تسوياتي (شركة)
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="admin" className="mt-4">
-          <p className="mb-4 text-sm text-muted-foreground">
-            عرض وإدارة جميع تسويات المناديب وشركات الشحن — اعتماد ودفع وتصدير.
-          </p>
-        </TabsContent>
-
         <TabsContent value="company" className="mt-4">
           <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-muted/20 p-4">
             <Building2 className="h-5 w-5 text-primary" />

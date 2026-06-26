@@ -14,7 +14,10 @@ import {
   settlementStatusLabel,
   settlementTypeLabel,
 } from "@/lib/admin/settlements-types";
-import { collectionTypeLabel, formatDateTime as formatCollectionDate } from "@/lib/admin/collections-types";
+import {
+  collectionTypeLabel,
+  formatDateTime as formatCollectionDate,
+} from "@/lib/admin/collections-types";
 
 type Props = {
   open: boolean;
@@ -46,25 +49,26 @@ export function SettlementDetailDialog({
       title={`تسوية ${item.settlement_ref}`}
       description="settlements — تفاصيل التسوية والتحصيلات المرتبطة"
       icon={Scale}
-      badge={item.settlement_id}
       size="2xl"
       footer={
         <>
           {showActions && item.settlement_status === 1 && onApprove && (
-            <Button className="rounded-xl bg-info px-6 text-info-foreground hover:bg-info/90" onClick={onApprove}>
+            <Button
+              className="rounded-xl bg-info px-6 text-info-foreground hover:bg-info/90"
+              onClick={onApprove}
+            >
               اعتماد التسوية
             </Button>
           )}
           {showActions && item.settlement_status === 2 && onMarkPaid && (
-            <Button className="rounded-xl bg-success px-6 text-success-foreground hover:bg-success/90" onClick={onMarkPaid}>
+            <Button
+              className="rounded-xl bg-success px-6 text-success-foreground hover:bg-success/90"
+              onClick={onMarkPaid}
+            >
               تحديد كمدفوعة
             </Button>
           )}
-          {onPrint && (
-            <Button variant="outline" className="rounded-xl px-5" onClick={onPrint}>
-              طباعة كشف
-            </Button>
-          )}
+
           <Button variant="outline" className="rounded-xl px-5" onClick={() => onOpenChange(false)}>
             إغلاق
           </Button>
@@ -75,18 +79,17 @@ export function SettlementDetailDialog({
         <div className="flex flex-wrap gap-2">
           <Badge>{settlementTypeLabel(item.settlement_type)}</Badge>
           <Badge variant="outline">{settlementStatusLabel(item.settlement_status)}</Badge>
-          {item.payment_method && <Badge variant="secondary">{paymentMethodLabel(item.payment_method)}</Badge>}
+          {item.payment_method && (
+            <Badge variant="secondary">{paymentMethodLabel(item.payment_method)}</Badge>
+          )}
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 text-sm">
           {[
-            ["settlement_id", item.settlement_id],
             ["settlement_ref", item.settlement_ref],
             ["settlement_type", settlementTypeLabel(item.settlement_type)],
             ["settlement_status", settlementStatusLabel(item.settlement_status)],
             ["party", settlementPartyName(item)],
-            ["delivery_agent_id", item.delivery_agent_id ?? "—"],
-            ["shipping_company_id", item.shipping_company_id ?? "—"],
             ["initiated_by", item.initiated_by_name],
             ["period_from", formatDate(item.period_from)],
             ["period_to", formatDate(item.period_to)],
@@ -112,15 +115,15 @@ export function SettlementDetailDialog({
         </div>
 
         <div>
-          <p className="mb-3 text-sm font-semibold">
-            التحصيلات المرتبطة ({linked.length})
-          </p>
           {linked.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-border py-8 text-center text-sm text-muted-foreground">
-              لا توجد تحصيلات مرتبطة في البيانات التجريبية
-            </p>
+            <></>
           ) : (
+            // <p className="rounded-xl border border-dashed border-border py-8 text-center text-sm text-muted-foreground">
+            //   لا توجد تحصيلات مرتبطة في البيانات التجريبية
+            // </p>
             <div className="overflow-x-auto rounded-2xl border border-border">
+              <p className="mb-3 text-sm font-semibold">التحصيلات المرتبطة ({linked.length})</p>
+
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/30 text-right text-xs font-semibold text-muted-foreground">
@@ -135,7 +138,10 @@ export function SettlementDetailDialog({
                 </thead>
                 <tbody>
                   {linked.map((c) => (
-                    <tr key={c.collection_id} className="border-b border-border/60 last:border-0 hover:bg-muted/20">
+                    <tr
+                      key={c.collection_id}
+                      className="border-b border-border/60 last:border-0 hover:bg-muted/20"
+                    >
                       <td className="px-4 py-3">
                         <Link
                           to="/shipments/$orderId"
@@ -146,11 +152,19 @@ export function SettlementDetailDialog({
                         </Link>
                       </td>
                       <td className="px-4 py-3">{c.agent_name}</td>
-                      <td className="px-4 py-3 text-xs">{collectionTypeLabel(c.collection_type)}</td>
+                      <td className="px-4 py-3 text-xs">
+                        {collectionTypeLabel(c.collection_type)}
+                      </td>
                       <td className="px-4 py-3 tabular-nums">{formatAmount(c.collected_amount)}</td>
-                      <td className="px-4 py-3 tabular-nums text-muted-foreground">−{formatAmount(c.commission_amount)}</td>
-                      <td className="px-4 py-3 font-semibold tabular-nums">{formatAmount(c.net_due_company)}</td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">{formatCollectionDate(c.collected_at)}</td>
+                      <td className="px-4 py-3 tabular-nums text-muted-foreground">
+                        −{formatAmount(c.commission_amount)}
+                      </td>
+                      <td className="px-4 py-3 font-semibold tabular-nums">
+                        {formatAmount(c.net_due_company)}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">
+                        {formatCollectionDate(c.collected_at)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
