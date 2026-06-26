@@ -3,11 +3,7 @@ import { AdminDialogShell } from "@/components/admin/AdminDialogShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { CollectionRecord } from "@/lib/admin/collections-types";
-import {
-  collectionTypeLabel,
-  formatAmount,
-  formatDateTime,
-} from "@/lib/admin/collections-types";
+import { collectionTypeLabel, formatAmount, formatDateTime } from "@/lib/admin/collections-types";
 
 type Props = {
   open: boolean;
@@ -35,12 +31,7 @@ export function CollectionDetailDialog({ open, onOpenChange, item }: Props) {
     >
       <div className="grid gap-3 sm:grid-cols-2 text-sm">
         {[
-          ["collection_id", item.collection_id],
-          ["order_id", item.order_id],
-          ["internal_code", item.internal_code],
-          ["delivery_agent_id", item.delivery_agent_id],
           ["agent_name", item.agent_name],
-          ["shipping_company_id", item.shipping_company_id],
           ["company_name", item.company_name],
           ["collection_type", collectionTypeLabel(item.collection_type)],
           ["collected_amount", `${formatAmount(item.collected_amount)} ج.م`],
@@ -49,7 +40,6 @@ export function CollectionDetailDialog({ open, onOpenChange, item }: Props) {
           ["is_settled", item.is_settled === 1 ? "مسوّاة" : "معلّقة"],
           ["cash_received_by_admin", item.cash_received_by_admin === 1 ? "نعم" : "لا"],
           ["cash_received_at", formatDateTime(item.cash_received_at)],
-          ["received_by_admin_name", item.received_by_admin_name ?? "—"],
           ["collected_at", formatDateTime(item.collected_at)],
         ].map(([label, value]) => (
           <div key={label} className="rounded-xl border border-border/70 bg-muted/20 p-3">

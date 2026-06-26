@@ -13,18 +13,23 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   agent: AgentCollectionSummary | null;
   pendingItems: CollectionRecord[];
-  onSave: (collectionIds: string[], note: string) => Promise<void>;
+  onSave: (collectionIds: string[]) => Promise<void>;
   loading?: boolean;
 };
 
-export function ReceiveCashDialog({ open, onOpenChange, agent, pendingItems, onSave, loading = false }: Props) {
+export function ReceiveCashDialog({
+  open,
+  onOpenChange,
+  agent,
+  onSave,
+  pendingItems,
+  loading = false,
+}: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [note, setNote] = useState("");
 
   useEffect(() => {
     if (open) {
       setSelected(new Set(pendingItems.map((item) => item.collection_id)));
-      setNote("");
     }
   }, [open, pendingItems]);
 
@@ -39,7 +44,7 @@ export function ReceiveCashDialog({ open, onOpenChange, agent, pendingItems, onS
       toast.error("يرجى اختيار تحصيل واحد على الأقل");
       return;
     }
-    await onSave(Array.from(selected), note.trim());
+    await onSave(Array.from(selected));
   };
 
   if (!agent) return null;
@@ -55,7 +60,11 @@ export function ReceiveCashDialog({ open, onOpenChange, agent, pendingItems, onS
       size="lg"
       footer={
         <>
-          <Button className="rounded-xl gradient-brand px-6 shadow-glow" onClick={handleSave} disabled={loading}>
+          <Button
+            className="rounded-xl gradient-brand px-6 shadow-glow"
+            onClick={handleSave}
+            disabled={loading}
+          >
             {loading && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
             تأكيد الاستلام
           </Button>
@@ -73,14 +82,18 @@ export function ReceiveCashDialog({ open, onOpenChange, agent, pendingItems, onS
           </p>
           <p className="mt-1">
             <span className="text-muted-foreground">إجمالي بانتظار التسليم:</span>{" "}
-            <span className="font-bold tabular-nums text-warning">{formatAmount(agent.pending_handoff_amount)} ج.م</span>
+            <span className="font-bold tabular-nums text-warning">
+              {formatAmount(agent.pending_handoff_amount)} ج.م
+            </span>
             <span className="text-muted-foreground"> ({agent.pending_handoff} عملية)</span>
           </p>
         </div>
 
         <div className="max-h-56 space-y-2 overflow-y-auto modal-scroll rounded-xl border border-border p-3">
           {pendingItems.length === 0 ? (
-            <p className="py-4 text-center text-sm text-muted-foreground">لا توجد تحصيلات معلّقة لهذا المندوب</p>
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              لا توجد تحصيلات معلّقة لهذا المندوب
+            </p>
           ) : (
             pendingItems.map((item) => (
               <label
@@ -110,16 +123,10 @@ export function ReceiveCashDialog({ open, onOpenChange, agent, pendingItems, onS
 
         <div className="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
           <span className="text-sm font-medium">المبلغ المحدد للاستلام</span>
-          <span className="text-lg font-extrabold tabular-nums text-primary">{formatAmount(selectedTotal)} ج.م</span>
+          <span className="text-lg font-extrabold tabular-nums text-primary">
+            {formatAmount(selectedTotal)} ج.م
+          </span>
         </div>
-
-        <FormTextarea
-          label="ملاحظة التسليم (اختياري)"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          rows={2}
-          placeholder="رقم الإيصال، وقت التسليم..."
-        />
       </div>
     </AdminDialogShell>
   );

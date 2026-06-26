@@ -155,7 +155,6 @@ export function ShipmentsTable() {
           <thead>
             <tr className="border-b border-border bg-muted/30 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <th className="px-5 py-3">الكود الداخلي</th>
-              <th className="px-5 py-3">المرجع</th>
               <th className="px-5 py-3">العميل</th>
               <th className="px-5 py-3">المنطقة</th>
               <th className="px-5 py-3">الشركة</th>
@@ -173,10 +172,6 @@ export function ShipmentsTable() {
                 key={r.order_id}
                 className="border-b border-border/60 transition-colors hover:bg-muted/30 last:border-0"
               >
-                <td className="px-5 py-4 font-mono text-xs font-semibold text-primary">
-                  #{r.internal_code}
-                </td>
-
                 <td className="px-5 py-4 font-mono text-[11px] text-muted-foreground">
                   {r.reference_no}
                 </td>

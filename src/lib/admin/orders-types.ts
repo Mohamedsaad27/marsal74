@@ -164,7 +164,7 @@ export type CreateOrderPayload = {
 export const ORDER_STATUS_TO_KEY: Record<OrderStatusCode, ShipmentStatus> = {
   1: "pending",
   2: "assigned",
-  3: "out_for_delivery",
+  3: "in_delivery",
   4: "awaiting_approval",
   5: "delivered",
   6: "delivered_price_changed",

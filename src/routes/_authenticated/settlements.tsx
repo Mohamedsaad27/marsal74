@@ -14,19 +14,20 @@ import { KpiCard } from "@/components/dashboard/KpiCard";
 import type { ConfirmAction } from "@/components/admin/use-admin-crud";
 import {
   approveSettlement,
-  computeSettlementKpis,
   createSettlement,
   exportSettlements,
   fetchSettlements,
-  filterByPeriod,
-  filterCompanySettlements,
+  fetchSettlementStats,
   markSettlementPaid,
+  type FetchSettlementsParams,
+  type SettlementKpis,
 } from "@/lib/admin/settlements-api";
-import {
-  MOCK_COMPANY_PORTAL_ID,
-  SETTLEMENT_COMPANY_OPTIONS,
-} from "@/lib/admin/settlements-data";
-import type { CreateSettlementInput, MarkSettlementPaidInput, SettlementRecord } from "@/lib/admin/settlements-types";
+import { MOCK_COMPANY_PORTAL_ID, SETTLEMENT_COMPANY_OPTIONS } from "@/lib/admin/settlements-data";
+import type {
+  CreateSettlementInput,
+  MarkSettlementPaidInput,
+  SettlementRecord,
+} from "@/lib/admin/settlements-types";
 import {
   SETTLEMENT_STATUS_OPTIONS,
   SETTLEMENT_TYPE_OPTIONS,
@@ -88,8 +89,22 @@ function SettlementStatusBadge({ status }: { status: SettlementRecord["settlemen
   );
 }
 
+const EMPTY_KPIS: SettlementKpis = {
+  total: 0,
+  totalNet: 0,
+  draftNet: 0,
+  approvedNet: 0,
+  paidThisMonth: 0,
+  draftCount: 0,
+  approvedCount: 0,
+  paidCount: 0,
+};
+
+const PAGE_SIZE = 20;
+
 function SettlementsPage() {
   const [items, setItems] = useState<SettlementRecord[]>([]);
+  const [kpis, setKpis] = useState<SettlementKpis>(EMPTY_KPIS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState("admin");
@@ -99,6 +114,8 @@ function SettlementsPage() {
   const [periodFilter, setPeriodFilter] = useState("all");
   const [companyPortalId, setCompanyPortalId] = useState(MOCK_COMPANY_PORTAL_ID);
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -106,51 +123,47 @@ function SettlementsPage() {
   const [paidOpen, setPaidOpen] = useState(false);
   const [printOpen, setPrintOpen] = useState(false);
   const [activeItem, setActiveItem] = useState<SettlementRecord | null>(null);
-  const pageSize = 10;
-
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await fetchSettlements();
-      if (!response.isSuccess) throw new Error(response.message);
-      setItems(response.data);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "فشل تحميل التسويات");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadData();
-  }, [loadData]);
 
   const isCompanyView = tab === "company";
 
-  const baseItems = useMemo(() => {
-    if (!isCompanyView) return items;
-    return filterCompanySettlements(items, companyPortalId);
-  }, [items, isCompanyView, companyPortalId]);
+  const buildParams = useCallback(
+    (overridePage?: number): FetchSettlementsParams => ({
+      page: overridePage ?? page,
+      perPage: PAGE_SIZE,
+      search: search.trim() || undefined,
+      type: typeFilter,
+      status: statusFilter,
+      period: periodFilter,
+      companyId: isCompanyView ? companyPortalId : undefined,
+    }),
+    [page, search, typeFilter, statusFilter, periodFilter, isCompanyView, companyPortalId],
+  );
 
-  const filtered = useMemo(() => {
-    const withPeriod = filterByPeriod(baseItems, periodFilter);
-    return withPeriod.filter((item) => {
-      if (typeFilter !== "all" && String(item.settlement_type) !== typeFilter) return false;
-      if (statusFilter !== "all" && String(item.settlement_status) !== statusFilter) return false;
-      if (!search.trim()) return true;
-      const q = search.toLowerCase();
-      return (
-        item.settlement_ref.toLowerCase().includes(q) ||
-        (item.agent_name ?? "").toLowerCase().includes(q) ||
-        (item.company_name ?? "").toLowerCase().includes(q) ||
-        (item.payment_reference ?? "").toLowerCase().includes(q)
-      );
-    });
-  }, [baseItems, typeFilter, statusFilter, periodFilter, search]);
+  const loadData = useCallback(
+    async (overridePage?: number) => {
+      setLoading(true);
+      try {
+        const [listResult, statsResult] = await Promise.all([
+          fetchSettlements(buildParams(overridePage)),
+          fetchSettlementStats(),
+        ]);
+        setItems(listResult.items);
+        setTotalPages(listResult.lastPage);
+        setTotalCount(listResult.total);
+        setKpis(statsResult);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "فشل تحميل التسويات");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [buildParams],
+  );
 
-  const paginatedRows = filtered.slice((page - 1) * pageSize, page * pageSize);
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const kpis = useMemo(() => computeSettlementKpis(baseItems), [baseItems]);
+  // Reload whenever filters/page/tab change
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
   const openDetail = (item: SettlementRecord) => {
     setActiveItem(item);
@@ -226,7 +239,8 @@ function SettlementsPage() {
     }
   };
 
-  const companyName = SETTLEMENT_COMPANY_OPTIONS.find((o) => o.value === companyPortalId)?.label ?? "—";
+  const companyName =
+    SETTLEMENT_COMPANY_OPTIONS.find((o) => o.value === companyPortalId)?.label ?? "—";
 
   const tableColumns = [
     { key: "ref", label: "رقم التسوية" },
@@ -241,7 +255,7 @@ function SettlementsPage() {
     { key: "actions", label: "", className: "w-12" },
   ];
 
-  const tableRows = paginatedRows.map((item) => ({
+  const tableRows = items.map((item) => ({
     id: item.settlement_id,
     cells: [
       <span key="ref" className="font-mono text-xs font-semibold text-primary">
@@ -359,7 +373,9 @@ function SettlementsPage() {
             <Building2 className="h-5 w-5 text-primary" />
             <div className="flex-1">
               <p className="text-sm font-semibold">عرض شركة الشحن (محاكاة)</p>
-              <p className="text-xs text-muted-foreground">سجل تسويات الشركة — قراءة وطباعة الكشوف فقط</p>
+              <p className="text-xs text-muted-foreground">
+                سجل تسويات الشركة — قراءة وطباعة الكشوف فقط
+              </p>
             </div>
             <select
               value={companyPortalId}
@@ -377,15 +393,31 @@ function SettlementsPage() {
             </select>
           </div>
           <p className="mb-4 text-sm text-muted-foreground">
-            تاريخ تسويات <span className="font-semibold text-foreground">{companyName}</span> — {filtered.length} سجل
+            تاريخ تسويات <span className="font-semibold text-foreground">{companyName}</span> —{" "}
+            {totalCount} سجل
           </p>
         </TabsContent>
       </Tabs>
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard label="إجمالي التسويات" value={`${formatAmount(kpis.totalNet)} ج.م`} icon={Scale} tone="primary" />
-        <KpiCard label="بانتظار الاعتماد" value={`${formatAmount(kpis.draftNet)} ج.م`} icon={Hourglass} tone="warning" />
-        <KpiCard label="معتمدة (لم تُدفع)" value={`${formatAmount(kpis.approvedNet)} ج.م`} icon={FileCheck2} tone="info" />
+        <KpiCard
+          label="إجمالي التسويات"
+          value={`${formatAmount(kpis.totalNet)} ج.م`}
+          icon={Scale}
+          tone="primary"
+        />
+        <KpiCard
+          label="بانتظار الاعتماد"
+          value={`${formatAmount(kpis.draftNet)} ج.م`}
+          icon={Hourglass}
+          tone="warning"
+        />
+        <KpiCard
+          label="معتمدة (لم تُدفع)"
+          value={`${formatAmount(kpis.approvedNet)} ج.م`}
+          icon={FileCheck2}
+          tone="info"
+        />
         <KpiCard
           label="مدفوعة هذا الشهر"
           value={`${formatAmount(kpis.paidThisMonth)} ج.م`}
@@ -416,7 +448,10 @@ function SettlementsPage() {
                 setTypeFilter(v);
                 setPage(1);
               },
-              options: [{ value: "all", label: "الكل" }, ...SETTLEMENT_TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))],
+              options: [
+                { value: "all", label: "الكل" },
+                ...SETTLEMENT_TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+              ],
               allLabel: "كل الأنواع",
             },
             {
@@ -428,7 +463,10 @@ function SettlementsPage() {
                 setStatusFilter(v);
                 setPage(1);
               },
-              options: [{ value: "all", label: "الكل" }, ...SETTLEMENT_STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))],
+              options: [
+                { value: "all", label: "الكل" },
+                ...SETTLEMENT_STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+              ],
               allLabel: "كل الحالات",
             },
             {
@@ -460,22 +498,33 @@ function SettlementsPage() {
               return next;
             });
           }}
-          onToggleSelectAll={(ids) => setSelectedIds(selectedIds.size === ids.length ? new Set() : new Set(ids))}
+          onToggleSelectAll={(ids) =>
+            setSelectedIds(selectedIds.size === ids.length ? new Set() : new Set(ids))
+          }
           page={page}
           totalPages={totalPages}
           onPageChange={setPage}
-          totalCount={filtered.length}
+          totalCount={totalCount}
           emptyMessage={isCompanyView ? "لا توجد تسويات لهذه الشركة" : "لا توجد تسويات مطابقة"}
         />
       )}
 
-      <SettlementCreateDialog open={createOpen} onOpenChange={setCreateOpen} onSave={handleCreate} loading={saving} />
+      <SettlementCreateDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onSave={handleCreate}
+        loading={saving}
+      />
       <SettlementDetailDialog
         open={detailOpen}
         onOpenChange={setDetailOpen}
         item={activeItem}
         showActions={!isCompanyView}
-        onApprove={activeItem?.settlement_status === 1 ? () => activeItem && handleApprove(activeItem) : undefined}
+        onApprove={
+          activeItem?.settlement_status === 1
+            ? () => activeItem && handleApprove(activeItem)
+            : undefined
+        }
         onMarkPaid={
           activeItem?.settlement_status === 2
             ? () => {

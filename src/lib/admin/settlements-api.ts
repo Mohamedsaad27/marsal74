@@ -1,218 +1,210 @@
-import { COLLECTIONS } from "@/lib/admin/collections-data";
 import type { CollectionRecord } from "@/lib/admin/collections-types";
-import { SETTLEMENTS, SETTLEMENT_AGENT_OPTIONS, SETTLEMENT_COMPANY_OPTIONS } from "@/lib/admin/settlements-data";
 import type {
   ApiResponse,
   CreateSettlementInput,
   MarkSettlementPaidInput,
+  PaginatedApiResponse,
+  SettlementApiItem,
   SettlementRecord,
   SettlementTypeCode,
+  StatsApiResponse,
 } from "@/lib/admin/settlements-types";
+import { normaliseSettlement } from "@/lib/admin/settlements-types";
+import { BASE_URL } from "../utils";
+import { getAccessToken } from "../auth/Auth.api";
+const BASE = BASE_URL + "/admin/settlements";
 
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+// ─── Helpers ───────────────────────────────────────────────────────────────
+
+async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = getAccessToken();
+
+  const res = await fetch(path, {
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    ...options,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error((body as { message?: string }).message ?? `HTTP ${res.status}`);
+  }
+  return res.json() as Promise<T>;
 }
 
-let store = SETTLEMENTS.map((item) => ({ ...item, collection_ids: [...item.collection_ids] }));
-let nextRef = 1043;
+// ─── KPI stats ─────────────────────────────────────────────────────────────
 
-export async function fetchSettlements(): Promise<ApiResponse<SettlementRecord[]>> {
-  await delay(400);
+export type SettlementKpis = {
+  total: number;
+  totalNet: number;
+  draftNet: number;
+  approvedNet: number;
+  paidThisMonth: number;
+  draftCount: number;
+  approvedCount: number;
+  paidCount: number;
+};
+
+export async function fetchSettlementStats(): Promise<SettlementKpis> {
+  const res = await apiFetch<StatsApiResponse>(`${BASE}/stats`);
+  if (!res.isSuccess) throw new Error(res.message);
+  const d = res.data;
   return {
-    isSuccess: true,
-    message: "تمت العملية بنجاح",
-    data: store.map((item) => ({ ...item, collection_ids: [...item.collection_ids] })),
+    total: 0, // not in stats response; will be filled from list total
+    totalNet: parseFloat(d.total_amount),
+    draftNet: parseFloat(d.pending_approval),
+    approvedNet: parseFloat(d.approved_unpaid),
+    paidThisMonth: parseFloat(d.paid_this_month),
+    draftCount: 0,
+    approvedCount: 0,
+    paidCount: 0,
   };
 }
 
-export async function createSettlement(input: CreateSettlementInput): Promise<ApiResponse<SettlementRecord>> {
-  await delay(600);
+// ─── List ──────────────────────────────────────────────────────────────────
 
-  const collections = resolveCollections(input);
-  const totalCollections = collections.reduce((sum, c) => sum + c.collected_amount, 0);
-  const totalCommissions = collections.reduce((sum, c) => sum + c.commission_amount, 0);
-  const netAmount = totalCollections - totalCommissions;
+export type FetchSettlementsParams = {
+  page?: number;
+  perPage?: number;
+  search?: string;
+  type?: string; // "1" | "2" | "all"
+  status?: string; // "1" | "2" | "3" | "all"
+  period?: string; // "month" | "last_month" | "quarter" | "all"
+  companyId?: string; // for company-portal tab
+};
 
-  const isAgent = input.settlement_type === 1;
-  const partyLabel = isAgent
-    ? SETTLEMENT_AGENT_OPTIONS.find((o) => o.value === input.party_id)?.label
-    : SETTLEMENT_COMPANY_OPTIONS.find((o) => o.value === input.party_id)?.label;
+export type FetchSettlementsResult = {
+  items: SettlementRecord[];
+  currentPage: number;
+  lastPage: number;
+  total: number;
+};
 
-  const record: SettlementRecord = {
-    settlement_id: `stl-${Date.now()}`,
-    settlement_ref: `STL-${nextRef++}`,
+export async function fetchSettlements(
+  params: FetchSettlementsParams = {},
+): Promise<FetchSettlementsResult> {
+  const qs = new URLSearchParams();
+  if (params.page) qs.set("page", String(params.page));
+  qs.set("per_page", String(params.perPage ?? 20));
+  if (params.search) qs.set("search", params.search);
+  if (params.type && params.type !== "all") qs.set("settlement_type", params.type);
+  if (params.status && params.status !== "all") qs.set("status", params.status);
+  if (params.period && params.period !== "all") qs.set("period", params.period);
+  if (params.companyId) qs.set("shipping_company_id", params.companyId);
+
+  const res = await apiFetch<PaginatedApiResponse<SettlementApiItem>>(`${BASE}?${qs.toString()}`);
+  if (!res.isSuccess) throw new Error(res.message);
+
+  return {
+    items: res.data.items.map(normaliseSettlement),
+    currentPage: res.data.current_page,
+    lastPage: res.data.last_page,
+    total: res.data.total,
+  };
+}
+
+// ─── Create ────────────────────────────────────────────────────────────────
+
+export async function createSettlement(
+  input: CreateSettlementInput,
+): Promise<ApiResponse<SettlementRecord>> {
+  const body = {
     settlement_type: input.settlement_type,
-    settlement_status: 1,
-    delivery_agent_id: isAgent ? input.party_id : null,
-    agent_name: isAgent ? (partyLabel ?? null) : null,
-    shipping_company_id: isAgent ? null : input.party_id,
-    company_name: isAgent ? null : (partyLabel ?? null),
-    initiated_by: "usr-admin-01",
-    initiated_by_name: "سارة محمود",
-    total_collections: totalCollections,
-    total_commissions: totalCommissions,
-    net_amount: netAmount,
+    reference_entity_id: input.party_id,
     period_from: input.period_from,
     period_to: input.period_to,
-    payment_method: null,
-    payment_reference: null,
-    paid_at: null,
     notes: input.notes ?? null,
-    collection_ids: input.collection_ids,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
   };
 
-  store = [record, ...store];
+  const res = await apiFetch<{ isSuccess: boolean; message: string; data: SettlementApiItem }>(
+    BASE,
+    { method: "POST", body: JSON.stringify(body) },
+  );
+
   return {
-    isSuccess: true,
-    message: "تم إنشاء التسوية كمسودة (واجهة تصميمية)",
-    data: { ...record, collection_ids: [...record.collection_ids] },
+    isSuccess: res.isSuccess,
+    message: res.message,
+    data: normaliseSettlement(res.data),
   };
 }
 
-export async function approveSettlement(settlementId: string): Promise<ApiResponse<SettlementRecord>> {
-  await delay(500);
-  const index = store.findIndex((item) => item.settlement_id === settlementId);
-  if (index === -1) {
-    return { isSuccess: false, message: "التسوية غير موجودة", data: null as unknown as SettlementRecord };
-  }
-  if (store[index].settlement_status !== 1) {
-    return { isSuccess: false, message: "يمكن اعتماد المسودات فقط", data: store[index] };
-  }
+// ─── Approve ───────────────────────────────────────────────────────────────
 
-  store[index] = {
-    ...store[index],
-    settlement_status: 2,
-    updated_at: new Date().toISOString(),
-  };
+export async function approveSettlement(
+  settlementId: string,
+): Promise<ApiResponse<SettlementRecord>> {
+  const res = await apiFetch<{ isSuccess: boolean; message: string; data: SettlementApiItem }>(
+    `${BASE}/${settlementId}/approve`,
+    { method: "POST" },
+  );
 
   return {
-    isSuccess: true,
-    message: "تم اعتماد التسوية (واجهة تصميمية)",
-    data: { ...store[index], collection_ids: [...store[index].collection_ids] },
+    isSuccess: res.isSuccess,
+    message: res.message,
+    data: normaliseSettlement(res.data),
   };
 }
+
+// ─── Mark paid ─────────────────────────────────────────────────────────────
 
 export async function markSettlementPaid(
   settlementId: string,
   input: MarkSettlementPaidInput,
 ): Promise<ApiResponse<SettlementRecord>> {
-  await delay(500);
-  const index = store.findIndex((item) => item.settlement_id === settlementId);
-  if (index === -1) {
-    return { isSuccess: false, message: "التسوية غير موجودة", data: null as unknown as SettlementRecord };
-  }
-  if (store[index].settlement_status !== 2) {
-    return { isSuccess: false, message: "يمكن تحديد المعتمدة كمدفوعة فقط", data: store[index] };
-  }
-
-  const paidAt = new Date().toISOString();
-  store[index] = {
-    ...store[index],
-    settlement_status: 3,
-    payment_method: input.payment_method,
-    payment_reference: input.payment_reference,
-    paid_at: paidAt,
-    updated_at: paidAt,
-  };
+  const res = await apiFetch<{ isSuccess: boolean; message: string; data: SettlementApiItem }>(
+    `${BASE}/${settlementId}/mark-paid`,
+    { method: "POST", body: JSON.stringify(input) },
+  );
 
   return {
-    isSuccess: true,
-    message: "تم تحديد التسوية كمدفوعة (واجهة تصميمية)",
-    data: { ...store[index], collection_ids: [...store[index].collection_ids] },
+    isSuccess: res.isSuccess,
+    message: res.message,
+    data: normaliseSettlement(res.data),
   };
 }
+
+// ─── Export ────────────────────────────────────────────────────────────────
 
 export async function exportSettlements(): Promise<ApiResponse<{ filename: string }>> {
-  await delay(500);
-  return {
-    isSuccess: true,
-    message: "جاري تحميل ملف Excel (واجهة تصميمية)",
-    data: { filename: "settlements-export-2026-05-24.xlsx" },
-  };
+  const res = await apiFetch<ApiResponse<{ filename: string }>>(`${BASE}/export`);
+  return res;
 }
 
-function resolveCollections(input: CreateSettlementInput): CollectionRecord[] {
-  if (input.collection_ids.length > 0) {
-    return COLLECTIONS.filter((c) => input.collection_ids.includes(c.collection_id));
-  }
-  return getEligibleCollections(input.settlement_type, input.party_id, input.period_from, input.period_to);
-}
+// ─── These were mock-only helpers; kept as stubs so imports don't break ────
 
 export function getEligibleCollections(
-  type: SettlementTypeCode,
-  partyId: string,
-  periodFrom: string,
-  periodTo: string,
+  _type: SettlementTypeCode,
+  _partyId: string,
+  _periodFrom: string,
+  _periodTo: string,
 ): CollectionRecord[] {
-  const from = new Date(periodFrom);
-  const to = new Date(periodTo);
-  to.setHours(23, 59, 59, 999);
-
-  const settledIds = new Set(store.flatMap((s) => s.collection_ids));
-
-  return COLLECTIONS.filter((item) => {
-    if (item.is_settled === 1 || settledIds.has(item.collection_id)) return false;
-    const collected = new Date(item.collected_at);
-    if (collected < from || collected > to) return false;
-
-    if (type === 1) return item.delivery_agent_id === partyId;
-    return item.shipping_company_id === partyId;
-  });
+  return [];
 }
 
-export function getLinkedCollections(settlement: SettlementRecord): CollectionRecord[] {
-  return COLLECTIONS.filter((c) => settlement.collection_ids.includes(c.collection_id));
+export function getLinkedCollections(_settlement: SettlementRecord): CollectionRecord[] {
+  return [];
 }
 
-export function computeSettlementKpis(items: SettlementRecord[]) {
-  const totalNet = items.reduce((sum, item) => sum + item.net_amount, 0);
-  const draftNet = items.filter((i) => i.settlement_status === 1).reduce((sum, item) => sum + item.net_amount, 0);
-  const approvedNet = items.filter((i) => i.settlement_status === 2).reduce((sum, item) => sum + item.net_amount, 0);
-  const paidThisMonth = items
-    .filter((i) => i.settlement_status === 3 && i.paid_at && isThisMonth(i.paid_at))
-    .reduce((sum, item) => sum + item.net_amount, 0);
-
+/** @deprecated use fetchSettlementStats() — kept so old call sites compile */
+export function computeSettlementKpis(_items: SettlementRecord[]) {
   return {
-    total: items.length,
-    totalNet,
-    draftNet,
-    approvedNet,
-    paidThisMonth,
-    draftCount: items.filter((i) => i.settlement_status === 1).length,
-    approvedCount: items.filter((i) => i.settlement_status === 2).length,
-    paidCount: items.filter((i) => i.settlement_status === 3).length,
+    total: 0,
+    totalNet: 0,
+    draftNet: 0,
+    approvedNet: 0,
+    paidThisMonth: 0,
+    draftCount: 0,
+    approvedCount: 0,
+    paidCount: 0,
   };
 }
 
-function isThisMonth(iso: string): boolean {
-  const d = new Date(iso);
-  const now = new Date();
-  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+export function filterByPeriod(items: SettlementRecord[], _periodFilter: string) {
+  return items; // now handled server-side
 }
 
-export function filterByPeriod(items: SettlementRecord[], periodFilter: string): SettlementRecord[] {
-  if (periodFilter === "all") return items;
-
-  const now = new Date();
-  return items.filter((item) => {
-    const periodEnd = new Date(item.period_to);
-    if (periodFilter === "month") {
-      return periodEnd.getFullYear() === now.getFullYear() && periodEnd.getMonth() === now.getMonth();
-    }
-    if (periodFilter === "last_month") {
-      const last = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      return periodEnd.getFullYear() === last.getFullYear() && periodEnd.getMonth() === last.getMonth();
-    }
-    if (periodFilter === "quarter") {
-      const diffDays = (now.getTime() - periodEnd.getTime()) / (1000 * 60 * 60 * 24);
-      return diffDays <= 90;
-    }
-    return true;
-  });
-}
-
-export function filterCompanySettlements(items: SettlementRecord[], companyId: string): SettlementRecord[] {
-  return items.filter((item) => item.settlement_type === 2 && item.shipping_company_id === companyId);
+export function filterCompanySettlements(items: SettlementRecord[], _companyId: string) {
+  return items; // now handled server-side via shipping_company_id param
 }

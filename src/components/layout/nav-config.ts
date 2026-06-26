@@ -51,19 +51,19 @@ export const navOperationsCategories: NavCategory[] = [
       },
     ],
   },
-  // {
-  //   label: "المالية",
-  //   sections: [
-  //     {
-  //       title: "التحصيل والتسوية",
-  //       icon: Wallet,
-  //       items: [
-  //         { title: "التحصيلات", url: "/collections", icon: Wallet },
-  //         { title: "التسويات", url: "/settlements", icon: Scale },
-  //       ],
-  //     },
-  //   ],
-  // },
+  {
+    label: "المالية",
+    sections: [
+      {
+        title: "التحصيل والتسوية",
+        icon: Wallet,
+        items: [
+          { title: "التحصيلات", url: "/collections", icon: Wallet },
+          { title: "التسويات", url: "/settlements", icon: Scale },
+        ],
+      },
+    ],
+  },
   // {
   //   label: "المتابعة",
   //   sections: [
