@@ -1,142 +1,138 @@
-import { APPROVAL_HISTORY, APPROVAL_REQUESTS, MOCK_COMPANY_REVIEWER } from "@/lib/admin/approvals-data";
-import type {
-  ApiResponse,
-  ApprovalHistoryEntry,
-  ApprovalRequest,
+import {
+  type ApiResponse,
+  type ApprovalRequest,
+  type ApprovalRequestWire,
+  type ApprovalStats,
+  type ApprovalStatsWire,
+  type PaginatedResponse,
+  type ReviewPayload,
+  normaliseApprovalRequest,
+  normaliseStats,
 } from "@/lib/admin/approvals-types";
+import { getAccessToken } from "../auth/Auth.api";
+import { BASE_URL } from "@/lib/utils";
 
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+// ─── Shared fetch helper ──────────────────────────────────────────────────────
+
+async function apiFetch<T>(path: string, options?: RequestInit): Promise<ApiResponse<T>> {
+  const token = getAccessToken();
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      // Auth header injected by your axios/fetch interceptor or here:
+      Authorization: `Bearer ${token}`,
+      ...options?.headers,
+    },
+    ...options,
+  });
+
+  // Surface HTTP errors as isSuccess=false so callers get a consistent shape
+  if (!res.ok) {
+    let message = `HTTP ${res.status}`;
+    try {
+      const body = (await res.json()) as { message?: string };
+      if (body.message) message = body.message;
+    } catch {
+      // ignore JSON parse errors
+    }
+    return { isSuccess: false, message, data: null as unknown as T };
+  }
+
+  return res.json() as Promise<ApiResponse<T>>;
 }
 
-let requestStore = APPROVAL_REQUESTS.map((item) => ({ ...item }));
-let historyStore = APPROVAL_HISTORY.map((item) => ({ ...item }));
+// ─── Filters / params ────────────────────────────────────────────────────────
 
-function appendHistory(entry: Omit<ApprovalHistoryEntry, "id">) {
-  historyStore = [{ ...entry, id: `ah-${Date.now()}` }, ...historyStore];
+export type ApprovalListFilters = {
+  status?: string; // "1" | "2" | "3" | "4" | ""
+  type?: string; // "1" | "2" | "3" | ""
+  agent_id?: string;
+  page?: number;
+  per_page?: number;
+};
+
+// ─── Stats ───────────────────────────────────────────────────────────────────
+
+export async function fetchApprovalStats(): Promise<ApiResponse<ApprovalStats>> {
+  const raw = await apiFetch<ApprovalStatsWire>("/admin/approval-requests/stats");
+  if (!raw.isSuccess) return { ...raw, data: null as unknown as ApprovalStats };
+  return { ...raw, data: normaliseStats(raw.data) };
 }
 
-export async function fetchApprovalRequests(): Promise<ApiResponse<ApprovalRequest[]>> {
-  await delay(400);
+// ─── List ─────────────────────────────────────────────────────────────────────
+
+export async function fetchApprovalRequests(
+  filters: ApprovalListFilters = {},
+): Promise<ApiResponse<PaginatedResponse<ApprovalRequest>>> {
+  const params = new URLSearchParams();
+  if (filters.status) params.set("status", filters.status);
+  if (filters.type) params.set("type", filters.type);
+  if (filters.agent_id) params.set("agent_id", filters.agent_id);
+  params.set("per_page", String(filters.per_page ?? 20));
+  if (filters.page && filters.page > 1) params.set("page", String(filters.page));
+
+  const qs = params.toString();
+  const raw = await apiFetch<PaginatedResponse<ApprovalRequestWire>>(
+    `/admin/approval-requests${qs ? `?${qs}` : ""}`,
+  );
+
+  if (!raw.isSuccess) {
+    return { ...raw, data: null as unknown as PaginatedResponse<ApprovalRequest> };
+  }
+
   return {
-    isSuccess: true,
-    message: "تمت العملية بنجاح",
-    data: requestStore.map((item) => ({ ...item })),
+    ...raw,
+    data: {
+      ...raw.data,
+      items: raw.data.items.map(normaliseApprovalRequest),
+    },
   };
 }
 
-export async function fetchApprovalHistory(): Promise<ApiResponse<ApprovalHistoryEntry[]>> {
-  await delay(300);
-  return {
-    isSuccess: true,
-    message: "تمت العملية بنجاح",
-    data: [...historyStore].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
-  };
+// ─── Detail ───────────────────────────────────────────────────────────────────
+
+export async function fetchApprovalRequest(id: string): Promise<ApiResponse<ApprovalRequest>> {
+  const raw = await apiFetch<ApprovalRequestWire>(`/admin/approval-requests/${id}`);
+  if (!raw.isSuccess) return { ...raw, data: null as unknown as ApprovalRequest };
+  return { ...raw, data: normaliseApprovalRequest(raw.data) };
 }
+
+// ─── Review (approve / reject) ────────────────────────────────────────────────
+
+export async function reviewRequest(
+  id: string,
+  payload: ReviewPayload,
+): Promise<ApiResponse<ApprovalRequest>> {
+  const raw = await apiFetch<ApprovalRequestWire>(`/admin/approval-requests/${id}/review`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      action: payload.action,
+      review_notes: payload.review_notes,
+    }),
+  });
+  if (!raw.isSuccess) return { ...raw, data: null as unknown as ApprovalRequest };
+  return { ...raw, data: normaliseApprovalRequest(raw.data) };
+}
+
+// ─── Convenience wrappers (keep call-sites readable) ─────────────────────────
 
 export async function approveRequest(
   id: string,
-  note?: string,
-  reviewer?: { id: string; name: string; role: ApprovalHistoryEntry["actor_role"] },
+  review_notes: string,
 ): Promise<ApiResponse<ApprovalRequest>> {
-  await delay(400);
-  const index = requestStore.findIndex((item) => item.approval_request_id === id);
-  if (index === -1) {
-    return { isSuccess: false, message: "الطلب غير موجود", data: null as unknown as ApprovalRequest };
-  }
-  if (requestStore[index].approval_status !== 1) {
-    return { isSuccess: false, message: "يمكن مراجعة الطلبات المعلّقة فقط", data: requestStore[index] };
-  }
-
-  const reviewerInfo = reviewer ?? { id: "usr-admin-01", name: "سارة محمود", role: "admin" as const };
-  const now = new Date().toISOString();
-
-  requestStore[index] = {
-    ...requestStore[index],
-    approval_status: 2,
-    resolved_at: now,
-    resolved_by: reviewerInfo.name,
-    review_note: note?.trim() || null,
-    expires_at: null,
-    updated_at: now,
-  };
-
-  appendHistory({
-    approval_request_id: id,
-    ref: requestStore[index].ref,
-    action: "approved",
-    actor_id: reviewerInfo.id,
-    actor_name: reviewerInfo.name,
-    actor_role: reviewerInfo.role,
-    note: note?.trim() || null,
-    from_status: 1,
-    to_status: 2,
-    created_at: now,
-  });
-
-  return {
-    isSuccess: true,
-    message: "تمت الموافقة على الطلب (واجهة تصميمية)",
-    data: { ...requestStore[index] },
-  };
+  return reviewRequest(id, { action: "approve", review_notes });
 }
 
 export async function rejectRequest(
   id: string,
-  note?: string,
-  reviewer?: { id: string; name: string; role: ApprovalHistoryEntry["actor_role"] },
+  review_notes: string,
 ): Promise<ApiResponse<ApprovalRequest>> {
-  await delay(400);
-  const index = requestStore.findIndex((item) => item.approval_request_id === id);
-  if (index === -1) {
-    return { isSuccess: false, message: "الطلب غير موجود", data: null as unknown as ApprovalRequest };
-  }
-  if (requestStore[index].approval_status !== 1) {
-    return { isSuccess: false, message: "يمكن مراجعة الطلبات المعلّقة فقط", data: requestStore[index] };
-  }
-
-  const reviewerInfo = reviewer ?? { id: "usr-admin-01", name: "سارة محمود", role: "admin" as const };
-  const now = new Date().toISOString();
-
-  requestStore[index] = {
-    ...requestStore[index],
-    approval_status: 3,
-    resolved_at: now,
-    resolved_by: reviewerInfo.name,
-    review_note: note?.trim() || null,
-    expires_at: null,
-    updated_at: now,
-  };
-
-  appendHistory({
-    approval_request_id: id,
-    ref: requestStore[index].ref,
-    action: "rejected",
-    actor_id: reviewerInfo.id,
-    actor_name: reviewerInfo.name,
-    actor_role: reviewerInfo.role,
-    note: note?.trim() || null,
-    from_status: 1,
-    to_status: 3,
-    created_at: now,
-  });
-
-  return {
-    isSuccess: true,
-    message: "تم رفض الطلب (واجهة تصميمية)",
-    data: { ...requestStore[index] },
-  };
+  return reviewRequest(id, { action: "reject", review_notes });
 }
 
-export function computeApprovalKpis(items: ApprovalRequest[]) {
-  return {
-    pending: items.filter((i) => i.approval_status === 1).length,
-    approved: items.filter((i) => i.approval_status === 2).length,
-    rejected: items.filter((i) => i.approval_status === 3).length,
-    expired: items.filter((i) => i.approval_status === 4).length,
-    urgent: items.filter((i) => i.approval_status === 1 && (expiresInMinutes(i.expires_at) ?? 999) <= 30).length,
-  };
-}
+// ─── Client-side helpers (kept from original; operate on normalised data) ─────
 
 export function getPendingApprovals(items: ApprovalRequest[]): ApprovalRequest[] {
   return items
@@ -148,26 +144,12 @@ export function getPendingApprovals(items: ApprovalRequest[]): ApprovalRequest[]
     });
 }
 
-export function filterByCompany(items: ApprovalRequest[], companyId: string): ApprovalRequest[] {
-  return items.filter((item) => item.shipping_company_id === companyId);
-}
-
-export function getHistoryForRequest(requestId: string, history: ApprovalHistoryEntry[]): ApprovalHistoryEntry[] {
-  return history
-    .filter((entry) => entry.approval_request_id === requestId)
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-}
-
-export function getCompanyReviewer(companyId: string) {
-  if (companyId === MOCK_COMPANY_REVIEWER.company_id) {
-    return { id: MOCK_COMPANY_REVIEWER.id, name: MOCK_COMPANY_REVIEWER.name, role: "company" as const };
-  }
-  return { id: `usr-comp-${companyId}`, name: "مسؤول الشركة", role: "company" as const };
-}
-
-function expiresInMinutes(expiresAt: string | null): number | null {
-  if (!expiresAt) return null;
-  const diff = new Date(expiresAt).getTime() - Date.now();
-  if (diff <= 0) return 0;
-  return Math.ceil(diff / (1000 * 60));
+export function computeApprovalKpis(stats: ApprovalStats) {
+  return {
+    pending: stats.pending,
+    urgent: stats.urgent,
+    approved: stats.approved,
+    rejected: stats.rejected,
+    expired: stats.expired,
+  };
 }

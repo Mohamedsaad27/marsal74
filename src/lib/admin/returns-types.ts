@@ -4,26 +4,75 @@ export type ApiResponse<T> = {
   data: T;
 };
 
-/** returns.return_status */
+// ── Wire shape ───────────────────────────────────────────────────────────────
+
 export type ReturnStatusCode = 1 | 2 | 3;
+
+export type ReturnRecordWire = {
+  id: string;
+  order_id: string;
+  return_status: { id: ReturnStatusCode; label: string; color: string };
+  returned_quantity: number;
+  return_reason: string;
+  notes: string | null;
+  agent: { id: string; name: string };
+  company: { id: string; name: string };
+  received_at: string | null;
+  returned_to_company_at: string | null;
+  created_at: string;
+};
+
+export type ReturnStatsWire = {
+  total: number;
+  pending: number;
+  received_by_admin: number;
+  sent_to_company: number;
+};
+
+// ── UI model ─────────────────────────────────────────────────────────────────
 
 export type ReturnRecord = {
   return_id: string;
-  return_ref: string;
   order_id: string;
-  internal_code: string;
+  return_status: ReturnStatusCode;
+  returned_quantity: number;
+  return_reason: string;
+  notes: string | null;
   delivery_agent_id: string;
   agent_name: string;
   shipping_company_id: string;
   company_name: string;
-  returned_quantity: number;
-  return_reason: string;
-  return_status: ReturnStatusCode;
   received_at: string | null;
   returned_to_company_at: string | null;
   created_at: string;
-  updated_at: string;
 };
+
+export type ReturnKpis = {
+  total: number;
+  pending: number;
+  received: number;
+  sent: number;
+};
+
+export function normaliseReturn(w: ReturnRecordWire): ReturnRecord {
+  return {
+    return_id: w.id,
+    order_id: w.order_id,
+    return_status: w.return_status.id,
+    returned_quantity: w.returned_quantity,
+    return_reason: w.return_reason,
+    notes: w.notes,
+    delivery_agent_id: w.agent.id,
+    agent_name: w.agent.name,
+    shipping_company_id: w.company.id,
+    company_name: w.company.name,
+    received_at: w.received_at,
+    returned_to_company_at: w.returned_to_company_at,
+    created_at: w.created_at,
+  };
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
 export const RETURN_STATUS_OPTIONS: { value: string; label: string; code: ReturnStatusCode }[] = [
   { value: "1", label: "بانتظار الاستلام", code: 1 },

@@ -4,9 +4,10 @@ import { toast } from "sonner";
 import { AdminDialogShell } from "@/components/admin/AdminDialogShell";
 import { FormSelect } from "@/components/admin/AdminFormFields";
 import { Button } from "@/components/ui/button";
-import { AGENT_OPTIONS } from "@/lib/admin/orders-data";
+import { fetchAgentOptions } from "@/lib/admin/orders-api";
 import type { OrderListItem } from "@/lib/admin/orders-types";
 import { formatDateTime } from "@/lib/admin/orders-types";
+import type { AgentOption } from "@/lib/admin/orders-api";
 
 type Props = {
   open: boolean;
@@ -18,7 +19,18 @@ type Props = {
 
 export function OrderAssignDialog({ open, onOpenChange, order, onSave, loading = false }: Props) {
   const [agentId, setAgentId] = useState("");
-
+  const [agentOptions, setAgentOptions] = useState<AgentOption[]>([]);
+  useEffect(() => {
+    async function loadOptions() {
+      try {
+        const [agents] = await Promise.all([fetchAgentOptions()]);
+        if (agents.isSuccess) setAgentOptions(agents.data);
+      } catch {
+        // non-fatal — filters just show no options
+      }
+    }
+    void loadOptions();
+  }, []);
   useEffect(() => {
     if (open && order?.order.delivery_agent_id) {
       setAgentId(order.order.delivery_agent_id);
@@ -48,7 +60,11 @@ export function OrderAssignDialog({ open, onOpenChange, order, onSave, loading =
       size="md"
       footer={
         <>
-          <Button className="rounded-xl gradient-brand px-6 shadow-glow" onClick={handleSave} disabled={loading}>
+          <Button
+            className="rounded-xl gradient-brand px-6 shadow-glow"
+            onClick={handleSave}
+            disabled={loading}
+          >
             {loading && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
             {order.order.delivery_agent_id ? "إعادة التعيين" : "تعيين المندوب"}
           </Button>
@@ -74,7 +90,7 @@ export function OrderAssignDialog({ open, onOpenChange, order, onSave, loading =
           required
           value={agentId}
           onValueChange={setAgentId}
-          options={AGENT_OPTIONS}
+          options={agentOptions}
           placeholder="اختر المندوب"
         />
       </div>

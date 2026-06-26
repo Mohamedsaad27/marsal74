@@ -1,41 +1,87 @@
-import { RETURNS } from "@/lib/admin/returns-data";
-import type { ApiResponse, ReturnRecord } from "@/lib/admin/returns-types";
+import { normaliseReturn } from "@/lib/admin/returns-types";
+import type {
+  ApiResponse,
+  ReturnKpis,
+  ReturnRecord,
+  ReturnRecordWire,
+  ReturnStatsWire,
+} from "@/lib/admin/returns-types";
+import { getAccessToken } from "../auth/Auth.api";
 
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+import { BASE_URL } from "@/lib/utils";
+
+function authHeaders(): HeadersInit {
+  const token = getAccessToken;
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
 }
 
-let store = RETURNS.map((item) => ({ ...item }));
-
-export async function fetchReturns(): Promise<ApiResponse<ReturnRecord[]>> {
-  await delay(400);
-  return { isSuccess: true, message: "تمت العملية بنجاح", data: store.map((item) => ({ ...item })) };
+async function handleResponse<T>(res: Response): Promise<ApiResponse<T>> {
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.message ?? `HTTP ${res.status}`);
+  return json as ApiResponse<T>;
 }
 
-export async function receiveReturn(_returnId: string): Promise<ApiResponse<null>> {
-  await delay(400);
-  return { isSuccess: true, message: "تم استلام المرتجع من المندوب (واجهة تصميمية)", data: null };
+export type ReturnFilters = {
+  status?: string;
+  company_id?: string;
+  agent_id?: string;
+  per_page?: number;
+};
+
+export async function fetchReturns(
+  filters: ReturnFilters = {},
+): Promise<ApiResponse<ReturnRecord[]>> {
+  const params = new URLSearchParams();
+  if (filters.status) params.set("status", filters.status);
+  if (filters.company_id) params.set("company_id", filters.company_id);
+  if (filters.agent_id) params.set("agent_id", filters.agent_id);
+  params.set("per_page", String(filters.per_page ?? 20));
+
+  const res = await fetch(`${BASE_URL}/admin/returns?${params}`, {
+    headers: authHeaders(),
+  });
+  const raw = await handleResponse<ReturnRecordWire[]>(res);
+  return { ...raw, data: raw.data.map(normaliseReturn) };
 }
 
-export async function sendReturnToCompany(_returnId: string): Promise<ApiResponse<null>> {
-  await delay(400);
-  return { isSuccess: true, message: "تم تسليم المرتجع لشركة الشحن (واجهة تصميمية)", data: null };
+export async function fetchReturnStats(): Promise<ApiResponse<ReturnKpis>> {
+  const res = await fetch(`${BASE_URL}/admin/returns/stats`, {
+    headers: authHeaders(),
+  });
+  const raw = await handleResponse<ReturnStatsWire>(res);
+  return {
+    ...raw,
+    data: {
+      total: raw.data.total,
+      pending: raw.data.pending,
+      received: raw.data.received_by_admin,
+      sent: raw.data.sent_to_company,
+    },
+  };
+}
+
+export async function receiveReturn(returnId: string): Promise<ApiResponse<null>> {
+  const res = await fetch(`${BASE_URL}/admin/returns/${returnId}/receive`, {
+    method: "PATCH",
+    headers: authHeaders(),
+  });
+  return handleResponse<null>(res);
+}
+
+export async function sendReturnToCompany(returnId: string): Promise<ApiResponse<null>> {
+  const res = await fetch(`${BASE_URL}/admin/returns/${returnId}/return-to-company`, {
+    method: "PATCH",
+    headers: authHeaders(),
+  });
+  return handleResponse<null>(res);
 }
 
 export async function exportReturnsReport(): Promise<ApiResponse<{ filename: string }>> {
-  await delay(500);
-  return {
-    isSuccess: true,
-    message: "جاري تحميل التقرير (واجهة تصميمية)",
-    data: { filename: "returns-report-2026-05-24.xlsx" },
-  };
-}
-
-export function computeReturnKpis(items: ReturnRecord[]) {
-  return {
-    total: items.length,
-    pending: items.filter((i) => i.return_status === 1).length,
-    received: items.filter((i) => i.return_status === 2).length,
-    sent: items.filter((i) => i.return_status === 3).length,
-  };
+  const res = await fetch(`${BASE_URL}/admin/returns/export`, {
+    headers: authHeaders(),
+  });
+  return handleResponse<{ filename: string }>(res);
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
@@ -14,21 +14,25 @@ import { ShipmentStatusKpiGrid } from "@/components/dashboard/ShipmentStatusKpiG
 import { shipmentsImportConfig } from "@/lib/admin/import-excel-configs";
 import {
   assignOrderAgent,
-  computeKpiCounts,
   createOrder,
   exportOrdersExcel,
+  fetchAgentOptions,
+  fetchCompanyOptions,
+  fetchGovernorateOptions,
+  fetchOrderStats,
   fetchOrders,
-  statusMatchesKpiFilter,
   updateOrderStatus,
 } from "@/lib/admin/orders-api";
-import { AGENT_OPTIONS, COMPANY_OPTIONS, ZONE_OPTIONS } from "@/lib/admin/orders-data";
+import type { AgentOption, CompanyOption, GovernorateOption } from "@/lib/admin/orders-api";
 import { ORDER_STATUS_OPTIONS, formatAmount, formatDateTime } from "@/lib/admin/orders-types";
-import type { CreateOrderPayload, OrderListItem } from "@/lib/admin/orders-types";
+import type { ApiOrderStats, CreateOrderPayload, OrderListItem } from "@/lib/admin/orders-types";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Building2,
-  Calendar,
   Download,
+  Calendar,
   Eye,
   FileSpreadsheet,
   Loader2,
@@ -37,118 +41,304 @@ import {
   RefreshCw,
   Truck,
   UserCheck,
+  X,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/shipments/")({
   component: ShipmentsPage,
 });
 
+const PAGE_SIZE = 20;
+
+const EMPTY_STATS: ApiOrderStats = {
+  total: 0,
+  pending: 0,
+  in_delivery: 0,
+  delivered: 0,
+  postponed_refused: 0,
+  returned: 0,
+};
+
+function statsToKpiCounts(stats: ApiOrderStats) {
+  return {
+    all: stats.total,
+    pending_assignment: stats.pending,
+    in_delivery: stats.in_delivery,
+    delivered: stats.delivered,
+    delayed_rejected: stats.postponed_refused,
+    returned: stats.returned,
+  };
+}
+
+const KPI_TO_API: Record<string, string> = {
+  all: "all",
+  pending_assignment: "pending",
+  in_delivery: "in_delivery",
+  delivered: "delivered",
+  delayed_rejected: "postponed_refused",
+  returned: "returned",
+};
+
+const STATUS_FILTER_OPTIONS = [
+  ...ORDER_STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+];
+
+function apiStatusToKpiBucket(apiStatus: string): string {
+  const entry = Object.entries(KPI_TO_API).find(([, v]) => v === apiStatus);
+  return entry ? entry[0] : "all";
+}
+
+// ─── Date range input ─────────────────────────────────────────────────────────
+
+function DateRangeFilter({
+  dateFrom,
+  dateTo,
+  onDateFromChange,
+  onDateToChange,
+}: {
+  dateFrom: string;
+  dateTo: string;
+  onDateFromChange: (v: string) => void;
+  onDateToChange: (v: string) => void;
+}) {
+  const hasValue = dateFrom || dateTo;
+
+  return (
+    <div className="flex items-end gap-2">
+      <div className="flex flex-col gap-1">
+        <Label className="text-xs text-muted-foreground">من</Label>
+        <Input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => onDateFromChange(e.target.value)}
+          max={dateTo || undefined}
+          className="h-9 w-36 rounded-xl text-sm"
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <Label className="text-xs text-muted-foreground">إلى</Label>
+        <Input
+          type="date"
+          value={dateTo}
+          onChange={(e) => onDateToChange(e.target.value)}
+          min={dateFrom || undefined}
+          className="h-9 w-36 rounded-xl text-sm"
+        />
+      </div>
+      {hasValue && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 shrink-0 rounded-xl text-muted-foreground"
+          onClick={() => {
+            onDateFromChange("");
+            onDateToChange("");
+          }}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      )}
+    </div>
+  );
+}
+function DateRangePill({
+  dateFrom,
+  dateTo,
+  onDateFromChange,
+  onDateToChange,
+}: {
+  dateFrom: string;
+  dateTo: string;
+  onDateFromChange: (v: string) => void;
+  onDateToChange: (v: string) => void;
+}) {
+  const isActive = !!(dateFrom || dateTo);
+
+  return (
+    <div
+      className={cn(
+        "flex h-10 items-stretch overflow-hidden rounded-xl border bg-background shadow-sm transition-colors",
+        isActive ? "border-primary/40 ring-1 ring-primary/10" : "border-input",
+      )}
+    >
+      {/* Label section — mirrors the icon+label pill header */}
+      <div className="flex shrink-0 items-center gap-1.5 border-s border-border bg-muted/50 px-3">
+        <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-xs font-bold text-muted-foreground">التاريخ</span>
+      </div>
+
+      {/* From date */}
+      <div className="flex items-center gap-1.5 border-s border-border/60 px-2">
+        <span className="text-[11px] text-muted-foreground">من</span>
+        <Input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => onDateFromChange(e.target.value)}
+          max={dateTo || undefined}
+          className={cn(
+            "h-7 w-32 rounded-lg border-0 bg-transparent px-1 text-xs shadow-none focus-visible:ring-0",
+            isActive && dateFrom && "font-semibold text-primary",
+          )}
+        />
+      </div>
+
+      {/* To date */}
+      <div className="flex items-center gap-1.5 border-s border-border/60 px-2">
+        <span className="text-[11px] text-muted-foreground">إلى</span>
+        <Input
+          type="date"
+          value={dateTo}
+          onChange={(e) => onDateToChange(e.target.value)}
+          min={dateFrom || undefined}
+          className={cn(
+            "h-7 w-32 rounded-lg border-0 bg-transparent px-1 text-xs shadow-none focus-visible:ring-0",
+            isActive && dateTo && "font-semibold text-primary",
+          )}
+        />
+      </div>
+
+      {/* Clear button — only when a date is set */}
+      {isActive && (
+        <button
+          type="button"
+          onClick={() => {
+            onDateFromChange("");
+            onDateToChange("");
+          }}
+          className="flex items-center border-s border-border/60 px-2 text-muted-foreground transition-colors hover:text-destructive"
+          aria-label="مسح التاريخ"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 function ShipmentsPage() {
   const navigate = useNavigate();
+
   const [orders, setOrders] = useState<OrderListItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<ApiOrderStats>(EMPTY_STATS);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [agentOptions, setAgentOptions] = useState<AgentOption[]>([]);
+  const [companyOptions, setCompanyOptions] = useState<CompanyOption[]>([]);
+  const [governorateOptions, setGovernorateOptions] = useState<GovernorateOption[]>([]);
+  const [optionsLoading, setOptionsLoading] = useState(true);
+
+  const [loadingOrders, setLoadingOrders] = useState(true);
+  const [loadingStats, setLoadingStats] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [search, setSearch] = useState("");
+
+  // Filters
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [companyFilter, setCompanyFilter] = useState("all");
   const [agentFilter, setAgentFilter] = useState("all");
-  const [zoneFilter, setZoneFilter] = useState("all");
-  const [dateFilter, setDateFilter] = useState("all");
+  const [governorateFilter, setGovernorateFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState(""); // YYYY-MM-DD
+  const [dateTo, setDateTo] = useState(""); // YYYY-MM-DD
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [importOpen, setImportOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
   const [activeOrder, setActiveOrder] = useState<OrderListItem | null>(null);
 
-  const pageSize = 10;
+  // ── fetch filter options once ─────────────────────────────────────────────
+  useEffect(() => {
+    async function loadOptions() {
+      setOptionsLoading(true);
+      try {
+        const [agents, companies, governorates] = await Promise.all([
+          fetchAgentOptions(),
+          fetchCompanyOptions(),
+          fetchGovernorateOptions(),
+        ]);
+        if (agents.isSuccess) setAgentOptions(agents.data);
+        if (companies.isSuccess) setCompanyOptions(companies.data);
+        if (governorates.isSuccess) setGovernorateOptions(governorates.data);
+      } catch {
+        // non-fatal
+      } finally {
+        setOptionsLoading(false);
+      }
+    }
+    void loadOptions();
+  }, []);
 
-  const goToOrder = (orderId: string) => {
-    void navigate({ to: "/shipments/$orderId", params: { orderId } });
-  };
-
-  const loadOrders = useCallback(async () => {
-    setLoading(true);
+  const loadStats = useCallback(async () => {
+    setLoadingStats(true);
     try {
-      const response = await fetchOrders();
+      const response = await fetchOrderStats();
       if (!response.isSuccess) throw new Error(response.message);
-      setOrders(response.data);
+      setStats(response.data);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "فشل تحميل الطلبات");
+      toast.error(error instanceof Error ? error.message : "فشل تحميل الإحصائيات");
     } finally {
-      setLoading(false);
+      setLoadingStats(false);
     }
   }, []);
 
+  const loadOrders = useCallback(
+    async (targetPage: number) => {
+      setLoadingOrders(true);
+      try {
+        const response = await fetchOrders({
+          page: targetPage,
+          per_page: PAGE_SIZE,
+          status: statusFilter,
+          company_id: companyFilter !== "all" ? companyFilter : undefined,
+          agent_id: agentFilter !== "all" ? agentFilter : undefined,
+          governorate_id: governorateFilter !== "all" ? governorateFilter : undefined,
+          date_from: dateFrom || undefined,
+          date_to: dateTo || undefined,
+          search: search.trim() || undefined,
+        });
+
+        if (!response.isSuccess) throw new Error(response.message);
+
+        setOrders(response.data.items);
+        setTotalCount(response.data.total);
+        setTotalPages(response.data.last_page);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "فشل تحميل الطلبات");
+      } finally {
+        setLoadingOrders(false);
+      }
+    },
+    [statusFilter, companyFilter, agentFilter, governorateFilter, dateFrom, dateTo, search],
+  );
+
   useEffect(() => {
-    void loadOrders();
-  }, [loadOrders]);
+    void loadStats();
+  }, [loadStats]);
+  useEffect(() => {
+    void loadOrders(page);
+  }, [loadOrders, page]);
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, companyFilter, agentFilter, governorateFilter, dateFrom, dateTo, search]);
 
-  const filtered = useMemo(() => {
-    const now = new Date();
-    return orders.filter((item) => {
-      if (statusFilter !== "all") {
-        const isKpiBucket = [
-          "pending_assignment",
-          "in_delivery",
-          "delivered",
-          "delayed_rejected",
-          "returned",
-        ].includes(statusFilter);
-        if (isKpiBucket) {
-          if (!statusMatchesKpiFilter(item.order.status, statusFilter)) return false;
-        } else if (String(item.order.status) !== statusFilter) {
-          return false;
-        }
-      }
-      if (companyFilter !== "all" && item.order.shipping_company_id !== companyFilter) return false;
-      if (agentFilter === "unassigned" && item.order.delivery_agent_id) return false;
-      if (
-        agentFilter !== "all" &&
-        agentFilter !== "unassigned" &&
-        item.order.delivery_agent_id !== agentFilter
-      )
-        return false;
-      if (zoneFilter !== "all") {
-        const cityName = ZONE_OPTIONS.find((z) => z.value === zoneFilter)
-          ?.label.split(" — ")[0]
-          ?.trim();
-        if (cityName && item.city_name !== cityName) return false;
-      }
-
-      if (dateFilter !== "all") {
-        const created = new Date(item.order.created_at);
-        const diffDays = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
-        if (dateFilter === "today" && diffDays > 1) return false;
-        if (dateFilter === "week" && diffDays > 7) return false;
-        if (dateFilter === "month" && diffDays > 30) return false;
-      }
-
-      if (!search.trim()) return true;
-      const query = search.toLowerCase();
-      return (
-        item.order.internal_code.toLowerCase().includes(query) ||
-        item.order.reference_no.toLowerCase().includes(query) ||
-        item.customer_name.toLowerCase().includes(query) ||
-        item.customer_phone.includes(query) ||
-        item.company_name.toLowerCase().includes(query) ||
-        (item.agent_name?.toLowerCase().includes(query) ?? false)
-      );
-    });
-  }, [orders, statusFilter, companyFilter, agentFilter, zoneFilter, dateFilter, search]);
-
-  const paginatedRows = filtered.slice((page - 1) * pageSize, page * pageSize);
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const kpiCounts = useMemo(() => computeKpiCounts(orders), [orders]);
+  const goToOrder = (orderId: string) =>
+    void navigate({ to: "/shipments/$orderId", params: { orderId } });
 
   const handleCreate = async (payload: CreateOrderPayload) => {
     setSaving(true);
     try {
       const response = await createOrder(payload);
+      if (!response.isSuccess) throw new Error(response.message);
       toast.success(response.message);
       setCreateOpen(false);
+      void loadOrders(1);
+      void loadStats();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "فشل إنشاء الطلب");
     } finally {
@@ -161,8 +351,10 @@ function ShipmentsPage() {
     setSaving(true);
     try {
       const response = await assignOrderAgent(activeOrder.order.order_id, agentId);
+      if (!response.isSuccess) throw new Error(response.message);
       toast.success(response.message);
       setAssignOpen(false);
+      void loadOrders(page);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "فشل التعيين");
     } finally {
@@ -175,8 +367,11 @@ function ShipmentsPage() {
     setSaving(true);
     try {
       const response = await updateOrderStatus(activeOrder.order.order_id, status, note);
+      if (!response.isSuccess) throw new Error(response.message);
       toast.success(response.message);
       setStatusOpen(false);
+      void loadOrders(page);
+      void loadStats();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "فشل تحديث الحالة");
     } finally {
@@ -187,22 +382,43 @@ function ShipmentsPage() {
   const handleExport = async () => {
     try {
       const response = await exportOrdersExcel();
+      if (!response.isSuccess) throw new Error(response.message);
       toast.success(`${response.message} — ${response.data.filename}`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "فشل التصدير");
     }
   };
 
+  const kpiCounts = statsToKpiCounts(stats);
+  const kpiActiveId = apiStatusToKpiBucket(statusFilter);
+  const isLoading = loadingOrders || loadingStats;
+
   return (
     <AppShell>
       <AdminPageHeader
         title="الطلبات"
         tableName="orders"
-        description="إدارة الطلبات — فلترة متقدمة، إنشاء يدوي، استيراد CSV، وتصدير Excel"
+        description="إدارة الطلبات — فلترة متقدمة، إنشاء يدوي، استيراد Excel، وتصدير"
         addLabel="طلب جديد"
         onAdd={() => setCreateOpen(true)}
+        showAdd={false}
         extra={
           <>
+            <Button
+              variant="outline"
+              className="rounded-xl"
+              onClick={() => {
+                void loadOrders(page);
+                void loadStats();
+              }}
+            >
+              <RefreshCw className="ms-2 h-4 w-4" />
+              تحديث
+            </Button>
+            <Button variant="outline" className="rounded-xl" onClick={handleExport}>
+              <Download className="ms-2 h-4 w-4" />
+              تصدير Excel
+            </Button>
             <Button variant="outline" className="rounded-xl" onClick={() => setImportOpen(true)}>
               <FileSpreadsheet className="ms-2 h-4 w-4" />
               استيراد من ملف Excel
@@ -212,196 +428,162 @@ function ShipmentsPage() {
       />
 
       <ShipmentStatusKpiGrid
-        activeId={statusFilter as "all"}
-        onSelect={(id) => {
-          setStatusFilter(id);
-          setPage(1);
-        }}
+        activeId={kpiActiveId as "all"}
+        onSelect={(bucketId) => setStatusFilter(KPI_TO_API[bucketId] ?? "all")}
         counts={kpiCounts}
       />
 
-      {loading ? (
+      {isLoading && orders.length === 0 ? (
         <div className="flex justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <AdminDataTable
-          search={search}
-          onSearchChange={(v) => {
-            setSearch(v);
-            setPage(1);
-          }}
-          searchPlaceholder="الكود الداخلي، المرجع، العميل، الهاتف..."
-          filters={[
-            {
-              id: "status",
-              label: "الحالة",
-              icon: Package,
-              value: statusFilter,
-              onChange: (v) => {
-                setStatusFilter(v);
-                setPage(1);
+        <>
+          <AdminDataTable
+            search={search}
+            onSearchChange={(v) => setSearch(v)}
+            searchPlaceholder="الكود، المرجع، العميل، الهاتف..."
+            filters={[
+              {
+                id: "status",
+                label: "الحالة",
+                icon: Package,
+                value: statusFilter,
+                onChange: (v) => setStatusFilter(v),
+                options: STATUS_FILTER_OPTIONS,
+                allLabel: "كل الحالات",
               },
-              options: [
-                { value: "all", label: "الكل" },
-                ...ORDER_STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
-              ],
-              allLabel: "كل الحالات",
-            },
-            {
-              id: "company",
-              label: "الشركة",
-              icon: Building2,
-              value: companyFilter,
-              onChange: (v) => {
-                setCompanyFilter(v);
-                setPage(1);
+              {
+                id: "company",
+                label: "الشركة",
+                icon: Building2,
+                value: companyFilter,
+                onChange: (v) => setCompanyFilter(v),
+                options: [...companyOptions],
+                allLabel: "كل الشركات",
               },
-              options: [{ value: "all", label: "الكل" }, ...COMPANY_OPTIONS],
-              allLabel: "كل الشركات",
-            },
-            {
-              id: "agent",
-              label: "المندوب",
-              icon: Truck,
-              value: agentFilter,
-              onChange: (v) => {
-                setAgentFilter(v);
-                setPage(1);
+              {
+                id: "agent",
+                label: "المندوب",
+                icon: Truck,
+                value: agentFilter,
+                onChange: (v) => setAgentFilter(v),
+                options: [...agentOptions],
+                allLabel: "كل المناديب",
               },
-              options: [
-                { value: "all", label: "الكل" },
-                { value: "unassigned", label: "غير معيّن" },
-                ...AGENT_OPTIONS,
-              ],
-              allLabel: "كل المناديب",
-            },
-            {
-              id: "zone",
-              label: "المنطقة",
-              icon: MapPin,
-              value: zoneFilter,
-              onChange: (v) => {
-                setZoneFilter(v);
-                setPage(1);
+              {
+                id: "governorate",
+                label: "المحافظة",
+                icon: MapPin,
+                value: governorateFilter,
+                onChange: (v) => setGovernorateFilter(v),
+                options: [...governorateOptions],
+                allLabel: "كل المحافظات",
               },
-              options: [
-                { value: "all", label: "الكل" },
-                ...ZONE_OPTIONS.map((z) => ({ value: z.value, label: z.label })),
-              ],
-              allLabel: "كل المناطق",
-            },
-            {
-              id: "date",
-              label: "التاريخ",
-              icon: Calendar,
-              value: dateFilter,
-              onChange: (v) => {
-                setDateFilter(v);
-                setPage(1);
-              },
-              options: [
-                { value: "all", label: "الكل" },
-                { value: "today", label: "اليوم" },
-                { value: "week", label: "آخر 7 أيام" },
-                { value: "month", label: "آخر 30 يوم" },
-              ],
-              allLabel: "كل الفترات",
-            },
-          ]}
-          columns={[
-            { key: "code", label: "الكود" },
-            { key: "customer", label: "العميل" },
-            { key: "zone", label: "المنطقة" },
-            { key: "company", label: "الشركة" },
-            { key: "agent", label: "المندوب" },
-            { key: "amount", label: "المبلغ" },
-            { key: "status", label: "الحالة" },
-            { key: "created", label: "التاريخ" },
-            { key: "actions", label: "", className: "w-12" },
-          ]}
-          rows={paginatedRows.map((item) => ({
-            id: item.order.order_id,
-            cells: [
-              <div key="code">
-                <Link
-                  to="/shipments/$orderId"
-                  params={{ orderId: item.order.order_id }}
-                  className="font-mono text-xs font-semibold text-primary hover:underline"
-                >
-                  {item.order.internal_code}
-                </Link>
-                <p className="font-mono text-[10px] text-muted-foreground">
-                  {item.order.reference_no}
-                </p>
-              </div>,
-              <div key="customer">
-                <p className="font-medium">{item.customer_name}</p>
-                <p className="text-[11px] tabular-nums text-muted-foreground">
-                  {item.customer_phone}
-                </p>
-              </div>,
-              <span key="zone" className="text-muted-foreground">
-                {item.governorate_name} / {item.city_name}
-              </span>,
-              item.company_name,
-              item.agent_name ?? <span className="text-warning">غير معيّن</span>,
-              <span key="amount" className="tabular-nums">
-                {formatAmount(item.original_amount)}{" "}
-                <span className="text-[10px] text-muted-foreground">ج.م</span>
-              </span>,
-              <StatusBadge key="status" status={item.status_key} />,
-              <span key="created" className="text-xs text-muted-foreground">
-                {formatDateTime(item.order.created_at)}
-              </span>,
-              <RowActions
-                key="actions"
-                onEdit={() => goToOrder(item.order.order_id)}
-                onDelete={() => toast.message("حذف الطلب — واجهة تصميمية")}
-                extra={[
-                  {
-                    label: "عرض التفاصيل",
-                    icon: <Eye className="ml-2 h-4 w-4" />,
-                    onClick: () => goToOrder(item.order.order_id),
-                  },
-                  {
-                    label: "تعيين / إعادة تعيين",
-                    icon: <UserCheck className="ml-2 h-4 w-4" />,
-                    onClick: () => {
-                      setActiveOrder(item);
-                      setAssignOpen(true);
+            ]}
+            extraFilters={
+              <DateRangePill
+                dateFrom={dateFrom}
+                dateTo={dateTo}
+                onDateFromChange={setDateFrom}
+                onDateToChange={setDateTo}
+              />
+            }
+            columns={[
+              { key: "code", label: "الكود" },
+              { key: "customer", label: "العميل" },
+              { key: "zone", label: "المنطقة" },
+              { key: "company", label: "الشركة" },
+              { key: "agent", label: "المندوب" },
+              { key: "amount", label: "المبلغ" },
+              { key: "status", label: "الحالة" },
+              { key: "created", label: "التاريخ" },
+              { key: "actions", label: "", className: "w-12" },
+            ]}
+            rows={orders.map((item) => ({
+              id: item.order.order_id,
+              cells: [
+                <div key="code">
+                  <Link
+                    to="/shipments/$orderId"
+                    params={{ orderId: item.order.order_id }}
+                    className="font-mono text-xs font-semibold text-primary hover:underline"
+                  >
+                    {item.order.internal_code}
+                  </Link>
+                  <p className="font-mono text-[10px] text-muted-foreground">
+                    {item.order.reference_no}
+                  </p>
+                </div>,
+                <div key="customer">
+                  <p className="font-medium">{item.customer_name}</p>
+                  <p className="text-[11px] tabular-nums text-muted-foreground">
+                    {item.customer_phone}
+                  </p>
+                </div>,
+                <span key="zone" className="text-muted-foreground">
+                  {item.governorate_name}
+                  {item.city_name && item.city_name !== "—" ? ` / ${item.city_name}` : ""}
+                </span>,
+                item.company_name,
+                item.agent_name ?? <span className="text-warning">غير معيّن</span>,
+                <span key="amount" className="tabular-nums">
+                  {formatAmount(item.original_amount)}{" "}
+                  <span className="text-[10px] text-muted-foreground">ج.م</span>
+                </span>,
+                <StatusBadge key="status" status={item.status_key} />,
+                <span key="created" className="text-xs text-muted-foreground">
+                  {formatDateTime(item.order.created_at)}
+                </span>,
+                <RowActions
+                  key="actions"
+                  onEdit={() => goToOrder(item.order.order_id)}
+                  onDelete={() => toast.message("حذف الطلب — واجهة تصميمية")}
+                  extra={[
+                    {
+                      label: "عرض التفاصيل",
+                      icon: <Eye className="ml-2 h-4 w-4" />,
+                      onClick: () => goToOrder(item.order.order_id),
                     },
-                  },
-                  {
-                    label: "تغيير الحالة",
-                    icon: <RefreshCw className="ml-2 h-4 w-4" />,
-                    onClick: () => {
-                      setActiveOrder(item);
-                      setStatusOpen(true);
+                    {
+                      label: "تعيين / إعادة تعيين",
+                      icon: <UserCheck className="ml-2 h-4 w-4" />,
+                      onClick: () => {
+                        setActiveOrder(item);
+                        setAssignOpen(true);
+                      },
                     },
-                  },
-                ]}
-              />,
-            ],
-          }))}
-          selectedIds={selectedIds}
-          onToggleSelect={(id) => {
-            setSelectedIds((prev) => {
-              const next = new Set(prev);
-              if (next.has(id)) next.delete(id);
-              else next.add(id);
-              return next;
-            });
-          }}
-          onToggleSelectAll={(ids) => {
-            setSelectedIds(selectedIds.size === ids.length ? new Set() : new Set(ids));
-          }}
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          totalCount={filtered.length}
-          emptyMessage="لا توجد طلبات مطابقة للفلتر"
-        />
+                    {
+                      label: "تغيير الحالة",
+                      icon: <RefreshCw className="ml-2 h-4 w-4" />,
+                      onClick: () => {
+                        setActiveOrder(item);
+                        setStatusOpen(true);
+                      },
+                    },
+                  ]}
+                />,
+              ],
+            }))}
+            selectedIds={selectedIds}
+            onToggleSelect={(id) => {
+              setSelectedIds((prev) => {
+                const next = new Set(prev);
+                if (next.has(id)) next.delete(id);
+                else next.add(id);
+                return next;
+              });
+            }}
+            onToggleSelectAll={(ids) => {
+              setSelectedIds(selectedIds.size === ids.length ? new Set() : new Set(ids));
+            }}
+            page={page}
+            totalPages={totalPages}
+            onPageChange={(p) => setPage(p)}
+            totalCount={totalCount}
+            emptyMessage="لا توجد طلبات مطابقة للفلتر"
+          />
+        </>
       )}
 
       <ImportExcelDialog

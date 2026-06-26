@@ -29,13 +29,19 @@ export function AdminPageHeader({
       <div>
         <h1 className="text-2xl font-extrabold tracking-tight md:text-3xl">{title}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          جدول <code className="rounded bg-muted px-1 text-[10px]">{tableName}</code> — {description}
+          جدول <code className="rounded bg-muted px-1 text-[10px]">{tableName}</code> —{" "}
+          {description}
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {extra}
         {selectedCount > 0 && onBulkDelete && (
-          <Button variant="outline" size="sm" className="rounded-xl text-destructive hover:bg-destructive/10" onClick={onBulkDelete}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-xl text-destructive hover:bg-destructive/10"
+            onClick={onBulkDelete}
+          >
             <Trash2 className="ml-1.5 h-4 w-4" />
             حذف ({selectedCount})
           </Button>

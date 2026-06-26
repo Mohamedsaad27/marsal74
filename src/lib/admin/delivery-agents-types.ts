@@ -1,4 +1,4 @@
-export type VehicleType = 1 | 2 | 3 | 4 | 5;
+export type VehicleType = 1 | 2;
 export type CommissionType = 1 | 2;
 
 // ─── Raw API shapes (as returned by the server) ───────────────────────────────
@@ -220,9 +220,6 @@ export interface ApiResponse<T> {
 export const VEHICLE_TYPE_LABELS: Record<VehicleType, string> = {
   1: "دراجة نارية",
   2: "سيارة",
-  3: "فان",
-  4: "دراجة هوائية",
-  5: "سيراً",
 };
 
 export const COMMISSION_TYPE_LABELS: Record<CommissionType, string> = {

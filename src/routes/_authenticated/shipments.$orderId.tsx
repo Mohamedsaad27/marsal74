@@ -18,60 +18,61 @@ import {
 } from "@/lib/admin/orders-types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  ArrowRight,
-  Camera,
-  Loader2,
-  Printer,
-  RefreshCw,
-  UserCheck,
-} from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { ArrowRight, Camera, Loader2, Phone, Printer, RefreshCw, UserCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/shipments/$orderId")({
   component: OrderDetailPage,
 });
 
-function DataTable({
+// ─── Reusable sub-components ─────────────────────────────────────────────────
+
+function SectionCard({
+  title,
   tableName,
-  columns,
-  rows,
+  children,
 }: {
-  tableName: string;
-  columns: { key: string; label: string }[];
-  rows: Record<string, React.ReactNode>[];
+  title: string;
+  tableName?: string;
+  children: React.ReactNode;
 }) {
   return (
     <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
-      <div className="border-b border-border bg-muted/30 px-4 py-3">
-        <code className="text-xs font-bold text-primary">{tableName}</code>
+      <div className="flex items-center justify-between border-b border-border bg-muted/30 px-4 py-3">
+        <p className="text-sm font-semibold">{title}</p>
+        {tableName && (
+          <code className="text-[10px] font-medium text-muted-foreground">{tableName}</code>
+        )}
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border text-right text-xs font-semibold text-muted-foreground">
-              {columns.map((col) => (
-                <th key={col.key} className="px-4 py-2.5">
-                  {col.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, index) => (
-              <tr key={index} className="border-b border-border/60 last:border-0">
-                {columns.map((col) => (
-                  <td key={col.key} className="px-4 py-3 align-top">
-                    {row[col.key]}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {children}
     </section>
   );
 }
+
+function FieldGrid({ rows }: { rows: { label: string; value: React.ReactNode }[] }) {
+  return (
+    <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 p-4 text-sm">
+      {rows.map(({ label, value }) => (
+        <div key={label} className="contents">
+          <dt className="text-muted-foreground">{label}</dt>
+          <dd className="font-medium">{value ?? "—"}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function InfoCard({ label, value, sub }: { label: string; value: React.ReactNode; sub?: string }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-1 font-semibold">{value}</p>
+      {sub && <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>}
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 function OrderDetailPage() {
   const { orderId } = Route.useParams();
@@ -100,6 +101,7 @@ function OrderDetailPage() {
     void loadDetail();
   }, [loadDetail]);
 
+  // Bridge to dialogs that expect OrderListItem
   const listItem: OrderListItem | null = detail
     ? {
         order: detail.order,
@@ -119,8 +121,10 @@ function OrderDetailPage() {
     setSaving(true);
     try {
       const response = await assignOrderAgent(orderId, agentId);
+      if (!response.isSuccess) throw new Error(response.message);
       toast.success(response.message);
       setAssignOpen(false);
+      void loadDetail(); // refresh to show new agent
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "فشل التعيين");
     } finally {
@@ -132,14 +136,18 @@ function OrderDetailPage() {
     setSaving(true);
     try {
       const response = await updateOrderStatus(orderId, status, note);
+      if (!response.isSuccess) throw new Error(response.message);
       toast.success(response.message);
       setStatusOpen(false);
+      void loadDetail(); // refresh timeline + badge
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "فشل تحديث الحالة");
     } finally {
       setSaving(false);
     }
   };
+
+  // ── Loading state ──────────────────────────────────────────────────────────
 
   if (loading) {
     return (
@@ -164,10 +172,17 @@ function OrderDetailPage() {
     );
   }
 
-  const statusLabel = ORDER_STATUS_OPTIONS.find((o) => o.code === detail.order.status)?.label ?? String(detail.order.status);
+  const statusLabel =
+    ORDER_STATUS_OPTIONS.find((o) => o.code === detail.order.status)?.label ??
+    String(detail.order.status);
+
+  const hasCity = detail.city_name && detail.city_name !== "—";
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <AppShell>
+      {/* ── Back + header ── */}
       <div className="mb-6">
         <Button asChild variant="ghost" size="sm" className="mb-3 rounded-xl text-muted-foreground">
           <Link to="/shipments">
@@ -185,10 +200,18 @@ function OrderDetailPage() {
               <StatusBadge status={detail.status_key} />
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              ref: {detail.order.reference_no} — order_id:{" "}
-              <code className="text-[10px]">{detail.order.order_id}</code>
+              {detail.order.reference_no && (
+                <>
+                  ref: <span className="font-mono">{detail.order.reference_no}</span> —{" "}
+                </>
+              )}
+              order_id: <code className="text-[10px]">{detail.order.order_id}</code>
             </p>
+            {detail.notes && (
+              <p className="mt-1 text-sm text-muted-foreground">ملاحظات: {detail.notes}</p>
+            )}
           </div>
+
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" className="rounded-xl" onClick={() => setAssignOpen(true)}>
               <UserCheck className="ms-2 h-4 w-4" />
@@ -202,7 +225,10 @@ function OrderDetailPage() {
               <Camera className="ms-2 h-4 w-4" />
               إثباتات ({detail.delivery_proofs.length})
             </Button>
-            <Button className="rounded-xl gradient-brand shadow-glow" onClick={() => setWaybillOpen(true)}>
+            <Button
+              className="rounded-xl gradient-brand shadow-glow"
+              onClick={() => setWaybillOpen(true)}
+            >
               <Printer className="ms-2 h-4 w-4" />
               طباعة البوليصة
             </Button>
@@ -210,144 +236,249 @@ function OrderDetailPage() {
         </div>
       </div>
 
+      {/* ── Quick-glance cards ── */}
       <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { label: "الشركة", value: detail.company_name },
-          { label: "المندوب", value: detail.agent_name ?? "غير معيّن" },
-          { label: "assigned_at", value: formatDateTime(detail.order.assigned_at) },
-          { label: "delivered_at", value: formatDateTime(detail.order.delivered_at) },
-        ].map((card) => (
-          <div key={card.label} className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-            <p className="text-xs font-semibold text-muted-foreground">{card.label}</p>
-            <p className="mt-1 font-semibold">{card.value}</p>
-          </div>
-        ))}
+        <InfoCard label="الشركة" value={detail.company_name} sub={detail.company_phone} />
+        <InfoCard
+          label="المندوب"
+          value={detail.agent_name ?? <span className="text-warning">غير معيّن</span>}
+          sub={detail.agent_phone ?? undefined}
+        />
+        <InfoCard label="تاريخ التعيين" value={formatDateTime(detail.order.assigned_at)} />
+        <InfoCard label="تاريخ التسليم" value={formatDateTime(detail.order.delivered_at)} />
       </div>
 
+      {/* ── Main grid: details left, timeline right ── */}
       <div className="grid gap-6 xl:grid-cols-[1fr_340px]">
         <div className="space-y-6">
-          <DataTable
-            tableName="orders"
-            columns={[
-              { key: "field", label: "الحقل" },
-              { key: "value", label: "القيمة" },
-            ]}
-            rows={[
-              { field: "order_id", value: detail.order.order_id },
-              { field: "reference_no", value: detail.order.reference_no },
-              { field: "internal_code", value: detail.order.internal_code },
-              { field: "shipping_company_id", value: detail.order.shipping_company_id ?? "—" },
-              { field: "delivery_agent_id", value: detail.order.delivery_agent_id ?? "—" },
-              { field: "status", value: `${detail.order.status} — ${statusLabel}` },
-              { field: "created_at", value: formatDateTime(detail.order.created_at) },
-              { field: "updated_at", value: formatDateTime(detail.order.updated_at) },
-            ]}
-          />
+          {/* Customer */}
+          <SectionCard title="بيانات العميل" tableName="order_customer_info">
+            <FieldGrid
+              rows={[
+                { label: "الاسم", value: detail.customer_info.customer_name },
+                {
+                  label: "الهاتف",
+                  value: (
+                    <a
+                      href={`tel:${detail.customer_info.customer_phone}`}
+                      className="flex items-center gap-1 text-primary hover:underline"
+                    >
+                      <Phone className="h-3 w-3" />
+                      {detail.customer_info.customer_phone}
+                    </a>
+                  ),
+                },
+                {
+                  label: "هاتف بديل",
+                  value: detail.customer_info.phone_alt ? (
+                    <a
+                      href={`tel:${detail.customer_info.phone_alt}`}
+                      className="flex items-center gap-1 text-primary hover:underline"
+                    >
+                      <Phone className="h-3 w-3" />
+                      {detail.customer_info.phone_alt}
+                    </a>
+                  ) : (
+                    "—"
+                  ),
+                },
+              ]}
+            />
+          </SectionCard>
 
-          <DataTable
-            tableName="order_customer_info"
-            columns={[
-              { key: "customer_name", label: "customer_name" },
-              { key: "customer_phone", label: "customer_phone" },
-              { key: "phone_alt", label: "phone_alt" },
-            ]}
-            rows={[
-              {
-                customer_name: detail.customer_info.customer_name,
-                customer_phone: detail.customer_info.customer_phone,
-                phone_alt: detail.customer_info.phone_alt ?? "—",
-              },
-            ]}
-          />
+          {/* Address */}
+          <SectionCard title="عنوان التوصيل" tableName="order_addresses">
+            <FieldGrid
+              rows={[
+                {
+                  label: "المحافظة",
+                  value: detail.governorate_name,
+                },
+                {
+                  label: "المدينة",
+                  value: hasCity ? detail.city_name : "—",
+                },
+                { label: "العنوان التفصيلي", value: detail.address.address_line },
+              ]}
+            />
+          </SectionCard>
 
-          <DataTable
-            tableName="order_addresses"
-            columns={[
-              { key: "governorate", label: "governorate_id" },
-              { key: "city", label: "city_id" },
-              { key: "address_line", label: "address_line" },
-            ]}
-            rows={[
-              {
-                governorate: `${detail.address.governorate_id} (${detail.governorate_name})`,
-                city: `${detail.address.city_id} (${detail.city_name})`,
-                address_line: detail.address.address_line,
-              },
-            ]}
-          />
+          {/* Items */}
+          <SectionCard title="محتوى الشحنة" tableName="order_items">
+            <FieldGrid
+              rows={[
+                {
+                  label: "الوصف",
+                  value: detail.items[0]?.item_description ?? detail.notes ?? "—",
+                },
+                { label: "الكمية الإجمالية", value: detail.items[0]?.total_quantity ?? "—" },
+                {
+                  label: "الكمية المسلّمة",
+                  value: detail.items[0]?.delivered_quantity ?? "—",
+                },
+                {
+                  label: "الكمية المرتجعة",
+                  value: detail.items[0]?.returned_quantity ?? "—",
+                },
+              ]}
+            />
+          </SectionCard>
 
-          <DataTable
-            tableName="order_items"
-            columns={[
-              { key: "item_description", label: "item_description" },
-              { key: "total_quantity", label: "total_quantity" },
-              { key: "delivered_quantity", label: "delivered_quantity" },
-              { key: "returned_quantity", label: "returned_quantity" },
-            ]}
-            rows={detail.items.map((item) => ({
-              item_description: item.item_description ?? "—",
-              total_quantity: item.total_quantity,
-              delivered_quantity: item.delivered_quantity ?? "—",
-              returned_quantity: item.returned_quantity ?? "—",
-            }))}
-          />
-
-          <DataTable
-            tableName="order_financials"
-            columns={[
-              { key: "original_amount", label: "original_amount" },
-              { key: "approved_amount", label: "approved_amount" },
-              { key: "collected_amount", label: "collected_amount" },
-              { key: "shipping_fee", label: "shipping_fee" },
-              { key: "commission_amount", label: "commission_amount" },
-              { key: "net_due_company", label: "net_due_company" },
-              { key: "is_settled", label: "is_settled" },
-            ]}
-            rows={[
-              {
-                original_amount: formatAmount(detail.financials.original_amount),
-                approved_amount: formatAmount(detail.financials.approved_amount),
-                collected_amount: formatAmount(detail.financials.collected_amount),
-                shipping_fee: formatAmount(detail.financials.shipping_fee),
-                commission_amount: formatAmount(detail.financials.commission_amount),
-                net_due_company: formatAmount(detail.financials.net_due_company),
-                is_settled: detail.financials.is_settled === 1 ? "نعم" : "لا",
-              },
-            ]}
-          />
-
-          <DataTable
-            tableName="order_approvals"
-            columns={[
-              { key: "requires_approval", label: "requires_approval" },
-              { key: "approval_granted", label: "approval_granted" },
-              { key: "approved_by", label: "approved_by" },
-              { key: "approved_at", label: "approved_at" },
-            ]}
-            rows={
-              detail.approval
-                ? [
-                    {
-                      requires_approval: detail.approval.requires_approval === 1 ? "نعم" : "لا",
-                      approval_granted: (
-                        <Badge variant={detail.approval.approval_granted === 1 ? "default" : "secondary"}>
-                          {approvalLabel(detail.approval.approval_granted)}
+          {/* Financials */}
+          <SectionCard title="المالية" tableName="order_financials">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-right text-xs font-semibold text-muted-foreground">
+                    {[
+                      "المبلغ الأصلي",
+                      "المبلغ المعتمد",
+                      "المحصّل",
+                      "رسوم الشحن",
+                      "العمولة",
+                      "صافي الشركة",
+                      "تسوية",
+                    ].map((h) => (
+                      <th key={h} className="px-4 py-2.5 font-semibold">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    {[
+                      formatAmount(detail.financials.original_amount),
+                      formatAmount(detail.financials.approved_amount),
+                      formatAmount(detail.financials.collected_amount),
+                      formatAmount(detail.financials.shipping_fee),
+                      formatAmount(detail.financials.commission_amount),
+                      formatAmount(detail.financials.net_due_company),
+                      detail.financials.is_settled === 1 ? (
+                        <Badge key="settled" variant="default">
+                          مسوّى
+                        </Badge>
+                      ) : (
+                        <Badge key="unsettled" variant="secondary">
+                          غير مسوّى
                         </Badge>
                       ),
-                      approved_by: detail.approved_by_name ?? detail.approval.approved_by ?? "—",
-                      approved_at: formatDateTime(detail.approval.approved_at),
+                    ].map((cell, i) => (
+                      <td
+                        key={i}
+                        className="border-b border-border/60 px-4 py-3 tabular-nums last:border-0"
+                      >
+                        {cell}
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </SectionCard>
+
+          {/* Schedule — only render if any schedule field is present */}
+          {detail.schedule &&
+            (detail.schedule.expected_delivery_date ||
+              detail.schedule.postponed_date ||
+              detail.schedule.schedule_notes) && (
+              <SectionCard title="الجدولة" tableName="order_schedule">
+                <FieldGrid
+                  rows={[
+                    {
+                      label: "تاريخ التسليم المتوقع",
+                      value: formatDateTime(detail.schedule.expected_delivery_date),
                     },
-                  ]
-                : [{ requires_approval: "—", approval_granted: "لا يوجد", approved_by: "—", approved_at: "—" }]
-            }
-          />
+                    {
+                      label: "تاريخ التأجيل",
+                      value: formatDateTime(detail.schedule.postponed_date),
+                    },
+                    { label: "ملاحظات الجدولة", value: detail.schedule.schedule_notes },
+                  ]}
+                />
+              </SectionCard>
+            )}
+
+          {/* Approvals — only render if approval data exists */}
+          {detail.approval && (
+            <SectionCard title="الموافقات" tableName="order_approvals">
+              <FieldGrid
+                rows={[
+                  {
+                    label: "يتطلب موافقة",
+                    value: detail.approval.requires_approval === 1 ? "نعم" : "لا",
+                  },
+                  {
+                    label: "حالة الموافقة",
+                    value: (
+                      <Badge
+                        variant={detail.approval.approval_granted === 1 ? "default" : "secondary"}
+                      >
+                        {approvalLabel(detail.approval.approval_granted)}
+                      </Badge>
+                    ),
+                  },
+                  {
+                    label: "بواسطة",
+                    value: detail.approved_by_name ?? detail.approval.approved_by ?? "—",
+                  },
+                  {
+                    label: "في",
+                    value: formatDateTime(detail.approval.approved_at),
+                  },
+                ]}
+              />
+            </SectionCard>
+          )}
+
+          {/* Raw order fields */}
+          {/* <SectionCard title="بيانات الطلب" tableName="orders">
+            <FieldGrid
+              rows={[
+                {
+                  label: "order_id",
+                  value: <code className="text-xs">{detail.order.order_id}</code>,
+                },
+                { label: "reference_no", value: detail.order.reference_no },
+                { label: "internal_code", value: detail.order.internal_code },
+                {
+                  label: "status",
+                  value: `${detail.order.status} — ${statusLabel}`,
+                },
+                {
+                  label: "shipping_company_id",
+                  value: <code className="text-xs">{detail.order.shipping_company_id ?? "—"}</code>,
+                },
+                {
+                  label: "delivery_agent_id",
+                  value: <code className="text-xs">{detail.order.delivery_agent_id ?? "—"}</code>,
+                },
+                { label: "created_at", value: formatDateTime(detail.order.created_at) },
+                { label: "updated_at", value: formatDateTime(detail.order.updated_at) },
+              ]}
+            />
+          </SectionCard> */}
         </div>
 
+        {/* ── Right column: status timeline ── */}
         <OrderStatusTimeline entries={detail.status_history} />
       </div>
 
-      <OrderAssignDialog open={assignOpen} onOpenChange={setAssignOpen} order={listItem} onSave={handleAssign} loading={saving} />
-      <OrderStatusDialog open={statusOpen} onOpenChange={setStatusOpen} order={listItem} onSave={handleStatusChange} loading={saving} />
+      {/* ── Dialogs ── */}
+      <OrderAssignDialog
+        open={assignOpen}
+        onOpenChange={setAssignOpen}
+        order={listItem}
+        onSave={handleAssign}
+        loading={saving}
+      />
+      <OrderStatusDialog
+        open={statusOpen}
+        onOpenChange={setStatusOpen}
+        order={listItem}
+        onSave={handleStatusChange}
+        loading={saving}
+      />
       <OrderDeliveryProofsDialog
         open={proofsOpen}
         onOpenChange={setProofsOpen}

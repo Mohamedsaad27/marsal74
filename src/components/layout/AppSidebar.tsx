@@ -42,17 +42,16 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-sidebar-border/60 px-4 py-4">
         <Link
           to="/"
-          className="flex items-center justify-end gap-3 transition-opacity hover:opacity-90"
+          className="flex items-center justify-start gap-3 transition-opacity hover:opacity-90"
         >
-          <h1 className="max-w-[180px] truncate text-lg font-bold tracking-tight text-sidebar-foreground">
-            {settings?.identity.platform_name}
-          </h1>
-
           <img
             src={settings?.identity.logo_url}
             alt={settings?.identity.platform_name}
             className="h-12 w-12 rounded-lg object-contain"
           />
+          <h1 className="max-w-[180px] truncate text-lg font-bold tracking-tight text-sidebar-foreground">
+            {settings?.identity.platform_name}
+          </h1>
         </Link>
       </SidebarHeader>
 

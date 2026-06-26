@@ -9,8 +9,8 @@ import {
 import { MoreHorizontal, Pencil, Trash2, Power, MapPin, Eye } from "lucide-react";
 
 type Props = {
-  onEdit: () => void;
-  onDelete: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
   onToggleActive?: () => void;
   activeLabel?: string;
   inactiveLabel?: string;
@@ -34,16 +34,20 @@ export function RowActions({
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
+
       <DropdownMenuContent align="start" className="rounded-xl" dir="rtl">
-        <DropdownMenuItem
-          onSelect={(event) => {
-            event.preventDefault();
-            onEdit();
-          }}
-        >
-          <Pencil className="ml-2 h-4 w-4" />
-          تعديل
-        </DropdownMenuItem>
+        {onEdit && (
+          <DropdownMenuItem
+            onSelect={(event) => {
+              event.preventDefault();
+              onEdit();
+            }}
+          >
+            <Pencil className="ml-2 h-4 w-4" />
+            تعديل
+          </DropdownMenuItem>
+        )}
+
         {extra.map((e) => (
           <DropdownMenuItem
             key={e.label}
@@ -56,6 +60,7 @@ export function RowActions({
             {e.label}
           </DropdownMenuItem>
         ))}
+
         {onToggleActive && (
           <DropdownMenuItem
             onSelect={(event) => {
@@ -67,20 +72,24 @@ export function RowActions({
             {isActive ? activeLabel : inactiveLabel}
           </DropdownMenuItem>
         )}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="text-destructive focus:text-destructive"
-          onSelect={(event) => {
-            event.preventDefault();
-            onDelete();
-          }}
-        >
-          <Trash2 className="ml-2 h-4 w-4" />
-          حذف
-        </DropdownMenuItem>
+
+        {onDelete && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onSelect={(event) => {
+                event.preventDefault();
+                onDelete();
+              }}
+            >
+              <Trash2 className="ml-2 h-4 w-4" />
+              حذف
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
-
 export { MapPin };

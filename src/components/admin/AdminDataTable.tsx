@@ -33,6 +33,8 @@ type Props = {
   onSearchChange: (v: string) => void;
   searchPlaceholder?: string;
   filters?: AdminFilter[];
+  /** Arbitrary nodes rendered inline in the filter bar, after the select filters */
+  extraFilters?: React.ReactNode;
   loading?: boolean;
   emptyMessage?: string;
   columns: { key: string; label: string; className?: string }[];
@@ -52,6 +54,7 @@ export function AdminDataTable({
   onSearchChange,
   searchPlaceholder = "بحث...",
   filters = [],
+  extraFilters,
   loading = false,
   emptyMessage = "لا توجد بيانات",
   columns,
@@ -81,6 +84,7 @@ export function AdminDataTable({
             dir="rtl"
           />
         </div>
+
         {filters.map((f) => {
           const Icon = f.icon;
           const displayValue = getFilterDisplayValue(f);
@@ -118,6 +122,9 @@ export function AdminDataTable({
             </div>
           );
         })}
+
+        {extraFilters}
+
         <p className="text-xs text-muted-foreground tabular-nums">{totalCount} سجل</p>
       </div>
 

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -9,15 +9,20 @@ import { ReturnDetailDialog } from "@/components/admin/ReturnDetailDialog";
 import { RowActions } from "@/components/admin/RowActions";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import {
-  computeReturnKpis,
   exportReturnsReport,
   fetchReturns,
+  fetchReturnStats,
   receiveReturn,
   sendReturnToCompany,
 } from "@/lib/admin/returns-api";
+import type { ReturnFilters } from "@/lib/admin/returns-api";
 import { RETURN_AGENT_OPTIONS, RETURN_COMPANY_OPTIONS } from "@/lib/admin/returns-data";
-import type { ReturnRecord } from "@/lib/admin/returns-types";
-import { RETURN_STATUS_OPTIONS, formatDateTime, returnStatusLabel } from "@/lib/admin/returns-types";
+import type { ReturnKpis, ReturnRecord } from "@/lib/admin/returns-types";
+import {
+  RETURN_STATUS_OPTIONS,
+  formatDateTime,
+  returnStatusLabel,
+} from "@/lib/admin/returns-types";
 import type { ConfirmAction } from "@/components/admin/use-admin-crud";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -60,6 +65,7 @@ function ReturnStatusBadge({ status }: { status: ReturnRecord["return_status"] }
 function ReturnsPage() {
   const navigate = useNavigate();
   const [items, setItems] = useState<ReturnRecord[]>([]);
+  const [kpis, setKpis] = useState<ReturnKpis>({ total: 0, pending: 0, received: 0, sent: 0 });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -75,40 +81,41 @@ function ReturnsPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetchReturns();
-      if (!response.isSuccess) throw new Error(response.message);
-      setItems(response.data);
+      const filters: ReturnFilters = {
+        status: statusFilter !== "all" ? statusFilter : undefined,
+        company_id: companyFilter !== "all" ? companyFilter : undefined,
+        agent_id: agentFilter !== "all" ? agentFilter : undefined,
+      };
+      const [listRes, statsRes] = await Promise.all([fetchReturns(filters), fetchReturnStats()]);
+      if (!listRes.isSuccess) throw new Error(listRes.message);
+      if (!statsRes.isSuccess) throw new Error(statsRes.message);
+      setItems(listRes.data);
+      setKpis(statsRes.data);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "فشل تحميل المرتجعات");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [statusFilter, companyFilter, agentFilter]);
 
   useEffect(() => {
     void loadData();
   }, [loadData]);
 
+  // client-side search only (filters already applied server-side)
   const filtered = useMemo(() => {
-    return items.filter((item) => {
-      if (statusFilter !== "all" && String(item.return_status) !== statusFilter) return false;
-      if (companyFilter !== "all" && item.shipping_company_id !== companyFilter) return false;
-      if (agentFilter !== "all" && item.delivery_agent_id !== agentFilter) return false;
-      if (!search.trim()) return true;
-      const q = search.toLowerCase();
-      return (
-        item.return_ref.toLowerCase().includes(q) ||
-        item.internal_code.toLowerCase().includes(q) ||
+    if (!search.trim()) return items;
+    const q = search.toLowerCase();
+    return items.filter(
+      (item) =>
         item.agent_name.toLowerCase().includes(q) ||
         item.company_name.toLowerCase().includes(q) ||
-        item.return_reason.toLowerCase().includes(q)
-      );
-    });
-  }, [items, statusFilter, companyFilter, agentFilter, search]);
+        item.return_reason.toLowerCase().includes(q),
+    );
+  }, [items, search]);
 
   const paginatedRows = filtered.slice((page - 1) * pageSize, page * pageSize);
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const kpis = useMemo(() => computeReturnKpis(items), [items]);
 
   const handleExport = async () => {
     try {
@@ -123,6 +130,7 @@ function ReturnsPage() {
     try {
       const response = await receiveReturn(returnId);
       toast.success(response.message);
+      void loadData();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "فشل الاستلام");
     }
@@ -132,6 +140,7 @@ function ReturnsPage() {
     try {
       const response = await sendReturnToCompany(returnId);
       toast.success(response.message);
+      void loadData();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "فشل التسليم");
     }
@@ -145,6 +154,7 @@ function ReturnsPage() {
         description="تتبع المرتجعات من المندوب → الإدارة → شركة الشحن"
         addLabel="تسجيل مرتجع"
         onAdd={() => toast.message("تسجيل مرتجع — واجهة تصميمية")}
+        showAdd={false}
         extra={
           <Button variant="outline" className="rounded-xl" onClick={handleExport}>
             <Download className="ms-2 h-4 w-4" />
@@ -155,8 +165,18 @@ function ReturnsPage() {
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard label="إجمالي المرتجعات" value={String(kpis.total)} icon={Undo2} tone="warning" />
-        <KpiCard label="بانتظار الاستلام" value={String(kpis.pending)} icon={PackageX} tone="warning" />
-        <KpiCard label="مستلمة من المناديب" value={String(kpis.received)} icon={PackageCheck} tone="info" />
+        <KpiCard
+          label="بانتظار الاستلام"
+          value={String(kpis.pending)}
+          icon={PackageX}
+          tone="warning"
+        />
+        <KpiCard
+          label="مستلمة من المناديب"
+          value={String(kpis.received)}
+          icon={PackageCheck}
+          tone="info"
+        />
         <KpiCard label="مُعادة للشركات" value={String(kpis.sent)} icon={Truck} tone="success" />
       </div>
 
@@ -171,7 +191,7 @@ function ReturnsPage() {
             setSearch(v);
             setPage(1);
           }}
-          searchPlaceholder="رقم المرتجع، الطلب، المندوب، السبب..."
+          searchPlaceholder="المندوب، الشركة، السبب..."
           filters={[
             {
               id: "status",
@@ -182,7 +202,10 @@ function ReturnsPage() {
                 setStatusFilter(v);
                 setPage(1);
               },
-              options: [{ value: "all", label: "الكل" }, ...RETURN_STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))],
+              options: [
+                { value: "all", label: "الكل" },
+                ...RETURN_STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+              ],
               allLabel: "كل الحالات",
             },
             {
@@ -211,7 +234,7 @@ function ReturnsPage() {
             },
           ]}
           columns={[
-            { key: "ref", label: "رقم المرتجع" },
+            { key: "id", label: "المعرّف" },
             { key: "order", label: "الطلب" },
             { key: "agent", label: "المندوب" },
             { key: "company", label: "الشركة" },
@@ -225,23 +248,22 @@ function ReturnsPage() {
           rows={paginatedRows.map((item) => ({
             id: item.return_id,
             cells: [
-              <span key="ref" className="font-mono text-xs font-semibold text-primary">
-                {item.return_ref}
+              <span key="id" className="font-mono text-xs font-semibold text-primary">
+                {item.return_id}
               </span>,
-              <Link
-                key="order"
-                to="/shipments/$orderId"
-                params={{ orderId: item.order_id }}
-                className="font-mono text-[11px] text-primary hover:underline"
-              >
-                {item.internal_code}
-              </Link>,
+              <span key="order" className="font-mono text-[11px] text-muted-foreground">
+                {item.order_id}
+              </span>,
               item.agent_name,
               item.company_name,
               <span key="qty" className="font-semibold tabular-nums">
                 {item.returned_quantity}
               </span>,
-              <span key="reason" className="max-w-[200px] truncate text-muted-foreground" title={item.return_reason}>
+              <span
+                key="reason"
+                className="max-w-[200px] truncate text-muted-foreground"
+                title={item.return_reason}
+              >
                 {item.return_reason}
               </span>,
               <span key="received" className="text-xs text-muted-foreground">
@@ -262,7 +284,8 @@ function ReturnsPage() {
                   {
                     label: "عرض الطلب",
                     icon: <Eye className="ml-2 h-4 w-4" />,
-                    onClick: () => navigate({ to: "/shipments/$orderId", params: { orderId: item.order_id } }),
+                    onClick: () =>
+                      navigate({ to: "/shipments/$orderId", params: { orderId: item.order_id } }),
                   },
                   ...(item.return_status === 1
                     ? [
@@ -272,7 +295,7 @@ function ReturnsPage() {
                           onClick: () =>
                             setConfirmAction({
                               title: "استلام المرتجع",
-                              description: `تأكيد استلام ${item.return_ref} من ${item.agent_name}`,
+                              description: `تأكيد استلام المرتجع من ${item.agent_name}`,
                               confirmLabel: "تأكيد الاستلام",
                               onConfirm: () => {
                                 setConfirmAction(null);
@@ -290,7 +313,7 @@ function ReturnsPage() {
                           onClick: () =>
                             setConfirmAction({
                               title: "تسليم للشركة",
-                              description: `تأكيد تسليم ${item.return_ref} إلى ${item.company_name}`,
+                              description: `تأكيد تسليم المرتجع إلى ${item.company_name}`,
                               confirmLabel: "تأكيد التسليم",
                               onConfirm: () => {
                                 setConfirmAction(null);
@@ -313,7 +336,9 @@ function ReturnsPage() {
               return next;
             });
           }}
-          onToggleSelectAll={(ids) => setSelectedIds(selectedIds.size === ids.length ? new Set() : new Set(ids))}
+          onToggleSelectAll={(ids) =>
+            setSelectedIds(selectedIds.size === ids.length ? new Set() : new Set(ids))
+          }
           page={page}
           totalPages={totalPages}
           onPageChange={setPage}
