@@ -23,22 +23,35 @@ async function handleResponse<T>(res: Response): Promise<ApiResponse<T>> {
   if (!res.ok) throw new Error(json.message ?? `HTTP ${res.status}`);
   return json as ApiResponse<T>;
 }
-
+export type ReturnListResponse = {
+  items: ReturnRecord[];
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+  from: number | null;
+  to: number | null;
+  has_more: boolean;
+};
 export type ReturnFilters = {
   status?: string;
   company_id?: string;
   agent_id?: string;
+  page?: number;
   per_page?: number;
 };
-
 export async function fetchReturns(
   filters: ReturnFilters = {},
-): Promise<ApiResponse<ReturnRecord[]>> {
+): Promise<ApiResponse<ReturnListResponse>> {
   const params = new URLSearchParams();
 
   if (filters.status) params.set("status", filters.status);
+
   if (filters.company_id) params.set("company_id", filters.company_id);
+
   if (filters.agent_id) params.set("agent_id", filters.agent_id);
+
+  params.set("page", String(filters.page ?? 1));
   params.set("per_page", String(filters.per_page ?? 20));
 
   const res = await fetch(`${BASE_URL}/admin/returns?${params}`, {
@@ -47,11 +60,21 @@ export async function fetchReturns(
 
   const raw = await handleResponse<{
     items: ReturnRecordWire[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from: number | null;
+    to: number | null;
+    has_more: boolean;
   }>(res);
 
   return {
     ...raw,
-    data: raw.data.items.map(normaliseReturn),
+    data: {
+      ...raw.data,
+      items: raw.data.items.map(normaliseReturn),
+    },
   };
 }
 

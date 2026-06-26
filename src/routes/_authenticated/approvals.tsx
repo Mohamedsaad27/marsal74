@@ -33,12 +33,15 @@ import {
   Eye,
   History,
   Loader2,
+  Truck,
   Power,
   ShieldAlert,
   ShieldCheck,
   Tag,
   XCircle,
 } from "lucide-react";
+import { fetchAgentOptions } from "@/lib/admin/orders-api";
+import type { AgentOption } from "@/lib/admin/orders-api";
 
 export const Route = createFileRoute("/_authenticated/approvals")({
   component: ApprovalsPage,
@@ -82,8 +85,10 @@ function ApprovalsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [agentFilter, setAgentFilter] = useState("all");
+  const [agentOptions, setAgentOptions] = useState<AgentOption[]>([]);
   const [page, setPage] = useState(1);
+  const [agentFilter, setAgentFilter] = useState("all");
+  const [optionsLoading, setOptionsLoading] = useState(true);
   const PAGE_SIZE = 20;
 
   // ── Detail dialog ────────────────────────────────────────────────────────
@@ -96,7 +101,25 @@ function ApprovalsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // ── Data loading ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    async function loadAgents() {
+      setOptionsLoading(true);
 
+      try {
+        const response = await fetchAgentOptions();
+
+        if (response.isSuccess) {
+          setAgentOptions(response.data);
+        }
+      } catch {
+        // ignore
+      } finally {
+        setOptionsLoading(false);
+      }
+    }
+
+    void loadAgents();
+  }, []);
   const loadStats = useCallback(async () => {
     const res = await fetchApprovalStats();
     if (res.isSuccess) setStats(res.data);
@@ -257,7 +280,6 @@ function ApprovalsPage() {
               value: statusFilter,
               onChange: handleFilterChange(setStatusFilter),
               options: [
-                { value: "all", label: "الكل" },
                 ...APPROVAL_STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
               ],
               allLabel: "كل الحالات",
@@ -268,19 +290,16 @@ function ApprovalsPage() {
               icon: Tag,
               value: typeFilter,
               onChange: handleFilterChange(setTypeFilter),
-              options: [
-                { value: "all", label: "الكل" },
-                ...APPROVAL_TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
-              ],
+              options: [...APPROVAL_TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))],
               allLabel: "كل الأنواع",
             },
             {
               id: "agent",
               label: "المندوب",
-              icon: ShieldCheck,
+              icon: Truck,
               value: agentFilter,
               onChange: handleFilterChange(setAgentFilter),
-              options: [{ value: "all", label: "الكل" }, ...APPROVAL_AGENT_OPTIONS],
+              options: [...agentOptions],
               allLabel: "كل المناديب",
             },
           ]}

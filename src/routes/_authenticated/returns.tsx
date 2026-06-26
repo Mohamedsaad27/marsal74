@@ -8,6 +8,8 @@ import { ConfirmActionDialog } from "@/components/admin/ConfirmActionDialog";
 import { ReturnDetailDialog } from "@/components/admin/ReturnDetailDialog";
 import { RowActions } from "@/components/admin/RowActions";
 import { KpiCard } from "@/components/dashboard/KpiCard";
+import { fetchAgentOptions, fetchCompanyOptions } from "@/lib/admin/orders-api";
+import type { AgentOption, CompanyOption } from "@/lib/admin/orders-api";
 import {
   exportReturnsReport,
   fetchReturns,
@@ -16,7 +18,6 @@ import {
   sendReturnToCompany,
 } from "@/lib/admin/returns-api";
 import type { ReturnFilters } from "@/lib/admin/returns-api";
-import { RETURN_AGENT_OPTIONS, RETURN_COMPANY_OPTIONS } from "@/lib/admin/returns-data";
 import type { ReturnKpis, ReturnRecord } from "@/lib/admin/returns-types";
 import {
   RETURN_STATUS_OPTIONS,
@@ -76,12 +77,47 @@ function ReturnsPage() {
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [activeItem, setActiveItem] = useState<ReturnRecord | null>(null);
-  const pageSize = 10;
+  const PAGE_SIZE = 20;
 
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [agentOptions, setAgentOptions] = useState<AgentOption[]>([]);
+  const [companyOptions, setCompanyOptions] = useState<CompanyOption[]>([]);
+
+  const [optionsLoading, setOptionsLoading] = useState(true);
+  const handleFilterChange = (setter: (value: string) => void) => (value: string) => {
+    setter(value);
+    setPage(1);
+  };
+  useEffect(() => {
+    async function loadOptions() {
+      setOptionsLoading(true);
+
+      try {
+        const [agents, companies] = await Promise.all([fetchAgentOptions(), fetchCompanyOptions()]);
+
+        if (agents.isSuccess) {
+          setAgentOptions(agents.data);
+        }
+
+        if (companies.isSuccess) {
+          setCompanyOptions(companies.data);
+        }
+      } catch {
+        // non-fatal
+      } finally {
+        setOptionsLoading(false);
+      }
+    }
+
+    void loadOptions();
+  }, []);
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const filters: ReturnFilters = {
+        page,
+        per_page: PAGE_SIZE,
         status: statusFilter !== "all" ? statusFilter : undefined,
         company_id: companyFilter !== "all" ? companyFilter : undefined,
         agent_id: agentFilter !== "all" ? agentFilter : undefined,
@@ -89,15 +125,16 @@ function ReturnsPage() {
       const [listRes, statsRes] = await Promise.all([fetchReturns(filters), fetchReturnStats()]);
       if (!listRes.isSuccess) throw new Error(listRes.message);
       if (!statsRes.isSuccess) throw new Error(statsRes.message);
-      setItems(listRes.data);
+      setItems(listRes.data.items);
+      setTotalCount(listRes.data.total);
+      setTotalPages(listRes.data.last_page);
       setKpis(statsRes.data);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "فشل تحميل المرتجعات");
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, companyFilter, agentFilter]);
-
+  }, [page, statusFilter, companyFilter, agentFilter]);
   useEffect(() => {
     void loadData();
   }, [loadData]);
@@ -113,9 +150,6 @@ function ReturnsPage() {
         item.return_reason.toLowerCase().includes(q),
     );
   }, [items, search]);
-
-  const paginatedRows = filtered.slice((page - 1) * pageSize, page * pageSize);
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
 
   const handleExport = async () => {
     try {
@@ -202,22 +236,15 @@ function ReturnsPage() {
                 setStatusFilter(v);
                 setPage(1);
               },
-              options: [
-                { value: "all", label: "الكل" },
-                ...RETURN_STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
-              ],
-              allLabel: "كل الحالات",
+              options: [...RETURN_STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))],
             },
             {
               id: "company",
               label: "الشركة",
               icon: Building2,
               value: companyFilter,
-              onChange: (v) => {
-                setCompanyFilter(v);
-                setPage(1);
-              },
-              options: [{ value: "all", label: "الكل" }, ...RETURN_COMPANY_OPTIONS],
+              onChange: handleFilterChange(setCompanyFilter),
+              options: companyOptions,
               allLabel: "كل الشركات",
             },
             {
@@ -225,11 +252,8 @@ function ReturnsPage() {
               label: "المندوب",
               icon: Truck,
               value: agentFilter,
-              onChange: (v) => {
-                setAgentFilter(v);
-                setPage(1);
-              },
-              options: [{ value: "all", label: "الكل" }, ...RETURN_AGENT_OPTIONS],
+              onChange: handleFilterChange(setAgentFilter),
+              options: agentOptions,
               allLabel: "كل المناديب",
             },
           ]}
@@ -245,7 +269,7 @@ function ReturnsPage() {
             { key: "status", label: "الحالة" },
             { key: "actions", label: "", className: "w-12" },
           ]}
-          rows={paginatedRows.map((item) => ({
+          rows={filtered.map((item) => ({
             id: item.return_id,
             cells: [
               <span key="id" className="font-mono text-xs font-semibold text-primary">
@@ -342,7 +366,7 @@ function ReturnsPage() {
           page={page}
           totalPages={totalPages}
           onPageChange={setPage}
-          totalCount={filtered.length}
+          totalCount={totalCount}
           emptyMessage="لا توجد مرتجعات مطابقة"
         />
       )}
