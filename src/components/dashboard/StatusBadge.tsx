@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 export type ShipmentStatus =
   | "pending"
   | "assigned"
-  | "out_for_delivery"
+  | "in_delivery"
   | "awaiting_approval"
   | "delivered"
   | "delivered_price_changed"
@@ -26,7 +26,7 @@ const map: Record<ShipmentStatus, { label: string; cls: string }> = {
     cls: "bg-info/10 text-info ring-info/20",
   },
 
-  out_for_delivery: {
+  in_delivery: {
     label: "قيد التوصيل",
     cls: "bg-blue-100 text-blue-700 ring-blue-200",
   },

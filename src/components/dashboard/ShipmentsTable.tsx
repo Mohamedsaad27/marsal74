@@ -1,11 +1,12 @@
 import { MoreHorizontal, Filter, Download } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge, ShipmentStatus } from "./StatusBadge";
 import { apiFetch } from "@/lib/admin/users.api";
 import { PROFILE_BASE_URL } from "@/lib/utils";
-
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 type RecentOrdersResponse = {
   isSuccess: boolean;
   message: string;
@@ -48,9 +49,11 @@ type Row = {
   created_at: string;
 };
 
-async function getRecentOrders() {
+async function getRecentOrders(search: string) {
   const response = await apiFetch<RecentOrdersResponse>(
-    "/api/dashboard/recent-orders?per_page=15&page=1&status=&search=&sort_by=created_at&sort_dir=desc",
+    `/api/dashboard/recent-orders?per_page=15&page=1&status=&search=${encodeURIComponent(
+      search,
+    )}&sort_by=created_at&sort_dir=desc`,
     {
       method: "GET",
     },
@@ -66,7 +69,7 @@ function mapStatus(status: number): ShipmentStatus {
       return "pending";
 
     case 2:
-      return "in_transit";
+      return "in_delivery";
 
     case 3:
       return "delivered";
@@ -77,9 +80,17 @@ function mapStatus(status: number): ShipmentStatus {
 }
 
 export function ShipmentsTable() {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["recent-orders"],
-    queryFn: getRecentOrders,
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const { data, isLoading, isFetching, error } = useQuery({
+    queryKey: ["recent-orders", debouncedSearch],
+    queryFn: () => getRecentOrders(debouncedSearch),
+    placeholderData: (previousData) => previousData, // ← keeps old rows visible
   });
 
   const rows: Row[] =
@@ -107,7 +118,7 @@ export function ShipmentsTable() {
     );
   }
 
-  if (error) {
+  if (error && !data) {
     return (
       <div className="rounded-2xl border border-border bg-card p-8 shadow-soft">
         <div className="text-center text-sm text-destructive">فشل تحميل الطلبات</div>
@@ -121,8 +132,21 @@ export function ShipmentsTable() {
         <div>
           <h3 className="text-base font-bold">أحدث الطلبات</h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            آخر {data?.meta.per_page ?? 15} طلب
+            {isFetching
+              ? "جاري التحديث..."
+              : error
+                ? "تعذّر تحديث البيانات" // subtle, doesn't blow up the UI
+                : `آخر ${data?.meta.per_page ?? 15} طلب`}
           </p>
+        </div>
+        <div className="relative w-72">
+          <Search className="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="بحث برقم الطلب أو العميل..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pr-9"
+          />
         </div>
       </div>
 
