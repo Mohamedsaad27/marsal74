@@ -2,50 +2,96 @@ import { cn } from "@/lib/utils";
 
 // Aligned with orders.status + business doc 6.x scenarios
 export type ShipmentStatus =
-  | "pending" // 1 — في انتظار التعيين
-  | "assigned" // 2 — تم التعيين للمندوب
-  | "in_transit" // 3 — قيد التوصيل
-  | "delivered" // 4 — تم التسليم
-  | "partial_delivered" // 5 — تسليم جزئي
-  | "refused_paid_shipping" // 6 — رفض ودفع الشحن
-  | "refused_no_payment" // 7 — رفض بدون دفع
-  | "postponed" // 8 — مؤجل
-  | "evading" // 9 — تهرّب / مختفي
-  | "unsafe_area" // 10 — منطقة غير آمنة
-  | "out_of_governorate" // 11 — خارج المحافظة
-  | "returned" // 12 — مرتجع
-  | "delayed"; // alias متأخرة
-
+  | "pending"
+  | "assigned"
+  | "out_for_delivery"
+  | "awaiting_approval"
+  | "delivered"
+  | "delivered_price_changed"
+  | "partial_delivery"
+  | "refused_paid_shipping"
+  | "refused_no_payment"
+  | "customer_cancelled"
+  | "no_answer"
+  | "phone_off"
+  | "postponed";
 const map: Record<ShipmentStatus, { label: string; cls: string }> = {
-  pending: { label: "بانتظار التعيين", cls: "bg-warning/15 text-warning ring-warning/25" },
-  assigned: { label: "تم التعيين", cls: "bg-info/10 text-info ring-info/20" },
-  in_transit: { label: "قيد التوصيل", cls: "bg-info/10 text-info ring-info/20" },
-  delivered: { label: "تم التسليم", cls: "bg-success/10 text-success ring-success/20" },
-  partial_delivered: { label: "تسليم جزئي", cls: "bg-success/10 text-success ring-success/20" },
+  pending: {
+    label: "بانتظار التوزيع",
+    cls: "bg-muted text-muted-foreground ring-border",
+  },
+
+  assigned: {
+    label: "تم التعيين",
+    cls: "bg-info/10 text-info ring-info/20",
+  },
+
+  out_for_delivery: {
+    label: "قيد التوصيل",
+    cls: "bg-blue-100 text-blue-700 ring-blue-200",
+  },
+
+  awaiting_approval: {
+    label: "بانتظار الموافقة",
+    cls: "bg-indigo-100 text-indigo-700 ring-indigo-200",
+  },
+
+  delivered: {
+    label: "تم التسليم",
+    cls: "bg-success/10 text-success ring-success/20",
+  },
+
+  delivered_price_changed: {
+    label: "تم التسليم بتغيير سعر",
+    cls: "bg-success/10 text-success ring-success/20",
+  },
+
+  partial_delivery: {
+    label: "تسليم جزئي",
+    cls: "bg-success/10 text-success ring-success/20",
+  },
+
   refused_paid_shipping: {
-    label: "رفض + دفع الشحن",
+    label: "رفض + دفع رسوم الشحن",
+    cls: "bg-destructive/10 text-destructive ring-destructive/20",
+  },
+
+  refused_no_payment: {
+    label: "رفض وعدم الدفع",
+    cls: "bg-destructive/10 text-destructive ring-destructive/20",
+  },
+
+  customer_cancelled: {
+    label: "ألغى العميل",
+    cls: "bg-destructive/10 text-destructive ring-destructive/20",
+  },
+
+  no_answer: {
+    label: "لا يوجد رد",
+    cls: "bg-muted text-muted-foreground ring-border",
+  },
+
+  phone_off: {
+    label: "الهاتف مغلق",
+    cls: "bg-muted text-muted-foreground ring-border",
+  },
+
+  postponed: {
+    label: "مؤجل",
     cls: "bg-warning/15 text-warning ring-warning/25",
   },
-  refused_no_payment: {
-    label: "رفض بدون دفع",
-    cls: "bg-destructive/10 text-destructive ring-destructive/20",
-  },
-  postponed: { label: "مؤجل", cls: "bg-warning/15 text-warning ring-warning/25" },
-  evading: {
-    label: "تهرّب / مختفي",
-    cls: "bg-destructive/10 text-destructive ring-destructive/20",
-  },
-  unsafe_area: {
-    label: "منطقة غير آمنة",
-    cls: "bg-destructive/10 text-destructive ring-destructive/20",
-  },
-  out_of_governorate: { label: "خارج المحافظة", cls: "bg-muted text-muted-foreground ring-border" },
-  returned: { label: "مرتجع", cls: "bg-muted text-muted-foreground ring-border" },
-  delayed: { label: "متأخرة", cls: "bg-destructive/10 text-destructive ring-destructive/20" },
 };
+export function StatusBadge({ status }: { status?: ShipmentStatus }) {
+  const s = status ? map[status] : undefined;
 
-export function StatusBadge({ status }: { status: ShipmentStatus }) {
-  const s = map[status];
+  if (!s) {
+    return (
+      <span className="rounded-full px-2 py-1 text-xs bg-muted text-muted-foreground">
+        حالة غير معروفة
+      </span>
+    );
+  }
+
   return (
     <span
       className={cn(

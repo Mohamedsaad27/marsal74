@@ -7,8 +7,7 @@ export type ApiResponse<T> = {
 };
 
 /** orders.status — TINYINT 1–12 */
-export type OrderStatusCode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
-
+export type OrderStatusCode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 15;
 export type Order = {
   order_id: string;
   reference_no: string;
@@ -165,33 +164,34 @@ export type CreateOrderPayload = {
 export const ORDER_STATUS_TO_KEY: Record<OrderStatusCode, ShipmentStatus> = {
   1: "pending",
   2: "assigned",
-  3: "in_transit",
-  4: "delivered",
-  5: "partial_delivered",
-  6: "refused_paid_shipping",
-  7: "refused_no_payment",
-  8: "postponed",
-  9: "evading",
-  10: "unsafe_area",
-  11: "out_of_governorate",
-  12: "returned",
+  3: "out_for_delivery",
+  4: "awaiting_approval",
+  5: "delivered",
+  6: "delivered_price_changed",
+  7: "partial_delivery",
+  8: "refused_paid_shipping",
+  9: "refused_no_payment",
+  10: "customer_cancelled",
+  11: "no_answer",
+  12: "phone_off",
+  15: "postponed",
 };
 
-export const ORDER_STATUS_OPTIONS: { value: string; label: string; code: OrderStatusCode }[] = [
-  { value: "1", label: "بانتظار التعيين", code: 1 },
-  { value: "2", label: "تم التعيين", code: 2 },
-  { value: "3", label: "قيد التوصيل", code: 3 },
-  { value: "4", label: "تم التسليم", code: 4 },
-  { value: "5", label: "تسليم جزئي", code: 5 },
-  { value: "6", label: "رفض + دفع الشحن", code: 6 },
-  { value: "7", label: "رفض بدون دفع", code: 7 },
-  { value: "8", label: "مؤجل", code: 8 },
-  { value: "9", label: "تهرّب / مختفي", code: 9 },
-  { value: "10", label: "منطقة غير آمنة", code: 10 },
-  { value: "11", label: "خارج المحافظة", code: 11 },
-  { value: "12", label: "مرتجع", code: 12 },
+export const ORDER_STATUS_OPTIONS = [
+  { value: "pending", label: "بانتظار التوزيع", code: 1 },
+  // { value: "assigned", label: "تم التعيين", code: 2 },
+  { value: "in_delivery", label: "قيد التوصيل", code: 3 },
+  // { value: "awaiting_approval", label: "بانتظار الموافقة", code: 4 },
+  { value: "delivered", label: "تم التسليم", code: 5 },
+  // { value: "delivered_price_changed", label: "تم التسليم بتغيير سعر", code: 6 },
+  // { value: "partial_delivery", label: "تسليم جزئي", code: 7 },
+  // { value: "refused_paid_shipping", label: "رفض + دفع رسوم الشحن", code: 8 },
+  // { value: "refused_no_payment", label: "رفض وعدم الدفع", code: 9 },
+  { value: "returned", label: "مرتجع", code: 10 },
+  // { value: "no_answer", label: "لا يوجد رد", code: 11 },
+  // { value: "phone_off", label: "الهاتف مغلق", code: 12 },
+  { value: "postponed_refused", label: "مؤجل", code: 15 },
 ];
-
 export function formatAmount(value: number | null | undefined): string {
   if (value == null) return "—";
   return value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });

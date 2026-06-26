@@ -9,9 +9,9 @@ import type {
 import { getAccessToken } from "../auth/Auth.api";
 
 import { BASE_URL } from "@/lib/utils";
-
+console.log("BASE_URL:", BASE_URL);
 function authHeaders(): HeadersInit {
-  const token = getAccessToken;
+  const token = getAccessToken();
   return {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -35,6 +35,7 @@ export async function fetchReturns(
   filters: ReturnFilters = {},
 ): Promise<ApiResponse<ReturnRecord[]>> {
   const params = new URLSearchParams();
+
   if (filters.status) params.set("status", filters.status);
   if (filters.company_id) params.set("company_id", filters.company_id);
   if (filters.agent_id) params.set("agent_id", filters.agent_id);
@@ -43,8 +44,15 @@ export async function fetchReturns(
   const res = await fetch(`${BASE_URL}/admin/returns?${params}`, {
     headers: authHeaders(),
   });
-  const raw = await handleResponse<ReturnRecordWire[]>(res);
-  return { ...raw, data: raw.data.map(normaliseReturn) };
+
+  const raw = await handleResponse<{
+    items: ReturnRecordWire[];
+  }>(res);
+
+  return {
+    ...raw,
+    data: raw.data.items.map(normaliseReturn),
+  };
 }
 
 export async function fetchReturnStats(): Promise<ApiResponse<ReturnKpis>> {
