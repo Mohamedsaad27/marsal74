@@ -9,7 +9,6 @@ import type {
 import { getAccessToken } from "../auth/Auth.api";
 
 import { BASE_URL } from "@/lib/utils";
-console.log("BASE_URL:", BASE_URL);
 function authHeaders(): HeadersInit {
   const token = getAccessToken();
   return {
