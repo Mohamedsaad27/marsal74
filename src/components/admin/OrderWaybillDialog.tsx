@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import type { OrderDetail } from "@/lib/admin/orders-types";
 import { formatAmount, formatDateTime } from "@/lib/admin/orders-types";
+import { useRef } from "react";
 
 type Props = {
   open: boolean;
@@ -12,10 +13,22 @@ type Props = {
 };
 
 export function OrderWaybillDialog({ open, onOpenChange, order }: Props) {
+  const printRef = useRef<HTMLDivElement>(null);
+
   if (!order) return null;
 
   const handlePrint = () => {
+    const printContent = printRef.current?.innerHTML;
+
+    if (!printContent) return;
+
+    const originalContent = document.body.innerHTML;
+
+    document.body.innerHTML = printContent;
     window.print();
+    document.body.innerHTML = originalContent;
+
+    window.location.reload();
   };
 
   return (
@@ -39,14 +52,16 @@ export function OrderWaybillDialog({ open, onOpenChange, order }: Props) {
         </>
       }
     >
-      <div className="rounded-2xl border-2 border-dashed border-primary/30 bg-white p-6 text-foreground print:border-solid">
+      <div
+        ref={printRef}
+        className="rounded-2xl border-2 border-dashed border-primary/30 bg-white p-6 text-foreground print:border-solid"
+      >
         <div className="mb-4 flex items-start justify-between gap-4 border-b border-border pb-4">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-primary">MARSAL ShipOps</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-primary">EXPRESS PRO</p>
             <p className="mt-1 font-mono text-2xl font-extrabold">{order.order.internal_code}</p>
             <p className="text-xs text-muted-foreground">ref: {order.order.reference_no}</p>
           </div>
-          <StatusBadge status={order.status_key} />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 text-sm">
@@ -57,7 +72,9 @@ export function OrderWaybillDialog({ open, onOpenChange, order }: Props) {
           </div>
           <div>
             <p className="text-xs font-bold text-muted-foreground">العنوان</p>
-            <p>{order.governorate_name} / {order.city_name}</p>
+            <p>
+              {order.governorate_name} / {order.city_name}
+            </p>
             <p className="text-muted-foreground">{order.address.address_line}</p>
           </div>
           <div>
@@ -70,16 +87,20 @@ export function OrderWaybillDialog({ open, onOpenChange, order }: Props) {
           </div>
           <div>
             <p className="text-xs font-bold text-muted-foreground">المبلغ (COD)</p>
-            <p className="text-lg font-bold tabular-nums">{formatAmount(order.financials.original_amount)} ج.م</p>
+            <p className="text-lg font-bold tabular-nums">
+              {formatAmount(order.financials.original_amount)} ج.م
+            </p>
           </div>
           <div>
-            <p className="text-xs font-bold text-muted-foreground">created_at</p>
+            <p className="text-xs font-bold text-muted-foreground">تاريخ الانشاء</p>
             <p className="text-xs">{formatDateTime(order.order.created_at)}</p>
           </div>
         </div>
 
         <div className="mt-6 flex h-16 items-end justify-center border border-border bg-muted/20">
-          <p className="pb-2 font-mono text-xs tracking-[0.3em] text-muted-foreground">|||| {order.order.internal_code} ||||</p>
+          <p className="pb-2 font-mono text-xs tracking-[0.3em] text-muted-foreground">
+            |||| {order.order.internal_code} ||||
+          </p>
         </div>
       </div>
     </AdminDialogShell>

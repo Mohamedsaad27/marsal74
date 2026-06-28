@@ -200,12 +200,7 @@ function OrderDetailPage() {
               <StatusBadge status={detail.status_key} />
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              {detail.order.reference_no && (
-                <>
-                  ref: <span className="font-mono">{detail.order.reference_no}</span> —{" "}
-                </>
-              )}
-              order_id: <code className="text-[10px]">{detail.order.order_id}</code>
+              {detail.order.reference_no && <></>}
             </p>
             {detail.notes && (
               <p className="mt-1 text-sm text-muted-foreground">ملاحظات: {detail.notes}</p>
@@ -221,10 +216,10 @@ function OrderDetailPage() {
               <RefreshCw className="ms-2 h-4 w-4" />
               تغيير الحالة
             </Button>
-            <Button variant="outline" className="rounded-xl" onClick={() => setProofsOpen(true)}>
+            {/* <Button variant="outline" className="rounded-xl" onClick={() => setProofsOpen(true)}>
               <Camera className="ms-2 h-4 w-4" />
               إثباتات ({detail.delivery_proofs.length})
-            </Button>
+            </Button> */}
             <Button
               className="rounded-xl gradient-brand shadow-glow"
               onClick={() => setWaybillOpen(true)}
@@ -252,7 +247,7 @@ function OrderDetailPage() {
       <div className="grid gap-6 xl:grid-cols-[1fr_340px]">
         <div className="space-y-6">
           {/* Customer */}
-          <SectionCard title="بيانات العميل" tableName="order_customer_info">
+          <SectionCard title="بيانات العميل">
             <FieldGrid
               rows={[
                 { label: "الاسم", value: detail.customer_info.customer_name },
@@ -287,7 +282,7 @@ function OrderDetailPage() {
           </SectionCard>
 
           {/* Address */}
-          <SectionCard title="عنوان التوصيل" tableName="order_addresses">
+          <SectionCard title="عنوان التوصيل">
             <FieldGrid
               rows={[
                 {
@@ -304,7 +299,7 @@ function OrderDetailPage() {
           </SectionCard>
 
           {/* Items */}
-          <SectionCard title="محتوى الشحنة" tableName="order_items">
+          <SectionCard title="محتوى الشحنة">
             <FieldGrid
               rows={[
                 {
@@ -325,7 +320,7 @@ function OrderDetailPage() {
           </SectionCard>
 
           {/* Financials */}
-          <SectionCard title="المالية" tableName="order_financials">
+          <SectionCard title="المالية">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>

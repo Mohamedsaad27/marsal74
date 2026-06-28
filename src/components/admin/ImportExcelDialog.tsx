@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { AdminDialogShell } from "@/components/admin/AdminDialogShell";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -16,7 +16,7 @@ import {
   ClockIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
+import { toast } from "sonner";
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -79,9 +79,9 @@ export function ImportExcelDialog({ open, onOpenChange, config, onImportComplete
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 10 * 1024 * 1024) {
       setFileName(file.name);
-      setValidationError("حجم الملف يتجاوز 5 ميجابايت.");
+      setValidationError("حجم الملف يتجاوز 10 ميجابايت.");
       return;
     }
 
@@ -122,6 +122,7 @@ export function ImportExcelDialog({ open, onOpenChange, config, onImportComplete
       if (config.onImportBatch) {
         const result = await config.onImportBatch(file);
         setBatchId(result.batch_id);
+        toast.success(config.batchSuccessMessage?.(result.batch_id) ?? "تم الإرسال بنجاح");
         setSuccess(true);
         onImportComplete?.(0); // count unknown at dispatch time
         return;
@@ -158,7 +159,18 @@ export function ImportExcelDialog({ open, onOpenChange, config, onImportComplete
   const step = success ? 3 : fileReady ? 2 : 1;
 
   // ── render ─────────────────────────────────────────────────────────────────
+  // Add this effect inside ImportExcelDialog, after the existing state declarations:
+  useEffect(() => {
+    if (!success || !batchId) return;
 
+    const timer = setTimeout(() => {
+      onImportComplete?.(0); // triggers reload in parent
+      handleOpenChange(false); // closes the dialog
+    }, 3000);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [success, batchId]);
   return (
     <AdminDialogShell
       open={open}
@@ -262,7 +274,7 @@ export function ImportExcelDialog({ open, onOpenChange, config, onImportComplete
           اختيار ملف
         </Button>
         <p className="mt-3 text-xs text-muted-foreground">
-          .xlsx · .xls · .csv — بحد أقصى 5 ميجابايت
+          .xlsx · .xls · .csv — بحد أقصى 10 ميجابايت
         </p>
         {fileName && fileReady && (
           <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
@@ -282,7 +294,7 @@ export function ImportExcelDialog({ open, onOpenChange, config, onImportComplete
 
       {/* ── Batch / background success (shipments) ── */}
       {success && batchId && config.batchSuccessMessage && (
-        <Alert className="mt-4 rounded-xl border-warning/40 bg-warning/10 text-success">
+        <Alert className="mt-4 rounded-xl border-success/40 bg-success/10 text-success">
           <ClockIcon className="h-4 w-4" />
           <AlertDescription className="font-medium">
             {config.batchSuccessMessage(batchId)}

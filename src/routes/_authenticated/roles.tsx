@@ -170,9 +170,9 @@ function RolesPage() {
             cells: [
               <div key="name">
                 <p className="font-bold">{formatRoleName(role.name)}</p>
-                <p className="font-mono text-[11px] text-muted-foreground" dir="ltr">
+                {/* <p className="font-mono text-[11px] text-muted-foreground" dir="ltr">
                   {role.name}
-                </p>
+                </p> */}
               </div>,
 
               <PermissionGroupsPreview

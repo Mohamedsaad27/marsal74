@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 export function FormField({
   label,
@@ -95,24 +96,49 @@ export function FormSelect({
   placeholder?: string;
   required?: boolean;
 }) {
+  const [search, setSearch] = useState("");
+
+  const filtered = search.trim() ? options.filter((o) => o.label.includes(search.trim())) : options;
+
   return (
     <FormField label={label} required={required}>
-      <Select value={value} onValueChange={onValueChange}>
+      <Select
+        value={value}
+        onValueChange={onValueChange}
+        onOpenChange={(open) => {
+          if (!open) setSearch("");
+        }}
+      >
         <SelectTrigger className="rounded-xl text-right" dir="rtl">
           <SelectValue dir="rtl" placeholder={placeholder ?? "اختر..."} />
         </SelectTrigger>
         <SelectContent dir="rtl">
-          {options.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
+          <div className="p-2 border-b border-border" onPointerDown={(e) => e.stopPropagation()}>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
+              placeholder="ابحث..."
+              dir="rtl"
+              className="h-8 w-full rounded-lg border border-input bg-background px-3 text-sm text-right outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
+            />
+          </div>
+          {filtered.length === 0 ? (
+            <div className="py-6 text-center text-sm text-muted-foreground">لا توجد نتائج.</div>
+          ) : (
+            filtered.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))
+          )}
         </SelectContent>
       </Select>
     </FormField>
   );
 }
-
 export function FormMultiCheckbox({
   label,
   options,

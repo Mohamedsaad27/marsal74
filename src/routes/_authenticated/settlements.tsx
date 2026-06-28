@@ -109,6 +109,7 @@ function SettlementsPage() {
   const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState("admin");
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [periodFilter, setPeriodFilter] = useState("all");
@@ -169,6 +170,10 @@ function SettlementsPage() {
     setActiveItem(item);
     setDetailOpen(true);
   };
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput), 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const openPrint = (item: SettlementRecord) => {
     setActiveItem(item);
@@ -341,7 +346,7 @@ function SettlementsPage() {
         onValueChange={(v) => {
           setTab(v);
           setPage(1);
-          setSearch("");
+          setSearchInput("");
         }}
         dir="rtl"
         className="mb-6"
@@ -404,88 +409,88 @@ function SettlementsPage() {
         />
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : (
-        <AdminDataTable
-          search={search}
-          onSearchChange={(v) => {
-            setSearch(v);
-            setPage(1);
-          }}
-          searchPlaceholder="رقم التسوية، الطرف، مرجع الدفع..."
-          filters={[
-            {
-              id: "type",
-              label: "النوع",
-              icon: Tag,
-              value: typeFilter,
-              onChange: (v) => {
-                setTypeFilter(v);
-                setPage(1);
-              },
-              options: [
-                { value: "all", label: "الكل" },
-                ...SETTLEMENT_TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
-              ],
-              allLabel: "كل الأنواع",
+      <AdminDataTable
+        search={search}
+        onSearchChange={(v) => {
+          setSearch(v);
+          setPage(1);
+        }}
+        searchPlaceholder="رقم التسوية، الطرف، مرجع الدفع..."
+        filters={[
+          {
+            id: "type",
+            label: "النوع",
+            icon: Tag,
+            value: typeFilter,
+            onChange: (v) => {
+              setTypeFilter(v);
+              setPage(1);
             },
-            {
-              id: "status",
-              label: "الحالة",
-              icon: FileCheck2,
-              value: statusFilter,
-              onChange: (v) => {
-                setStatusFilter(v);
-                setPage(1);
-              },
-              options: [
-                { value: "all", label: "الكل" },
-                ...SETTLEMENT_STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
-              ],
-              allLabel: "كل الحالات",
+            options: [
+              { value: "all", label: "الكل" },
+              ...SETTLEMENT_TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+            ],
+            allLabel: "كل الأنواع",
+          },
+          {
+            id: "status",
+            label: "الحالة",
+            icon: FileCheck2,
+            value: statusFilter,
+            onChange: (v) => {
+              setStatusFilter(v);
+              setPage(1);
             },
-            {
-              id: "period",
-              label: "الفترة",
-              icon: Calendar,
-              value: periodFilter,
-              onChange: (v) => {
-                setPeriodFilter(v);
-                setPage(1);
-              },
-              options: [
-                { value: "all", label: "الكل" },
-                { value: "month", label: "هذا الشهر" },
-                { value: "last_month", label: "الشهر الماضي" },
-                { value: "quarter", label: "آخر 90 يوم" },
-              ],
-              allLabel: "كل الفترات",
+            options: [
+              { value: "all", label: "الكل" },
+              ...SETTLEMENT_STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+            ],
+            allLabel: "كل الحالات",
+          },
+          {
+            id: "period",
+            label: "الفترة",
+            icon: Calendar,
+            value: periodFilter,
+            onChange: (v) => {
+              setPeriodFilter(v);
+              setPage(1);
             },
-          ]}
-          columns={tableColumns}
-          rows={tableRows}
-          selectedIds={selectedIds}
-          onToggleSelect={(id) => {
-            setSelectedIds((prev) => {
-              const next = new Set(prev);
-              if (next.has(id)) next.delete(id);
-              else next.add(id);
-              return next;
-            });
-          }}
-          onToggleSelectAll={(ids) =>
-            setSelectedIds(selectedIds.size === ids.length ? new Set() : new Set(ids))
-          }
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          totalCount={totalCount}
-          emptyMessage={isCompanyView ? "لا توجد تسويات لهذه الشركة" : "لا توجد تسويات مطابقة"}
-        />
-      )}
+            options: [
+              { value: "all", label: "الكل" },
+              { value: "month", label: "هذا الشهر" },
+              { value: "last_month", label: "الشهر الماضي" },
+              { value: "quarter", label: "آخر 90 يوم" },
+            ],
+            allLabel: "كل الفترات",
+          },
+        ]}
+        columns={tableColumns}
+        rows={tableRows}
+        selectedIds={selectedIds}
+        onToggleSelect={(id) => {
+          setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+          });
+        }}
+        onToggleSelectAll={(ids) =>
+          setSelectedIds(selectedIds.size === ids.length ? new Set() : new Set(ids))
+        }
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        totalCount={totalCount}
+        emptyMessage={
+          loading
+            ? "جاري التحميل..."
+            : isCompanyView
+              ? "لا توجد تسويات لهذه الشركة"
+              : "لا توجد تسويات مطابقة"
+        }
+      />
 
       <SettlementCreateDialog
         open={createOpen}

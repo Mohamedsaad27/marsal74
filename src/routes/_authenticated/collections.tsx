@@ -137,6 +137,8 @@ function CollectionsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState(""); // raw — bound to input
+
   const [agentFilter, setAgentFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
@@ -194,7 +196,11 @@ function CollectionsPage() {
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [search, typeFilter, agentFilter, dateFrom, dateTo]);
+  }, [searchInput, typeFilter, agentFilter, dateFrom, dateTo]);
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput), 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const paginatedRows = items.slice((page - 1) * pageSize, page * pageSize);
   const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
@@ -262,149 +268,143 @@ function CollectionsPage() {
         />
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : (
-        <AdminDataTable
-          search={search}
-          onSearchChange={(v) => setSearch(v)}
-          searchPlaceholder="كود الطلب، المندوب، الشركة..."
-          filters={[
-            {
-              id: "agent",
-              label: "المندوب",
-              icon: Truck,
-              value: agentFilter,
-              onChange: (v) => setAgentFilter(v),
-              options: agentOptions,
-              allLabel: "كل المناديب",
-            },
-            {
-              id: "type",
-              label: "النوع",
-              icon: Tag,
-              value: typeFilter,
-              onChange: (v) => setTypeFilter(v),
-              options: COLLECTION_TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
-              allLabel: "كل الأنواع",
-            },
-          ]}
-          extraFilters={
-            <DateRangePill
-              dateFrom={dateFrom}
-              dateTo={dateTo}
-              onDateFromChange={setDateFrom}
-              onDateToChange={setDateTo}
-            />
-          }
-          columns={[
-            { key: "order", label: "الطلب" },
-            { key: "agent", label: "المندوب" },
-            { key: "company", label: "الشركة" },
-            { key: "type", label: "النوع" },
-            { key: "collected", label: "المحصّل" },
-            { key: "commission", label: "العمولة" },
-            { key: "net", label: "الصافي" },
-            { key: "handoff", label: "استلام النقد" },
-            { key: "settled", label: "التسوية" },
-            { key: "date", label: "التاريخ" },
-            { key: "actions", label: "", className: "w-12" },
-          ]}
-          rows={paginatedRows.map((item) => ({
-            id: item.collection_id,
-            cells: [
-              <Link
-                key="order"
-                to="/shipments/$orderId"
-                params={{ orderId: item.order_id }}
-                className="font-mono text-xs font-semibold text-primary hover:underline"
-              >
-                {item.internal_code}
-              </Link>,
-              item.agent_name,
-              item.company_name,
-              <CollectionTypeBadge key="type" type={item.collection_type} />,
-              <span key="collected" className="font-semibold tabular-nums">
-                {formatAmount(item.collected_amount)}
-              </span>,
-              <span key="commission" className="tabular-nums text-muted-foreground">
-                −{formatAmount(item.commission_amount)}
-              </span>,
-              <span key="net" className="font-bold tabular-nums">
-                {formatAmount(item.net_due_company)}{" "}
-                <span className="text-[10px] font-normal text-muted-foreground">ج.م</span>
-              </span>,
-              item.cash_received_by_admin === 1 ? (
-                <span key="handoff" className="inline-flex items-center gap-1 text-xs text-success">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> تم الاستلام
-                </span>
-              ) : (
-                <span key="handoff" className="text-xs font-semibold text-warning">
-                  بانتظار التسليم
-                </span>
-              ),
-              item.is_settled === 1 ? (
-                <span key="settled" className="inline-flex items-center gap-1 text-xs text-success">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> مسوّاة
-                </span>
-              ) : (
-                <span key="settled" className="text-xs text-warning">
-                  معلّقة
-                </span>
-              ),
-              <span key="date" className="text-xs text-muted-foreground">
-                {formatDateTime(item.collected_at)}
-              </span>,
-              <RowActions
-                key="actions"
-                extra={[
-                  {
-                    label: "عرض التفاصيل",
-                    icon: <Eye className="ml-2 h-4 w-4" />,
-                    onClick: () => {
-                      setActiveItem(item);
-                      setDetailOpen(true);
-                    },
+      <AdminDataTable
+        search={searchInput}
+        onSearchChange={(value) => setSearchInput(value)}
+        searchPlaceholder="كود الطلب، المندوب، الشركة..."
+        filters={[
+          {
+            id: "agent",
+            label: "المندوب",
+            icon: Truck,
+            value: agentFilter,
+            onChange: (v) => setAgentFilter(v),
+            options: agentOptions,
+            allLabel: "كل المناديب",
+          },
+          {
+            id: "type",
+            label: "النوع",
+            icon: Tag,
+            value: typeFilter,
+            onChange: (v) => setTypeFilter(v),
+            options: COLLECTION_TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+            allLabel: "كل الأنواع",
+          },
+        ]}
+        extraFilters={
+          <DateRangePill
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onDateFromChange={setDateFrom}
+            onDateToChange={setDateTo}
+          />
+        }
+        columns={[
+          { key: "order", label: "الطلب" },
+          { key: "agent", label: "المندوب" },
+          { key: "company", label: "الشركة" },
+          { key: "type", label: "النوع" },
+          { key: "collected", label: "المحصّل" },
+          { key: "commission", label: "العمولة" },
+          { key: "net", label: "الصافي" },
+          { key: "handoff", label: "استلام النقد" },
+          { key: "settled", label: "التسوية" },
+          { key: "date", label: "التاريخ" },
+          { key: "actions", label: "", className: "w-12" },
+        ]}
+        rows={paginatedRows.map((item) => ({
+          id: item.collection_id,
+          cells: [
+            <Link
+              key="order"
+              to="/shipments/$orderId"
+              params={{ orderId: item.order_id }}
+              className="font-mono text-xs font-semibold text-primary hover:underline"
+            >
+              {item.internal_code}
+            </Link>,
+            item.agent_name,
+            item.company_name,
+            <CollectionTypeBadge key="type" type={item.collection_type} />,
+            <span key="collected" className="font-semibold tabular-nums">
+              {formatAmount(item.collected_amount)}
+            </span>,
+            <span key="commission" className="tabular-nums text-muted-foreground">
+              −{formatAmount(item.commission_amount)}
+            </span>,
+            <span key="net" className="font-bold tabular-nums">
+              {formatAmount(item.net_due_company)}{" "}
+              <span className="text-[10px] font-normal text-muted-foreground">ج.م</span>
+            </span>,
+            item.cash_received_by_admin === 1 ? (
+              <span key="handoff" className="inline-flex items-center gap-1 text-xs text-success">
+                <CheckCircle2 className="h-3.5 w-3.5" /> تم الاستلام
+              </span>
+            ) : (
+              <span key="handoff" className="text-xs font-semibold text-warning">
+                بانتظار التسليم
+              </span>
+            ),
+            item.is_settled === 1 ? (
+              <span key="settled" className="inline-flex items-center gap-1 text-xs text-success">
+                <CheckCircle2 className="h-3.5 w-3.5" /> مسوّاة
+              </span>
+            ) : (
+              <span key="settled" className="text-xs text-warning">
+                معلّقة
+              </span>
+            ),
+            <span key="date" className="text-xs text-muted-foreground">
+              {formatDateTime(item.collected_at)}
+            </span>,
+            <RowActions
+              key="actions"
+              extra={[
+                {
+                  label: "عرض التفاصيل",
+                  icon: <Eye className="ml-2 h-4 w-4" />,
+                  onClick: () => {
+                    setActiveItem(item);
+                    setDetailOpen(true);
                   },
-                  ...(item.cash_received_by_admin === 0
-                    ? [
-                        {
-                          label: "استلام نقد من المندوب",
-                          icon: <Banknote className="ml-2 h-4 w-4" />,
-                          onClick: () => {
-                            const agent = agentSummaries.find(
-                              (a) => a.delivery_agent_id === item.delivery_agent_id,
-                            );
-                            if (agent) openReceiveCash(agent);
-                          },
+                },
+                ...(item.cash_received_by_admin === 0
+                  ? [
+                      {
+                        label: "استلام نقد من المندوب",
+                        icon: <Banknote className="ml-2 h-4 w-4" />,
+                        onClick: () => {
+                          const agent = agentSummaries.find(
+                            (a) => a.delivery_agent_id === item.delivery_agent_id,
+                          );
+                          if (agent) openReceiveCash(agent);
                         },
-                      ]
-                    : []),
-                ]}
-              />,
-            ],
-          }))}
-          selectedIds={selectedIds}
-          onToggleSelect={(id) => {
-            setSelectedIds((prev) => {
-              const next = new Set(prev);
-              if (next.has(id)) next.delete(id);
-              else next.add(id);
-              return next;
-            });
-          }}
-          onToggleSelectAll={(ids) =>
-            setSelectedIds(selectedIds.size === ids.length ? new Set() : new Set(ids))
-          }
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          totalCount={items.length}
-          emptyMessage="لا توجد تحصيلات مطابقة"
-        />
-      )}
+                      },
+                    ]
+                  : []),
+              ]}
+            />,
+          ],
+        }))}
+        selectedIds={selectedIds}
+        onToggleSelect={(id) => {
+          setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+          });
+        }}
+        onToggleSelectAll={(ids) =>
+          setSelectedIds(selectedIds.size === ids.length ? new Set() : new Set(ids))
+        }
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        totalCount={items.length}
+        emptyMessage={loading ? "جاري التحميل..." : "لا توجد تحصيلات مطابقة"}
+      />
 
       <CollectionDetailDialog open={detailOpen} onOpenChange={setDetailOpen} item={activeItem} />
       <ReceiveCashDialog

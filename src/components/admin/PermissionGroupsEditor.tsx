@@ -118,7 +118,11 @@ export function PermissionGroupsEditor({
                       className="shrink-0 rounded-lg text-xs"
                       onClick={() => toggleGroup(groupIds)}
                     >
-                      {allSelected ? "إلغاء تحديد المجموعة" : partiallySelected ? "تحديد المتبقي" : "تحديد الكل"}
+                      {allSelected
+                        ? "إلغاء تحديد المجموعة"
+                        : partiallySelected
+                          ? "تحديد المتبقي"
+                          : "تحديد الكل"}
                     </Button>
                   )}
                 </div>
@@ -147,7 +151,9 @@ export function PermissionGroupsEditor({
                           <span
                             className={cn(
                               "mt-0.5 flex h-4 w-4 items-center justify-center rounded-sm border",
-                              checked ? "border-primary bg-primary text-primary-foreground" : "border-input",
+                              checked
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-input",
                             )}
                           >
                             {checked && <Check className="h-3 w-3" />}
@@ -157,9 +163,12 @@ export function PermissionGroupsEditor({
                           <span className="block text-sm font-semibold leading-snug">
                             {permissionLabel(permission)}
                           </span>
-                          <span className="mt-0.5 block font-mono text-[10px] text-muted-foreground" dir="ltr">
+                          {/* <span
+                            className="mt-0.5 block font-mono text-[10px] text-muted-foreground"
+                            dir="ltr"
+                          >
                             {permission.name}
-                          </span>
+                          </span> */}
                         </span>
                       </label>
                     );
@@ -193,12 +202,17 @@ export function PermissionGroupsPreview({
       onClick={onClick}
       className={cn(
         "max-w-md space-y-2 text-start",
-        onClick && "rounded-xl border border-transparent px-1 py-1 transition-colors hover:border-primary/20 hover:bg-primary/5",
+        onClick &&
+          "rounded-xl border border-transparent px-1 py-1 transition-colors hover:border-primary/20 hover:bg-primary/5",
       )}
     >
       <div className="flex flex-wrap gap-1.5">
         {groups.slice(0, 3).map((group) => (
-          <Badge key={group.group} variant="secondary" className="rounded-md text-[10px] font-medium">
+          <Badge
+            key={group.group}
+            variant="secondary"
+            className="rounded-md text-[10px] font-medium"
+          >
             {group.groupLabel}
             <span className="ms-1 tabular-nums opacity-70">({group.permissions.length})</span>
           </Badge>

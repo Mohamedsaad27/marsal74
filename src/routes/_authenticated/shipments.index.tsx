@@ -244,6 +244,7 @@ function ShipmentsPage() {
   const [dateTo, setDateTo] = useState(""); // YYYY-MM-DD
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState(""); // raw — bound to input
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [importOpen, setImportOpen] = useState(false);
@@ -316,6 +317,10 @@ function ShipmentsPage() {
     },
     [statusFilter, companyFilter, agentFilter, governorateFilter, dateFrom, dateTo, search],
   );
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput), 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   useEffect(() => {
     void loadStats();
@@ -325,7 +330,7 @@ function ShipmentsPage() {
   }, [loadOrders, page]);
   useEffect(() => {
     setPage(1);
-  }, [statusFilter, companyFilter, agentFilter, governorateFilter, dateFrom, dateTo, search]);
+  }, [statusFilter, companyFilter, agentFilter, governorateFilter, dateFrom, dateTo, searchInput]);
 
   const goToOrder = (orderId: string) =>
     void navigate({ to: "/shipments/$orderId", params: { orderId } });
@@ -433,163 +438,164 @@ function ShipmentsPage() {
         counts={kpiCounts}
       />
 
-      {isLoading && orders.length === 0 ? (
+      {loadingStats && orders.length === 0 && !searchInput && (
         <div className="flex justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      ) : (
-        <>
-          <AdminDataTable
-            search={search}
-            onSearchChange={(v) => setSearch(v)}
-            searchPlaceholder="الكود، المرجع، العميل، الهاتف..."
-            filters={[
-              {
-                id: "status",
-                label: "الحالة",
-                icon: Package,
-                value: statusFilter,
-                onChange: (v) => setStatusFilter(v),
-                options: STATUS_FILTER_OPTIONS,
-                allLabel: "كل الحالات",
-              },
-              {
-                id: "company",
-                label: "الشركة",
-                icon: Building2,
-                value: companyFilter,
-                onChange: (v) => setCompanyFilter(v),
-                options: [...companyOptions],
-                allLabel: "كل الشركات",
-              },
-              {
-                id: "agent",
-                label: "المندوب",
-                icon: Truck,
-                value: agentFilter,
-                onChange: (v) => setAgentFilter(v),
-                options: [...agentOptions],
-                allLabel: "كل المناديب",
-              },
-              {
-                id: "governorate",
-                label: "المحافظة",
-                icon: MapPin,
-                value: governorateFilter,
-                onChange: (v) => setGovernorateFilter(v),
-                options: [...governorateOptions],
-                allLabel: "كل المحافظات",
-              },
-            ]}
-            extraFilters={
-              <DateRangePill
-                dateFrom={dateFrom}
-                dateTo={dateTo}
-                onDateFromChange={setDateFrom}
-                onDateToChange={setDateTo}
-              />
-            }
-            columns={[
-              { key: "code", label: "الكود" },
-              { key: "customer", label: "العميل" },
-              { key: "zone", label: "المنطقة" },
-              { key: "company", label: "الشركة" },
-              { key: "agent", label: "المندوب" },
-              { key: "amount", label: "المبلغ" },
-              { key: "status", label: "الحالة" },
-              { key: "created", label: "التاريخ" },
-              { key: "actions", label: "", className: "w-12" },
-            ]}
-            rows={orders.map((item) => ({
-              id: item.order.order_id,
-              cells: [
-                <div key="code">
-                  <Link
-                    to="/shipments/$orderId"
-                    params={{ orderId: item.order.order_id }}
-                    className="font-mono text-xs font-semibold text-primary hover:underline"
-                  >
-                    {item.order.internal_code}
-                  </Link>
-                  <p className="font-mono text-[10px] text-muted-foreground">
-                    {item.order.reference_no}
-                  </p>
-                </div>,
-                <div key="customer">
-                  <p className="font-medium">{item.customer_name}</p>
-                  <p className="text-[11px] tabular-nums text-muted-foreground">
-                    {item.customer_phone}
-                  </p>
-                </div>,
-                <span key="zone" className="text-muted-foreground">
-                  {item.governorate_name}
-                  {item.city_name && item.city_name !== "—" ? ` / ${item.city_name}` : ""}
-                </span>,
-                item.company_name,
-                item.agent_name ?? <span className="text-warning">غير معيّن</span>,
-                <span key="amount" className="tabular-nums">
-                  {formatAmount(item.original_amount)}{" "}
-                  <span className="text-[10px] text-muted-foreground">ج.م</span>
-                </span>,
-                <StatusBadge key="status" status={item.status_key} />,
-                <span key="created" className="text-xs text-muted-foreground">
-                  {formatDateTime(item.order.created_at)}
-                </span>,
-                <RowActions
-                  key="actions"
-                  // onEdit={() => goToOrder(item.order.order_id)}
-                  // onDelete={() => toast.message("حذف الطلب — واجهة تصميمية")}
-                  extra={[
-                    {
-                      label: "عرض التفاصيل",
-                      icon: <Eye className="ml-2 h-4 w-4" />,
-                      onClick: () => goToOrder(item.order.order_id),
-                    },
-                    {
-                      label: "تعيين / إعادة تعيين",
-                      icon: <UserCheck className="ml-2 h-4 w-4" />,
-                      onClick: () => {
-                        setActiveOrder(item);
-                        setAssignOpen(true);
-                      },
-                    },
-                    // {
-                    //   label: "تغيير الحالة",
-                    //   icon: <RefreshCw className="ml-2 h-4 w-4" />,
-                    //   onClick: () => {
-                    //     setActiveOrder(item);
-                    //     setStatusOpen(true);
-                    //   },
-                    // },
-                  ]}
-                />,
-              ],
-            }))}
-            selectedIds={selectedIds}
-            onToggleSelect={(id) => {
-              setSelectedIds((prev) => {
-                const next = new Set(prev);
-                if (next.has(id)) next.delete(id);
-                else next.add(id);
-                return next;
-              });
-            }}
-            onToggleSelectAll={(ids) => {
-              setSelectedIds(selectedIds.size === ids.length ? new Set() : new Set(ids));
-            }}
-            page={page}
-            totalPages={totalPages}
-            onPageChange={(p) => setPage(p)}
-            totalCount={totalCount}
-            emptyMessage="لا توجد طلبات مطابقة للفلتر"
-          />
-        </>
       )}
+      <AdminDataTable
+        search={searchInput}
+        onSearchChange={(value) => setSearchInput(value)}
+        searchPlaceholder="الكود، المرجع، العميل، الهاتف..."
+        filters={[
+          {
+            id: "status",
+            label: "الحالة",
+            icon: Package,
+            value: statusFilter,
+            onChange: (v) => setStatusFilter(v),
+            options: STATUS_FILTER_OPTIONS,
+            allLabel: "كل الحالات",
+          },
+          {
+            id: "company",
+            label: "الشركة",
+            icon: Building2,
+            value: companyFilter,
+            onChange: (v) => setCompanyFilter(v),
+            options: [...companyOptions],
+            allLabel: "كل الشركات",
+          },
+          {
+            id: "agent",
+            label: "المندوب",
+            icon: Truck,
+            value: agentFilter,
+            onChange: (v) => setAgentFilter(v),
+            options: [...agentOptions],
+            allLabel: "كل المناديب",
+          },
+          {
+            id: "governorate",
+            label: "المحافظة",
+            icon: MapPin,
+            value: governorateFilter,
+            onChange: (v) => setGovernorateFilter(v),
+            options: [...governorateOptions],
+            allLabel: "كل المحافظات",
+          },
+        ]}
+        extraFilters={
+          <DateRangePill
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onDateFromChange={setDateFrom}
+            onDateToChange={setDateTo}
+          />
+        }
+        columns={[
+          { key: "code", label: "الكود" },
+          { key: "customer", label: "العميل" },
+          { key: "zone", label: "المنطقة" },
+          { key: "company", label: "الشركة" },
+          { key: "agent", label: "المندوب" },
+          { key: "amount", label: "المبلغ" },
+          { key: "status", label: "الحالة" },
+          { key: "created", label: "التاريخ" },
+          { key: "actions", label: "", className: "w-12" },
+        ]}
+        rows={orders.map((item) => ({
+          id: item.order.order_id,
+          cells: [
+            <div key="code">
+              <Link
+                to="/shipments/$orderId"
+                params={{ orderId: item.order.order_id }}
+                className="font-mono text-xs font-semibold text-primary hover:underline"
+              >
+                {item.order.internal_code}
+              </Link>
+              <p className="font-mono text-[10px] text-muted-foreground">
+                {item.order.reference_no}
+              </p>
+            </div>,
+            <div key="customer">
+              <p className="font-medium">{item.customer_name}</p>
+              <p className="text-[11px] tabular-nums text-muted-foreground">
+                {item.customer_phone}
+              </p>
+            </div>,
+            <span key="zone" className="text-muted-foreground">
+              {item.governorate_name}
+              {item.city_name && item.city_name !== "—" ? ` / ${item.city_name}` : ""}
+            </span>,
+            item.company_name,
+            item.agent_name ?? <span className="text-warning">غير معيّن</span>,
+            <span key="amount" className="tabular-nums">
+              {formatAmount(item.original_amount)}{" "}
+              <span className="text-[10px] text-muted-foreground">ج.م</span>
+            </span>,
+            <StatusBadge key="status" status={item.status_key} />,
+            <span key="created" className="text-xs text-muted-foreground">
+              {formatDateTime(item.order.created_at)}
+            </span>,
+            <RowActions
+              key="actions"
+              // onEdit={() => goToOrder(item.order.order_id)}
+              // onDelete={() => toast.message("حذف الطلب — واجهة تصميمية")}
+              extra={[
+                {
+                  label: "عرض التفاصيل",
+                  icon: <Eye className="ml-2 h-4 w-4" />,
+                  onClick: () => goToOrder(item.order.order_id),
+                },
+                {
+                  label: "تعيين / إعادة تعيين",
+                  icon: <UserCheck className="ml-2 h-4 w-4" />,
+                  onClick: () => {
+                    setActiveOrder(item);
+                    setAssignOpen(true);
+                  },
+                },
+                // {
+                //   label: "تغيير الحالة",
+                //   icon: <RefreshCw className="ml-2 h-4 w-4" />,
+                //   onClick: () => {
+                //     setActiveOrder(item);
+                //     setStatusOpen(true);
+                //   },
+                // },
+              ]}
+            />,
+          ],
+        }))}
+        selectedIds={selectedIds}
+        onToggleSelect={(id) => {
+          setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+          });
+        }}
+        onToggleSelectAll={(ids) => {
+          setSelectedIds(selectedIds.size === ids.length ? new Set() : new Set(ids));
+        }}
+        page={page}
+        totalPages={totalPages}
+        onPageChange={(p) => setPage(p)}
+        totalCount={totalCount}
+        emptyMessage={loadingOrders ? "جاري التحميل..." : "لا توجد طلبات مطابقة للفلتر"}
+      />
 
       <ImportExcelDialog
         open={importOpen}
         onOpenChange={setImportOpen}
         config={shipmentsImportConfig}
+        onImportComplete={() => {
+          void loadOrders(1);
+          void loadStats();
+        }}
       />
       <OrderCreateDialog
         open={createOpen}

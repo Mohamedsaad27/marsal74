@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-
+import { useState } from "react";
 export type AdminFilter = {
   id: string;
   label: string;
@@ -85,44 +85,9 @@ export function AdminDataTable({
           />
         </div>
 
-        {filters.map((f) => {
-          const Icon = f.icon;
-          const displayValue = getFilterDisplayValue(f);
-          const isActive = f.value !== "all";
-
-          return (
-            <div
-              key={f.id}
-              className={cn(
-                "flex h-10 items-stretch overflow-hidden rounded-xl border bg-background shadow-sm transition-colors",
-                isActive ? "border-primary/40 ring-1 ring-primary/10" : "border-input",
-              )}
-            >
-              <div className="flex shrink-0 items-center gap-1.5 border-s border-border bg-muted/50 px-3">
-                {Icon && <Icon className="h-3.5 w-3.5 text-muted-foreground" />}
-                <span className="text-xs font-bold text-muted-foreground">{f.label}</span>
-              </div>
-              <Select value={f.value} onValueChange={f.onChange}>
-                <SelectTrigger className="h-10 w-[132px] rounded-none border-0 bg-transparent px-3 shadow-none focus:ring-0">
-                  <SelectValue>
-                    <span className={cn("truncate font-semibold", isActive && "text-primary")}>
-                      {displayValue}
-                    </span>
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent dir="rtl">
-                  <SelectItem value="all">{f.allLabel ?? "الكل"}</SelectItem>
-                  {f.options.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          );
-        })}
-
+        {filters.map((f) => (
+          <FilterSelect key={f.id} filter={f} />
+        ))}
         {extraFilters}
 
         <p className="text-xs text-muted-foreground tabular-nums">{totalCount} سجل</p>
@@ -219,6 +184,69 @@ export function AdminDataTable({
           </Button>
         </div>
       </div>
+    </div>
+  );
+}
+function FilterSelect({ filter }: { filter: AdminFilter }) {
+  const [search, setSearch] = useState("");
+  const Icon = filter.icon;
+  const displayValue = getFilterDisplayValue(filter);
+  const isActive = filter.value !== "all";
+
+  const filtered = search.trim()
+    ? filter.options.filter((o) => o.label.includes(search.trim()))
+    : filter.options;
+
+  return (
+    <div
+      className={cn(
+        "flex h-10 items-stretch overflow-hidden rounded-xl border bg-background shadow-sm transition-colors",
+        isActive ? "border-primary/40 ring-1 ring-primary/10" : "border-input",
+      )}
+    >
+      <div className="flex shrink-0 items-center gap-1.5 border-s border-border bg-muted/50 px-3">
+        {Icon && <Icon className="h-3.5 w-3.5 text-muted-foreground" />}
+        <span className="text-xs font-bold text-muted-foreground">{filter.label}</span>
+      </div>
+      <Select
+        value={filter.value}
+        onValueChange={filter.onChange}
+        onOpenChange={(open) => {
+          if (!open) setSearch("");
+        }}
+      >
+        <SelectTrigger className="h-10 w-[132px] rounded-none border-0 bg-transparent px-3 shadow-none focus:ring-0">
+          <SelectValue>
+            <span className={cn("truncate font-semibold", isActive && "text-primary")}>
+              {displayValue}
+            </span>
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent dir="rtl">
+          <div className="p-2 border-b border-border" onPointerDown={(e) => e.stopPropagation()}>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
+              placeholder="ابحث..."
+              dir="rtl"
+              className="h-8 w-full rounded-lg border border-input bg-background px-3 text-sm text-right outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
+            />
+          </div>
+          <SelectItem value="all">{filter.allLabel ?? "الكل"}</SelectItem>
+          {filtered.length === 0 ? (
+            <div className="py-4 text-center text-sm text-muted-foreground">لا توجد نتائج.</div>
+          ) : (
+            filtered.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))
+          )}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

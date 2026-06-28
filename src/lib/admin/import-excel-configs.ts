@@ -116,8 +116,8 @@ export const shipmentsImportConfig: ImportExcelConfig = {
   rowKey: "الكود",
   importButtonLabel: "استيراد الطلبات",
 
-  batchSuccessMessage: (batchId) => `جارٍ معالجة الملف في الخلفية `,
-
+  batchSuccessMessage: (batchId) =>
+    `تم إرسال الملف بنجاح — جارٍ المعالجة في الخلفية. سيتم تحديث البيانات تلقائياً.`,
   onImportBatch: async (file: File): Promise<ImportBatchResult> => {
     const formData = new FormData();
     formData.append("file", file);

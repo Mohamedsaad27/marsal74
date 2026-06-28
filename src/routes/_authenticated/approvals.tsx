@@ -169,11 +169,11 @@ function ApprovalsPage() {
     const q = search.toLowerCase();
     return items.filter(
       (item) =>
-        item.ref.toLowerCase().includes(q) ||
-        item.internal_code.toLowerCase().includes(q) ||
-        item.requested_by_name.toLowerCase().includes(q) ||
-        item.company_name.toLowerCase().includes(q) ||
-        item.reason.toLowerCase().includes(q),
+        item.ref?.toLowerCase().includes(q) ||
+        item.internal_code?.toLowerCase().includes(q) ||
+        item.requested_by_name?.toLowerCase().includes(q) ||
+        item.company_name?.toLowerCase().includes(q) ||
+        item.reason?.toLowerCase().includes(q),
     );
   }, [items, search]);
 
@@ -306,8 +306,8 @@ function ApprovalsPage() {
           columns={[
             { key: "ref", label: "رقم الطلب" },
             { key: "order", label: "طلب التوصيل" },
-            { key: "company", label: "الشركة" },
-            { key: "agent", label: "المندوب" },
+            // { key: "company", label: "الشركة" },
+            // { key: "agent", label: "المندوب" },
             { key: "type", label: "النوع" },
             { key: "original", label: "الأصلي" },
             { key: "requested", label: "المطلوب" },
@@ -331,8 +331,8 @@ function ApprovalsPage() {
               >
                 {item.internal_code}
               </Link>,
-              item.company_name,
-              item.agent_name,
+              // item.company_name,
+              // item.agent_name,
               <span
                 key="type"
                 className="inline-flex rounded-full bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground"
@@ -364,8 +364,8 @@ function ApprovalsPage() {
               <ApprovalStatusBadge key="status" status={item.approval_status} />,
               <RowActions
                 key="actions"
-                onEdit={() => openDetail(item)}
-                onDelete={() => toast.message("حذف الطلب — غير متاح")}
+                // onEdit={() => openDetail(item)}
+                // onDelete={() => toast.message("حذف الطلب — غير متاح")}
                 extra={[
                   {
                     label: item.approval_status === 1 ? "مراجعة / موافقة" : "عرض التفاصيل",

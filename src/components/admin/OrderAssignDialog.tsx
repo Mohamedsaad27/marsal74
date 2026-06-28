@@ -81,7 +81,7 @@ export function OrderAssignDialog({ open, onOpenChange, order, onSave, loading =
             <span className="font-semibold">{order.agent_name ?? "غير معيّن"}</span>
           </p>
           <p className="mt-1">
-            <span className="text-muted-foreground">assigned_at:</span>{" "}
+            <span className="text-muted-foreground">وقت التعيين:</span>{" "}
             <span className="font-mono text-xs">{formatDateTime(order.order.assigned_at)}</span>
           </p>
         </div>

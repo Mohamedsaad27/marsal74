@@ -100,7 +100,7 @@ export function RolePermissionsDialog({
       <div className="space-y-5">
         <div className="grid gap-4 rounded-2xl border border-border/70 bg-card p-4 shadow-soft sm:grid-cols-2">
           <FormInput
-            label="اسم الدور (name)"
+            label="اسم الدور "
             required
             placeholder="operations_manager"
             value={name}
@@ -108,14 +108,14 @@ export function RolePermissionsDialog({
             dir="ltr"
             className="font-mono"
           />
-          <FormInput
+          {/* <FormInput
             label="guard_name"
             disabled
             value={guardName}
             onChange={(e) => setGuardName(e.target.value)}
             dir="ltr"
             className="font-mono"
-          />
+          /> */}
         </div>
 
         {isEdit && role && (
@@ -126,13 +126,13 @@ export function RolePermissionsDialog({
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-bold">{formatRoleName(role.name)}</p>
-                <p className="font-mono text-xs text-muted-foreground" dir="ltr">
+                {/* <p className="font-mono text-xs text-muted-foreground" dir="ltr">
                   {role.name}
-                </p>
+                </p> */}
               </div>
-              <Badge variant="outline" className="rounded-md font-mono text-[10px]">
+              {/* <Badge variant="outline" className="rounded-md font-mono text-[10px]">
                 {role.guard_name}
-              </Badge>
+              </Badge> */}
             </div>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {groupedSelected.map((group) => (

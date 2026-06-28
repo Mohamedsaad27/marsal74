@@ -137,7 +137,7 @@ export function Topbar() {
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-xl md:px-6">
       <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
 
-      <div className="relative hidden flex-1 max-w-md md:block">
+      {/* <div className="relative hidden flex-1 max-w-md md:block">
         <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="ابحث عن شحنة، مندوب، عميل..."
@@ -146,7 +146,7 @@ export function Topbar() {
         <kbd className="absolute left-3 top-1/2 -translate-y-1/2 rounded-md border border-border bg-card px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
           ⌘K
         </kbd>
-      </div>
+      </div> */}
 
       <div className="mr-auto flex items-center gap-1.5">
         <Button
