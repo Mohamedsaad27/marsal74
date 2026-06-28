@@ -306,8 +306,8 @@ function ApprovalsPage() {
           columns={[
             { key: "ref", label: "رقم الطلب" },
             { key: "order", label: "طلب التوصيل" },
-            // { key: "company", label: "الشركة" },
-            // { key: "agent", label: "المندوب" },
+            { key: "company", label: "الشركة" },
+            { key: "agent", label: "المندوب" },
             { key: "type", label: "النوع" },
             { key: "original", label: "الأصلي" },
             { key: "requested", label: "المطلوب" },
@@ -331,8 +331,8 @@ function ApprovalsPage() {
               >
                 {item.internal_code}
               </Link>,
-              // item.company_name,
-              // item.agent_name,
+              item.company_name,
+              item.agent_name,
               <span
                 key="type"
                 className="inline-flex rounded-full bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground"
