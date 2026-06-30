@@ -377,7 +377,7 @@ function OrderDetailPage() {
             (detail.schedule.expected_delivery_date ||
               detail.schedule.postponed_date ||
               detail.schedule.schedule_notes) && (
-              <SectionCard title="الجدولة" tableName="order_schedule">
+              <SectionCard title="الجدولة">
                 <FieldGrid
                   rows={[
                     {
@@ -396,7 +396,7 @@ function OrderDetailPage() {
 
           {/* Approvals — only render if approval data exists */}
           {detail.approval && (
-            <SectionCard title="الموافقات" tableName="order_approvals">
+            <SectionCard title="الموافقات">
               <FieldGrid
                 rows={[
                   {
