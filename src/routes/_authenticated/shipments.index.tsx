@@ -53,20 +53,26 @@ const PAGE_SIZE = 20;
 
 const EMPTY_STATS: ApiOrderStats = {
   total: 0,
-  pending: 0,
-  in_delivery: 0,
-  delivered: 0,
-  postponed_refused: 0,
   returned: 0,
+  statuses: [],
 };
 
 function statsToKpiCounts(stats: ApiOrderStats) {
+  const counts = Object.fromEntries(stats.statuses.map((s) => [s.id, s.count]));
+
   return {
     all: stats.total,
-    pending_assignment: stats.pending,
-    in_delivery: stats.in_delivery,
-    delivered: stats.delivered,
-    delayed_rejected: stats.postponed_refused,
+    pending_assignment: counts[1] ?? 0,
+    assigned: counts[2] ?? 0,
+    in_delivery: counts[3] ?? 0,
+    delivered: (counts[5] ?? 0) + (counts[6] ?? 0) + (counts[7] ?? 0),
+    delayed_rejected:
+      (counts[8] ?? 0) +
+      (counts[9] ?? 0) +
+      (counts[10] ?? 0) +
+      (counts[11] ?? 0) +
+      (counts[12] ?? 0) +
+      (counts[15] ?? 0),
     returned: stats.returned,
   };
 }

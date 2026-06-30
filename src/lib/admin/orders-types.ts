@@ -178,20 +178,23 @@ export const ORDER_STATUS_TO_KEY: Record<OrderStatusCode, ShipmentStatus> = {
 };
 
 export const ORDER_STATUS_OPTIONS = [
-  { value: "pending", label: "بانتظار التوزيع", code: 1 },
-  // { value: "assigned", label: "تم التعيين", code: 2 },
-  { value: "in_delivery", label: "قيد التوصيل", code: 3 },
-  // { value: "awaiting_approval", label: "بانتظار الموافقة", code: 4 },
-  { value: "delivered", label: "تم التسليم", code: 5 },
-  // { value: "delivered_price_changed", label: "تم التسليم بتغيير سعر", code: 6 },
-  // { value: "partial_delivery", label: "تسليم جزئي", code: 7 },
-  // { value: "refused_paid_shipping", label: "رفض + دفع رسوم الشحن", code: 8 },
-  // { value: "refused_no_payment", label: "رفض وعدم الدفع", code: 9 },
-  { value: "returned", label: "مرتجع", code: 10 },
-  // { value: "no_answer", label: "لا يوجد رد", code: 11 },
-  // { value: "phone_off", label: "الهاتف مغلق", code: 12 },
-  { value: "postponed_refused", label: "مؤجل", code: 15 },
-];
+  { value: "1", label: "بانتظار التوزيع", code: 1 },
+  { value: "2", label: "تم التعيين", code: 2 },
+  { value: "3", label: "قيد التوصيل", code: 3 },
+  { value: "4", label: "بانتظار الموافقة", code: 4 },
+  { value: "5", label: "تم التسليم", code: 5 },
+  { value: "6", label: "تم التسليم بتغيير سعر", code: 6 },
+  { value: "7", label: "تسليم جزئي", code: 7 },
+  { value: "8", label: "رفض + دفع رسوم الشحن", code: 8 },
+  { value: "9", label: "رفض وعدم الدفع", code: 9 },
+  { value: "10", label: "عميل ملغي", code: 10 },
+  { value: "11", label: "لا يوجد رد", code: 11 },
+  { value: "12", label: "الهاتف مغلق", code: 12 },
+  { value: "15", label: "مؤجل", code: 15 },
+
+  // Special case: has a return record
+  { value: "returned", label: "مرتجع", code: null },
+] as const;
 export function formatAmount(value: number | null | undefined): string {
   if (value == null) return "—";
   return value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -215,13 +218,16 @@ export function approvalLabel(granted: 0 | 1 | null): string {
 
 // ─── Stats endpoint ───────────────────────────────────────────────────────────
 
+export interface OrderStatusStat {
+  id: number;
+  label_ar: string;
+  count: number;
+}
+
 export interface ApiOrderStats {
   total: number;
-  pending: number;
-  in_delivery: number;
-  delivered: number;
-  postponed_refused: number;
   returned: number;
+  statuses: OrderStatusStat[];
 }
 
 // ─── List endpoint wire shapes ────────────────────────────────────────────────
