@@ -19,6 +19,7 @@ import {
 } from "@/lib/admin/notifications-types";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 
 const typeIcons: Record<NotificationTypeCode, LucideIcon> = {
   1: Package,
@@ -53,13 +54,22 @@ export function NotificationListItem({ item, onMarkRead, showPushMeta = false }:
   const meta = notificationTypeStyles[item.type.code];
   const Icon = typeIcons[item.type.code];
   const unread = !item.is_read; // ← boolean now
+  const navigate = useNavigate();
+
+  const goToOrder = (orderId: string) =>
+    void navigate({ to: "/shipments/$orderId", params: { orderId } });
 
   return (
     <div
       className={cn(
-        "flex items-start gap-4 rounded-2xl border p-4 transition-colors hover:bg-muted/30",
+        "flex items-start gap-4 rounded-2xl border p-4 transition-colors hover:bg-muted/30 cursor-pointer",
         unread ? "border-primary/20 bg-primary/5 shadow-soft" : "border-border/60 bg-background",
       )}
+      onClick={() => {
+        if (item.data?.order_id) {
+          goToOrder(item.data.order_id);
+        }
+      }}
     >
       <div
         className={cn(
@@ -79,9 +89,9 @@ export function NotificationListItem({ item, onMarkRead, showPushMeta = false }:
                 {item.type.label}
               </span>
             </div>
-            {item.data?.order_id && (
+            {/* {item.data?.order_id && (
               <p className="mt-0.5 font-mono text-[11px] text-primary">{item.data.order_id}</p>
-            )}
+            )} */}
           </div>
           <span className="shrink-0 text-[11px] text-muted-foreground">
             {formatRelativeTime(item.created_at)}
@@ -103,7 +113,10 @@ export function NotificationListItem({ item, onMarkRead, showPushMeta = false }:
               size="sm"
               variant="secondary"
               className="h-7 rounded-lg text-xs"
-              onClick={() => onMarkRead(item.id)} // ← item.id
+              onClick={(e) => {
+                e.stopPropagation();
+                onMarkRead(item.id);
+              }}
             >
               تعليم كمقروء
             </Button>

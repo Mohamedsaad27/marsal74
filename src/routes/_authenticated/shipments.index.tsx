@@ -79,10 +79,10 @@ function statsToKpiCounts(stats: ApiOrderStats) {
 
 const KPI_TO_API: Record<string, string> = {
   all: "all",
-  pending_assignment: "pending",
-  in_delivery: "in_delivery",
-  delivered: "delivered",
-  delayed_rejected: "postponed_refused",
+  pending_assignment: "1",
+  in_delivery: "3",
+  delivered: "5",
+  delayed_rejected: "",
   returned: "returned",
 };
 

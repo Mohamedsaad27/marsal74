@@ -210,7 +210,7 @@ function NotificationsPage() {
                 className="rounded-xl pr-9"
               />
             </div>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
+            {/* <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-[160px] rounded-xl">
                 <SelectValue placeholder="النوع" />
               </SelectTrigger>
@@ -222,7 +222,7 @@ function NotificationsPage() {
                   </SelectItem>
                 ))}
               </SelectContent>
-            </Select>
+            </Select> */}
           </div>
 
           <Tabs value={readTab} onValueChange={(v) => setReadTab(v as typeof readTab)} dir="rtl">

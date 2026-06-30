@@ -37,7 +37,7 @@ import {
 import type { NotificationRecord } from "@/lib/admin/notifications-types";
 import { formatRelativeTime } from "@/lib/admin/notifications-types";
 import { cn } from "@/lib/utils";
-
+import { useNavigate } from "@tanstack/react-router";
 // Color dot per type group
 const typeDotColor: Record<number, string> = {
   1: "bg-info", // new order
@@ -61,7 +61,14 @@ export function Topbar() {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { user } = useCurrentUser();
+  const navigate = useNavigate();
 
+  const goToOrder = (orderId: string) => {
+    void navigate({
+      to: "/shipments/$orderId",
+      params: { orderId },
+    });
+  };
   const toggleDark = () => {
     document.documentElement.classList.toggle("dark");
     setDark((d) => !d);
@@ -168,7 +175,7 @@ export function Topbar() {
             >
               <Bell className="h-[18px] w-[18px]" />
               {unread > 0 && (
-                <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground ring-2 ring-background">
+                <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground ring-2 ring-background">
                   {unread > 99 ? "99" : unread}
                 </span>
               )}
@@ -225,6 +232,12 @@ export function Topbar() {
                     !n.is_read && "bg-primary/5",
                   )}
                   onSelect={(e) => e.preventDefault()} // keep open on click
+                  onClick={() => {
+                    if (n.data?.order_id) {
+                      goToOrder(n.data.order_id);
+                      setOpen(false); // close dropdown
+                    }
+                  }}
                 >
                   <span
                     className={cn(

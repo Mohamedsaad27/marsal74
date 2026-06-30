@@ -59,7 +59,7 @@ export async function markNotificationRead(
   notificationId: string,
 ): Promise<ApiResponse<NotificationRecord>> {
   const res = await fetch(`${BASE_URL}/notifications/${notificationId}/read`, {
-    method: "POST",
+    method: "PATCH",
     headers: authHeaders(),
   });
   return handleResponse<NotificationRecord>(res);
@@ -69,7 +69,7 @@ export async function markNotificationRead(
 
 export async function markAllNotificationsRead(): Promise<ApiResponse<{ count: number }>> {
   const res = await fetch(`${BASE_URL}/notifications/read-all`, {
-    method: "POST",
+    method: "PATCH",
     headers: authHeaders(),
   });
   return handleResponse<{ count: number }>(res);
