@@ -37,7 +37,54 @@ import type {
   AuditEntry,
   AuditSeverity,
 } from "@/components/admin/AuditLogDetailDialog";
+// ─── Coded-value maps (for rendering old/new values, not just labels) ─────────
 
+export const ACCOUNT_TYPE_LABELS: Record<number, string> = {
+  1: "مدير نظام",
+  2: "شركة شحن",
+  3: "مندوب توصيل",
+  4: "موظف إداري",
+};
+
+export const COMMISSION_TYPE_LABELS: Record<number, string> = {
+  1: "نسبة مئوية",
+  2: "مبلغ ثابت",
+};
+
+export const VEHICLE_TYPE_LABELS: Record<number, string> = {
+  1: "دراجة نارية",
+  2: "سيارة",
+};
+
+export const ORDER_STATUS_LABELS: Record<number, string> = {
+  1: "بانتظار التوزيع",
+  2: "معيّن لمندوب",
+  3: "خرج للتوصيل",
+  4: "بانتظار الموافقة",
+  5: "تم التوصيل",
+  6: "تم التوصيل بتغيير سعر",
+  7: "تسليم جزئي",
+  8: "رفض + دفع رسوم الشحن",
+  9: "رفض وعدم دفع رسوم الشحن",
+  10: "ألغى العميل",
+  11: "لا يوجد رد",
+  12: "الهاتف مغلق",
+  13: "تهرّب / مختفي",
+  14: "منطقة غير آمنة",
+  15: "مؤجل",
+  16: "خارج المحافظة",
+  17: "رقم هاتف خاطئ",
+};
+
+// Maps a field key → the code→label lookup that applies to its value.
+// Used by ValuesDiff / metadata rendering to turn raw numbers into Arabic text.
+export const FIELD_VALUE_MAPS: Record<string, Record<number, string>> = {
+  account_type: ACCOUNT_TYPE_LABELS,
+  commission_type: COMMISSION_TYPE_LABELS,
+  vehicle_type: VEHICLE_TYPE_LABELS,
+  status: ORDER_STATUS_LABELS,
+  status_id: ORDER_STATUS_LABELS,
+};
 // ─── Raw API types ─────────────────────────────────────────────────────────────
 
 export type ApiAuditItem = {
@@ -213,12 +260,12 @@ function deriveSeverity(item: ApiAuditItem): AuditSeverity {
 
 const AUDITABLE_TYPE_LABELS: Record<string, string> = {
   users: "المستخدمون",
+  roles: "الأدوار",
+  governorates: "المحافظات",
+  cities: "المدن",
+  shipping_companies: "شركات الشحن",
   delivery_agents: "المناديب",
   orders: "الطلبات",
-  settlements: "التسويات",
-  chats: "المحادثات",
-  roles: "الأدوار",
-  reports: "التقارير",
 };
 
 function labelAuditableType(raw: string): string {
@@ -228,7 +275,7 @@ function labelAuditableType(raw: string): string {
 // ─── Main mapper ───────────────────────────────────────────────────────────────
 
 export function mapApiItemToEntry(item: ApiAuditItem): AuditEntry {
-  const action: AuditAction = EVENT_CODE_MAP[item.event.code] ?? "update";
+  const action: AuditAction = EVENT_CODE_MAP[item.event.code] ?? "updated";
   const severity = deriveSeverity(item);
 
   // Prefer actor.name; fall back to actor_type_label for system events
@@ -270,3 +317,14 @@ export function mapApiItemToEntry(item: ApiAuditItem): AuditEntry {
     actor: item.actor ?? null,
   };
 }
+// ─── String-coded value maps (e.g. metadata.action discriminators) ────────────
+
+export const ACTION_DISCRIMINATOR_LABELS: Record<string, string> = {
+  sync_permissions: "مزامنة الصلاحيات",
+  order_agent_assignment: "تعيين مندوب للطلب",
+};
+
+// Maps a field key → the string-value lookup that applies to its value.
+export const FIELD_STRING_VALUE_MAPS: Record<string, Record<string, string>> = {
+  action: ACTION_DISCRIMINATOR_LABELS,
+};

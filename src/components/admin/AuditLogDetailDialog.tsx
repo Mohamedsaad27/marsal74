@@ -15,8 +15,14 @@ import {
   User,
   type LucideIcon,
 } from "lucide-react";
-import { ACTION_META, SEVERITY_META } from "@/lib/audit-helpers";
+import {
+  ACTION_META,
+  SEVERITY_META,
+  FIELD_VALUE_MAPS,
+  FIELD_STRING_VALUE_MAPS,
+} from "@/lib/audit-helpers";
 
+import { AUDIT_FIELD_LABELS } from "@/lib/audit-field-labels";
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
 export type AuditAction =
@@ -39,7 +45,9 @@ export type AuditAction =
   | "deactivated";
 
 export type AuditSeverity = "info" | "success" | "warning" | "critical";
-
+function getFieldLabel(key: string) {
+  return AUDIT_FIELD_LABELS[key] ?? key;
+}
 export type AuditEntry = {
   id: number;
   createdAt: string;
@@ -124,18 +132,10 @@ function ValuesDiff({
     new Set([...Object.keys(oldValues ?? {}), ...Object.keys(newValues ?? {})]),
   );
 
-  // Skip keys that are typically too long or uninteresting
   const skipKeys = new Set(["welcome_whatsapp_url", "user_agent"]);
-  const visibleKeys = keys.filter((k) => !skipKeys.has(k));
+  const visibleKeys = keys.filter((k) => !skipKeys.has(k) && !isIdField(k));
 
   if (visibleKeys.length === 0) return null;
-
-  function fmt(v: unknown): string {
-    if (v === null || v === undefined) return "—";
-    if (typeof v === "boolean") return v ? "مفعّل" : "معطّل";
-    if (typeof v === "string" && v.length > 80) return v.slice(0, 77) + "…";
-    return String(v);
-  }
 
   return (
     <div className="overflow-x-auto rounded-xl border border-border">
@@ -154,12 +154,14 @@ function ValuesDiff({
         <tbody>
           {visibleKeys.map((key) => (
             <tr key={key} className="border-t border-border/50">
-              <td className="px-3 py-2 font-mono text-muted-foreground">{key}</td>
+              <td className="px-3 py-2 font-mono text-muted-foreground"> {getFieldLabel(key)}</td>
               {oldValues && (
-                <td className="px-3 py-2 text-destructive/90">{fmt((oldValues ?? {})[key])}</td>
+                <td className="px-3 py-2 text-destructive/90">
+                  {fmt(key, (oldValues ?? {})[key])}
+                </td>
               )}
               {newValues && (
-                <td className="px-3 py-2 text-success">{fmt((newValues ?? {})[key])}</td>
+                <td className="px-3 py-2 text-success">{fmt(key, (newValues ?? {})[key])}</td>
               )}
             </tr>
           ))}
@@ -168,7 +170,6 @@ function ValuesDiff({
     </div>
   );
 }
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 type Props = {
@@ -280,19 +281,25 @@ export function AuditLogDetailDialog({ entry, open, onOpenChange }: Props) {
         </div>
 
         {/* Metadata (e.g. login metadata) */}
-        {entry.metadata && Object.keys(entry.metadata).length > 0 && (
-          <>
-            <Separator />
-            <div>
-              <h4 className="mb-3 text-sm font-bold text-foreground">البيانات الإضافية</h4>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {Object.entries(entry.metadata).map(([k, v]) => (
-                  <TechnicalBadge key={k} label={k} value={String(v ?? "—")} />
-                ))}
-              </div>
-            </div>
-          </>
-        )}
+        {entry.metadata &&
+          Object.keys(entry.metadata).length > 0 &&
+          (() => {
+            const visibleMetaKeys = Object.entries(entry.metadata).filter(([k]) => !isIdField(k));
+            if (visibleMetaKeys.length === 0) return null;
+            return (
+              <>
+                <Separator />
+                <div>
+                  <h4 className="mb-3 text-sm font-bold text-foreground">البيانات الإضافية</h4>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {visibleMetaKeys.map(([k, v]) => (
+                      <TechnicalBadge key={k} label={getFieldLabel(k)} value={fmt(k, v)} />
+                    ))}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
 
         {/* Diff table */}
         {hasDiff && (
@@ -320,4 +327,23 @@ export function AuditLogDetailDialog({ entry, open, onOpenChange }: Props) {
       </div>
     </AdminDialogShell>
   );
+}
+/** Any field ending in _id, or exactly "id", is treated as an internal identifier and hidden. */
+function isIdField(key: string): boolean {
+  return key === "id" || key.endsWith("_id");
+}
+
+function fmt(key: string, v: unknown): string {
+  if (v === null || v === undefined) return "—";
+  if (typeof v === "boolean") return v ? "مفعّل" : "معطّل";
+
+  const codeMap = FIELD_VALUE_MAPS[key];
+  if (codeMap && typeof v === "number" && codeMap[v]) return codeMap[v];
+  if (codeMap && typeof v === "string" && codeMap[Number(v)]) return codeMap[Number(v)];
+
+  const stringMap = FIELD_STRING_VALUE_MAPS[key];
+  if (stringMap && typeof v === "string" && stringMap[v]) return stringMap[v];
+
+  if (typeof v === "string" && v.length > 80) return v.slice(0, 77) + "…";
+  return String(v);
 }

@@ -1,0 +1,55 @@
+export const AUDIT_FIELD_LABELS: Record<string, string> = {
+  // Common fields
+  name: "الاسم",
+  name_ar: "الاسم بالعربية",
+  name_en: "الاسم بالإنجليزية",
+  email: "البريد الإلكتروني",
+  phone: "الهاتف",
+  gender: "الجنس",
+  avatar: "الصورة",
+  is_active: "الحالة",
+  is_available: "التوفر",
+  code: "الرمز",
+  guard_name: "الحارس",
+  permissions: "الصلاحيات",
+  governorate_id: "المحافظة",
+  company_name: "اسم الشركة",
+  commercial_reg: "السجل التجاري",
+  balance: "الرصيد",
+  commission_type: "نوع العمولة",
+  commission_value: "قيمة العمولة",
+  national_id: "الرقم القومي",
+  vehicle_type: "نوع المركبة",
+  vehicle_plate_number: "رقم اللوحة",
+  supervisor_agent_id: "المندوب المشرف",
+  status_id: "الحالة",
+  status: "الحالة",
+
+  agent_name: "اسم المندوب",
+  last_login_at: "آخر تسجيل دخول",
+  logo_url: "الشعار",
+
+  // IDs
+  user_id: "معرّف المستخدم",
+  shipping_company_id: "معرّف شركة الشحن",
+  delivery_agent_id: "معرّف مندوب التوصيل",
+
+  // Metadata
+  ip: "عنوان IP",
+  action: "الإجراء",
+  role_name: "اسم الدور",
+  changed_by_admin: "تم بواسطة المدير",
+  reference_code: "رقم الطلب",
+  is_reassignment: "إعادة تعيين",
+  previous_agent_id: "معرّف المندوب السابق",
+  previous_agent_name: "اسم المندوب السابق",
+  new_agent_id: "معرّف المندوب الجديد",
+  new_agent_name: "اسم المندوب الجديد",
+
+  // Auto-audited entity fields (users / shipping_companies / delivery_agents)
+  account_type: "نوع الحساب",
+  welcome_whatsapp_url: "رابط واتساب الترحيبي",
+  created_at: "تاريخ الإنشاء",
+  updated_at: "تاريخ التحديث",
+  deleted_at: "تاريخ الحذف",
+};

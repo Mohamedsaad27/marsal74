@@ -327,6 +327,7 @@ export default function AuditLogPage() {
           </Select>
 
           {/* Auditable type filter */}
+          {/* Auditable type filter */}
           <Select value={auditableType} onValueChange={setAuditableType}>
             <SelectTrigger className="w-[160px] rounded-xl">
               <SelectValue placeholder="نوع السجل" />
@@ -334,15 +335,12 @@ export default function AuditLogPage() {
             <SelectContent dir="rtl">
               <SelectItem value="all">كل الأنواع</SelectItem>
               <SelectItem value="users">المستخدمون</SelectItem>
+              <SelectItem value="roles">الأدوار</SelectItem>
+              <SelectItem value="governorates">المحافظات</SelectItem>
+              <SelectItem value="cities">المدن</SelectItem>
+              <SelectItem value="shipping_companies">شركات الشحن</SelectItem>
+              <SelectItem value="delivery_agents">المناديب</SelectItem>
               <SelectItem value="orders">الطلبات</SelectItem>
-              <SelectItem value="settlements">التسويات</SelectItem>
-              {allAuditableTypes
-                .filter((t) => !["users", "orders", "settlements"].includes(t ?? ""))
-                .map((t) => (
-                  <SelectItem key={t} value={t ?? ""}>
-                    {t}
-                  </SelectItem>
-                ))}
             </SelectContent>
           </Select>
 
