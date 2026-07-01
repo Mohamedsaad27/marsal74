@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { LogOut } from "lucide-react";
+import { useMemo } from "react";
 import { Logo } from "@/components/brand/Logo";
 import { SidebarNavGroup } from "@/components/layout/SidebarNavGroup";
 
@@ -24,9 +25,9 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { logout } from "@/lib/auth/Auth.api";
+import { filterCategories, filterItems, filterSections } from "@/lib/auth/permissions";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { useSettings } from "@/hooks/useSettings";
 
 export function AppSidebar() {
   const { user, hydrated } = useCurrentUser();
@@ -35,7 +36,21 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const isActive = (url: string) => (url === "/" ? pathname === "/" : pathname.startsWith(url));
-  const { settings, hydratedset } = useSettings();
+
+  const permissions = useMemo(() => user?.permissions ?? [], [user]);
+
+  const visibleOperationsCategories = useMemo(
+    () => filterCategories(navOperationsCategories, permissions),
+    [permissions],
+  );
+  const visibleSections = useMemo(() => filterSections(navSections, permissions), [permissions]);
+  const visibleSystem = useMemo(() => filterItems(navSystem, permissions), [permissions]);
+
+  // Don't render permission-gated nav until we know who the user is,
+  // to avoid a flash of items the user doesn't have access to.
+  if (!hydrated) {
+    return null; // or a lightweight skeleton, if you have one
+  }
 
   return (
     <Sidebar collapsible="icon" side="right" className="border-l-0">
@@ -45,12 +60,12 @@ export function AppSidebar() {
           className="flex items-center justify-start gap-3 transition-opacity hover:opacity-90"
         >
           <img
-            src={settings?.identity.logo_url}
-            alt={settings?.identity.platform_name}
+            src="src/assets/6.png"
+            alt={"EXPRESS PRO"}
             className="h-12 w-12 rounded-lg object-contain"
           />
           <h1 className="max-w-[180px] truncate text-lg font-bold tracking-tight text-sidebar-foreground">
-            {settings?.identity.platform_name}
+            اكسبريس برو
           </h1>
         </Link>
       </SidebarHeader>
@@ -77,26 +92,31 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup className="mt-5 p-0">
-          <SidebarGroupContent className="space-y-4">
-            {navOperationsCategories.map((category) => (
-              <div key={category.label}>
-                {!collapsed && (
-                  <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
-                    {category.label}
-                  </p>
-                )}
-                <SidebarMenu className="gap-0.5">
-                  {category.sections.map((section) => (
-                    <SidebarNavGroup key={`${category.label}-${section.title}`} section={section} />
-                  ))}
-                </SidebarMenu>
-              </div>
-            ))}
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {visibleOperationsCategories.length > 0 && (
+          <SidebarGroup className="mt-5 p-0">
+            <SidebarGroupContent className="space-y-4">
+              {visibleOperationsCategories.map((category) => (
+                <div key={category.label}>
+                  {!collapsed && (
+                    <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+                      {category.label}
+                    </p>
+                  )}
+                  <SidebarMenu className="gap-0.5">
+                    {category.sections.map((section) => (
+                      <SidebarNavGroup
+                        key={`${category.label}-${section.title}`}
+                        section={section}
+                      />
+                    ))}
+                  </SidebarMenu>
+                </div>
+              ))}
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
-        {navSections.map((section) => (
+        {visibleSections.map((section) => (
           <SidebarGroup key={section.title} className="mt-6 p-0">
             <SidebarGroupContent>
               <SidebarMenu className="gap-0.5">
@@ -110,7 +130,7 @@ export function AppSidebar() {
           {!collapsed && <SidebarGroupLabel className="px-2">النظام</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu className="gap-0.5">
-              {navSystem.map((item) => (
+              {visibleSystem.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton
                     asChild

@@ -15,6 +15,7 @@ export interface LoginResponse {
     account_type: string;
     is_active: boolean;
     roles: string[];
+    permissions: string[];
     shipping_company: unknown | null;
     staff_member: {
       staff_member_id: string;

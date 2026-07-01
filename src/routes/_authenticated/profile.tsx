@@ -39,7 +39,11 @@ function ProfilePage() {
       account_type: string;
       is_active: boolean;
       staff_member: {
-        department: string;
+        department: {
+          id: string;
+          name_ar: string;
+          name_en: string;
+        } | null;
         job_title: string;
       } | null;
     };
@@ -60,13 +64,12 @@ function ProfilePage() {
         });
         setMeta({
           account_type: data.account_type ?? "",
-          department: data.staff_member?.department ?? "",
+          department: data.staff_member?.department?.name_ar ?? "",
           job_title: data.staff_member?.job_title ?? "",
         });
       })
       .catch(() => {});
   }, []);
-
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 

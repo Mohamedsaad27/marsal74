@@ -21,6 +21,7 @@ type CurrentUser = {
   delivery_agent: null;
   last_login_at: string;
   created_at: string;
+  permissions: string[];
 };
 
 type MeResponse = {

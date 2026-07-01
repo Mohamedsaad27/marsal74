@@ -4,7 +4,7 @@ export type ApiResponse<T> = {
   data: T;
 };
 
-export type NotificationTypeCode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export type NotificationTypeCode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 export type NotificationRecord = {
   id: string; // real API uses "id"
@@ -63,6 +63,7 @@ export const NOTIFICATION_TYPE_OPTIONS: {
   { value: "6", label: "رسالة جديدة", code: 6 },
   { value: "7", label: "تم تحديث رقم الهاتف", code: 7 },
   { value: "8", label: "تذكير بموعد تأجيل التسليم", code: 8 },
+  { value: "9", label: "تحصيل نقدي من المندوب", code: 9 },
 ];
 
 export function notificationTypeLabel(code: NotificationTypeCode): string {
@@ -107,4 +108,5 @@ export const notificationTypeStyles: Record<
   },
   7: { iconTone: "bg-muted-foreground text-white", badge: "bg-muted text-muted-foreground" },
   8: { iconTone: "bg-orange-500 text-white", badge: "bg-orange-100 text-orange-600" },
+  9: { iconTone: "bg-success text-white", badge: "bg-success/10 text-success" },
 };

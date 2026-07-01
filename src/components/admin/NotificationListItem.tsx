@@ -30,6 +30,7 @@ const typeIcons: Record<NotificationTypeCode, LucideIcon> = {
   6: Undo2,
   7: Bell,
   8: Clock,
+  9: Wallet,
 };
 
 type Props = {

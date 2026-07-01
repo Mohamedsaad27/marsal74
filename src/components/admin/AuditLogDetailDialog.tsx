@@ -261,7 +261,7 @@ export function AuditLogDetailDialog({ entry, open, onOpenChange }: Props) {
             <>
               <span className="text-xs text-muted-foreground">•</span>
               <span className="font-mono text-xs text-muted-foreground">
-                {entry.auditableId.slice(0, 8)}…
+                {/* {entry.auditableId.slice(0, 8)}… */}
               </span>
             </>
           )}
