@@ -32,6 +32,7 @@ import {
   Bell,
   BellOff,
   CheckCheck,
+  DollarSign,
   Loader2,
   Package,
   Search,
@@ -57,7 +58,13 @@ function NotificationsPage() {
   const [readTab, setReadTab] = useState<"all" | "unread" | "read">("all");
   const [mainTab, setMainTab] = useState("inbox");
 
-  const [kpis, setKpis] = useState({ approvals: 0, collections: 0, shipments: 0, unread: 0 });
+  const [kpis, setKpis] = useState({
+    approvals: 0,
+    collections: 0,
+    shipments: 0,
+    settlements: 0,
+    unread: 0,
+  });
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(1);
   const loadNotifications = useCallback(async (p = 1) => {
@@ -65,7 +72,10 @@ function NotificationsPage() {
     try {
       const response = await fetchNotifications(p);
       if (!response.isSuccess) throw new Error(response.message);
-      setKpis(response.data.kpis); // ← from API
+      setKpis({
+        ...response.data.kpis,
+        settlements: response.data.kpis.settlements ?? 0,
+      });
       setHasMore(response.data.has_more);
       setPage(response.data.current_page);
       setItems((prev) => (p === 1 ? response.data.items : [...prev, ...response.data.items]));
@@ -182,6 +192,7 @@ function NotificationsPage() {
         <KpiCard label="شحنات" value={String(kpis.shipments)} icon={Package} tone="info" />
         <KpiCard label="تحصيلات" value={String(kpis.collections)} icon={Wallet} tone="success" />
         <KpiCard label="موافقات" value={String(kpis.approvals)} icon={ShieldCheck} tone="info" />
+        <KpiCard label="تسويات" value={String(kpis.settlements)} icon={DollarSign} tone="success" />
       </div>
 
       <Tabs
@@ -190,15 +201,6 @@ function NotificationsPage() {
         dir="rtl"
         className="rounded-2xl border border-border bg-card shadow-soft"
       >
-        <div className="border-b border-border p-4 pb-0">
-          <TabsList className="mb-0 h-10 w-full justify-start rounded-xl bg-muted/50 p-1 sm:w-auto">
-            <TabsTrigger value="inbox" className="rounded-lg px-4">
-              <Bell className="ms-1.5 h-3.5 w-3.5" />
-              صندوق الوارد
-            </TabsTrigger>
-          </TabsList>
-        </div>
-
         <TabsContent value="inbox" className="mt-0 p-4">
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <div className="relative min-w-[200px] flex-1">

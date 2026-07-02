@@ -8,6 +8,7 @@ export type NotificationKpis = {
   approvals: number;
   collections: number;
   shipments: number;
+  settlements?: number;
   unread: number;
 };
 
