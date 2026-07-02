@@ -4,19 +4,6 @@ export type ApiResponse<T> = {
   data: T;
 };
 
-export type NotificationTypeCode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
-
-export type NotificationRecord = {
-  id: string; // real API uses "id"
-  type: { code: NotificationTypeCode; label: string };
-  title_ar: string;
-  body_ar: string;
-  data: { order_id?: string } | null;
-  is_read: boolean; // real API: boolean, not 0|1
-  sent_via_fcm: boolean;
-  created_at: string;
-};
-
 export type NotificationKpis = {
   approvals: number;
   collections: number;
@@ -50,22 +37,6 @@ export type NotificationPreferencesState = {
   digest_enabled: boolean;
 };
 
-export const NOTIFICATION_TYPE_OPTIONS: {
-  value: string;
-  label: string;
-  code: NotificationTypeCode;
-}[] = [
-  { value: "1", label: "طلب توصيل جديد", code: 1 },
-  { value: "2", label: "تحديث حالة الطلب", code: 2 },
-  { value: "3", label: "طلب موافقة على تغيير السعر", code: 3 },
-  { value: "4", label: "بدأ توقيت رفض الاستلام", code: 4 },
-  { value: "5", label: "انتهى وقت رفض الاستلام", code: 5 },
-  { value: "6", label: "رسالة جديدة", code: 6 },
-  { value: "7", label: "تم تحديث رقم الهاتف", code: 7 },
-  { value: "8", label: "تذكير بموعد تأجيل التسليم", code: 8 },
-  { value: "9", label: "تحصيل نقدي من المندوب", code: 9 },
-];
-
 export function notificationTypeLabel(code: NotificationTypeCode): string {
   return NOTIFICATION_TYPE_OPTIONS.find((o) => o.code === code)?.label ?? String(code);
 }
@@ -93,6 +64,46 @@ export function formatRelativeTime(iso: string): string {
   return formatDateTime(iso);
 }
 
+export type NotificationTypeCode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+
+export type NotificationRecord = {
+  id: string;
+  type: { code: NotificationTypeCode; label: string };
+  title_ar: string;
+  body_ar: string;
+  data: {
+    order_id?: string;
+    conversation_id?: string;
+    approval_request_id?: string;
+    collection_id?: string;
+    settlement_id?: string;
+    return_id?: string;
+  } | null;
+  is_read: boolean;
+  sent_via_fcm: boolean;
+  read_at: string | null;
+  created_at: string;
+};
+
+export const NOTIFICATION_TYPE_OPTIONS: {
+  value: string;
+  label: string;
+  code: NotificationTypeCode;
+}[] = [
+  { value: "1", label: "طلب توصيل جديد", code: 1 },
+  { value: "2", label: "تحديث حالة الطلب", code: 2 },
+  { value: "3", label: "طلب موافقة على تغيير السعر", code: 3 },
+  { value: "4", label: "بدأ توقيت رفض الاستلام", code: 4 },
+  { value: "5", label: "انتهى وقت رفض الاستلام", code: 5 },
+  { value: "6", label: "رسالة جديدة", code: 6 },
+  { value: "7", label: "تم تحديث رقم الهاتف", code: 7 },
+  { value: "8", label: "تذكير بموعد تأجيل التسليم", code: 8 },
+  { value: "9", label: "تحصيل نقدي من المندوب", code: 9 },
+  { value: "10", label: "تسوية مالية", code: 10 },
+  { value: "11", label: "مرتجع", code: 11 },
+  { value: "12", label: "إعادة تعيين طلب", code: 12 },
+];
+
 export const notificationTypeStyles: Record<
   NotificationTypeCode,
   { iconTone: string; badge: string }
@@ -109,4 +120,13 @@ export const notificationTypeStyles: Record<
   7: { iconTone: "bg-muted-foreground text-white", badge: "bg-muted text-muted-foreground" },
   8: { iconTone: "bg-orange-500 text-white", badge: "bg-orange-100 text-orange-600" },
   9: { iconTone: "bg-success text-white", badge: "bg-success/10 text-success" },
+  10: { iconTone: "bg-emerald-600 text-white", badge: "bg-emerald-100 text-emerald-700" },
+  11: { iconTone: "bg-rose-500 text-white", badge: "bg-rose-100 text-rose-600" },
+  12: { iconTone: "bg-sky-500 text-white", badge: "bg-sky-100 text-sky-600" },
+};
+
+// Fallback for any future/unknown code so the UI never crashes on a new type
+export const FALLBACK_NOTIFICATION_META = {
+  iconTone: "bg-muted text-muted-foreground",
+  badge: "bg-muted text-muted-foreground",
 };

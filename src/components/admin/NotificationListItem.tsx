@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import type { NotificationRecord, NotificationTypeCode } from "@/lib/admin/notifications-types";
 import {
+  FALLBACK_NOTIFICATION_META,
   formatRelativeTime,
   notificationTypeLabel,
   notificationTypeStyles,
@@ -20,18 +21,6 @@ import {
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
-
-const typeIcons: Record<NotificationTypeCode, LucideIcon> = {
-  1: Package,
-  2: Truck,
-  3: Wallet,
-  4: ShieldCheck,
-  5: Scale,
-  6: Undo2,
-  7: Bell,
-  8: Clock,
-  9: Wallet,
-};
 
 type Props = {
   item: NotificationRecord;
@@ -51,14 +40,55 @@ type Props = {
 // item.channel === "push" → item.sent_via_fcm
 
 // Updated component:
+
+import { Handshake, ArrowLeftRight, Repeat } from "lucide-react";
+
+const typeIcons: Record<NotificationTypeCode, LucideIcon> = {
+  1: Package,
+  2: Truck,
+  3: Wallet,
+  4: ShieldCheck,
+  5: Scale,
+  6: Undo2,
+  7: Bell,
+  8: Clock,
+  9: Wallet,
+  10: Handshake,
+  11: ArrowLeftRight,
+  12: Repeat,
+};
+
 export function NotificationListItem({ item, onMarkRead, showPushMeta = false }: Props) {
-  const meta = notificationTypeStyles[item.type.code];
-  const Icon = typeIcons[item.type.code];
-  const unread = !item.is_read; // ← boolean now
+  const code = item.type?.code;
+  const meta = code
+    ? (notificationTypeStyles[code] ?? FALLBACK_NOTIFICATION_META)
+    : FALLBACK_NOTIFICATION_META;
+  const Icon = (code ? typeIcons[code] : undefined) ?? Bell;
+  const unread = !item.is_read;
   const navigate = useNavigate();
 
-  const goToOrder = (orderId: string) =>
-    void navigate({ to: "/shipments/$orderId", params: { orderId } });
+  const handleClick = () => {
+    if (unread) {
+      onMarkRead(item.id);
+    }
+    const data = item.data;
+    if (!data) return;
+    if (data.settlement_id) {
+      void navigate({
+        to: "/settlements/",
+        params: { settlementId: data.settlement_id },
+      });
+    } else if (data.return_id) {
+      void navigate({ to: "/returns/", params: { returnId: data.return_id } });
+    } else if (data.collection_id) {
+      void navigate({
+        to: "/collections/",
+        params: { collectionId: data.collection_id },
+      });
+    } else if (data.order_id) {
+      void navigate({ to: "/shipments/$orderId", params: { orderId: data.order_id } });
+    }
+  };
 
   return (
     <div
@@ -66,11 +96,7 @@ export function NotificationListItem({ item, onMarkRead, showPushMeta = false }:
         "flex items-start gap-4 rounded-2xl border p-4 transition-colors hover:bg-muted/30 cursor-pointer",
         unread ? "border-primary/20 bg-primary/5 shadow-soft" : "border-border/60 bg-background",
       )}
-      onClick={() => {
-        if (item.data?.order_id) {
-          goToOrder(item.data.order_id);
-        }
-      }}
+      onClick={handleClick}
     >
       <div
         className={cn(
