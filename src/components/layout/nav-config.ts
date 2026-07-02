@@ -64,19 +64,19 @@ export const navOperationsCategories: NavCategory[] = [
       },
     ],
   },
-  // {
-  //   label: "المتابعة",
-  //   sections: [
-  //     {
-  //       title: "التتبع والتواصل",
-  //       icon: MapPin,
-  //       items: [
-  //         { title: "التتبع المباشر", url: "/tracking", icon: MapPin },
-  //         { title: "المحادثات", url: "/chat", icon: MessageSquare },
-  //       ],
-  //     },
-  //   ],
-  // },
+  {
+    label: "المتابعة",
+    sections: [
+      {
+        title: "التواصل",
+        icon: MapPin,
+        items: [
+          // { title: "التتبع المباشر", url: "/tracking", icon: MapPin },
+          { title: "المحادثات", url: "/chat", icon: MessageSquare },
+        ],
+      },
+    ],
+  },
 ];
 
 export const navLogistics: NavSection = {

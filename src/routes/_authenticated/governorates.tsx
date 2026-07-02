@@ -17,6 +17,7 @@ import {
   toggleGovernorateActive,
   updateGovernorate,
   fetchGovernoratesKpis,
+  bulkDeleteGovernorates,
 } from "@/lib/admin/locations-api";
 import type { Governorate } from "@/lib/admin/locations-types";
 import type { ConfirmAction, CrudMode } from "@/components/admin/use-admin-crud";
@@ -184,7 +185,26 @@ function GovernoratesPage() {
       },
     });
   };
+  const requestBulkDelete = () => {
+    setConfirmAction({
+      title: "حذف متعدد",
+      description: `سيتم حذف ${selectedIds.size} محافظة. لا يمكن التراجع.`,
+      confirmLabel: "حذف الكل",
+      variant: "destructive",
+      onConfirm: async () => {
+        setConfirmAction(null);
 
+        try {
+          await bulkDeleteGovernorates([...selectedIds]);
+          toast.success("تم حذف المحافظات المحددة");
+          setSelectedIds(new Set());
+          await fetchGovernorates();
+        } catch (err) {
+          toast.error((err as Error).message ?? "فشل الحذف");
+        }
+      },
+    });
+  };
   return (
     <AppShell>
       <AdminPageHeader
@@ -194,7 +214,7 @@ function GovernoratesPage() {
         addLabel="إضافة محافظة"
         onAdd={openCreate}
         selectedCount={selectedIds.size}
-        onBulkDelete={() => {}}
+        onBulkDelete={requestBulkDelete}
         extra={
           <Button variant="outline" className="rounded-xl" asChild>
             <Link to="/cities">

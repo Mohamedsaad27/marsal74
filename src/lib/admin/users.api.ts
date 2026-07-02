@@ -188,7 +188,15 @@ export const usersApi = {
   delete(userId: string): Promise<{ isSuccess: boolean; message: string }> {
     return apiFetch(`/admin/users/${userId}`, { method: "DELETE" });
   },
-
+  /**
+   * Delete multiple users.
+   */
+  bulkDelete(ids: string[]): Promise<{ isSuccess: boolean; message: string }> {
+    return apiFetch(`/admin/users`, {
+      method: "DELETE",
+      body: JSON.stringify({ ids }),
+    });
+  },
   /**
    * Change a user's password.
    */

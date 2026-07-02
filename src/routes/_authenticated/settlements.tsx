@@ -410,6 +410,7 @@ function SettlementsPage() {
       </div>
 
       <AdminDataTable
+        selectable={false}
         search={search}
         onSearchChange={(v) => {
           setSearch(v);

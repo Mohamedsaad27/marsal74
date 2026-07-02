@@ -255,8 +255,34 @@ export async function createOrder(payload: CreateOrderPayload): Promise<ApiRespo
   });
 }
 
-export async function exportOrdersExcel(): Promise<ApiResponse<{ filename: string }>> {
-  return apiFetch<ApiResponse<{ filename: string }>>("/admin/orders/export");
-}
+export async function exportOrdersExcel() {
+  const token = getAccessToken();
+  const response = await fetch(`${BASE_URL}/admin/orders/export`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
+  if (!response.ok) {
+    throw new Error("فشل التصدير");
+  }
+
+  const blob = await response.blob();
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "orders.xlsx";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+export async function bulkDeleteOrders(ids: string[]): Promise<ApiResponse<null>> {
+  return apiFetch<ApiResponse<null>>("/admin/orders", {
+    method: "DELETE",
+    body: JSON.stringify({ ids }),
+  });
+}
 export { ORDER_STATUS_TO_KEY };

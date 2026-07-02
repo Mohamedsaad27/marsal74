@@ -18,6 +18,7 @@ import {
   fetchGovernorates,
   toggleCityActive,
   updateCity,
+  bulkDeleteCities,
 } from "@/lib/admin/locations-api";
 import type { City, Governorate, CityPayload } from "@/lib/admin/locations-types";
 import type { ConfirmAction, CrudMode } from "@/components/admin/use-admin-crud";
@@ -206,7 +207,26 @@ function CitiesPage() {
       },
     });
   };
+  const requestBulkDelete = () => {
+    setConfirmAction({
+      title: "حذف متعدد",
+      description: `سيتم حذف ${selectedIds.size} مدينة. لا يمكن التراجع.`,
+      confirmLabel: "حذف الكل",
+      variant: "destructive",
+      onConfirm: async () => {
+        setConfirmAction(null);
 
+        try {
+          await bulkDeleteCities([...selectedIds]);
+          toast.success("تم حذف المدن المحددة");
+          setSelectedIds(new Set());
+          await fetchCities();
+        } catch (err) {
+          toast.error((err as Error).message ?? "فشل الحذف");
+        }
+      },
+    });
+  };
   return (
     <AppShell>
       <AdminPageHeader
@@ -216,7 +236,7 @@ function CitiesPage() {
         addLabel="إضافة مدينة"
         onAdd={openCreate}
         selectedCount={selectedIds.size}
-        onBulkDelete={() => {}}
+        onBulkDelete={requestBulkDelete}
         extra={
           <Button variant="outline" className="rounded-xl" asChild>
             <Link to="/governorates">

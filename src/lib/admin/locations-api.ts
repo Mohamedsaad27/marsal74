@@ -112,7 +112,12 @@ export async function deleteGovernorate(
     method: "DELETE",
   });
 }
-
+export async function bulkDeleteGovernorates(ids: string[]): Promise<ApiResponse<unknown>> {
+  return apiRequest(API_URL, {
+    method: "DELETE",
+    body: JSON.stringify({ ids }),
+  });
+}
 export async function fetchGovernorateCities(
   governorateId: string,
   page = 1,
@@ -202,5 +207,11 @@ export async function toggleCityActive(cityId: string): Promise<ApiResponse<Citi
 export async function deleteCity(cityId: string): Promise<ApiResponse<unknown>> {
   return apiRequest(`${CITIES_API_URL}/${cityId}`, {
     method: "DELETE",
+  });
+}
+export async function bulkDeleteCities(ids: string[]): Promise<ApiResponse<unknown>> {
+  return apiRequest(CITIES_API_URL, {
+    method: "DELETE",
+    body: JSON.stringify({ ids }),
   });
 }

@@ -7,7 +7,7 @@ export type ApiResponse<T> = {
 };
 
 /** orders.status — TINYINT 1–12 */
-export type OrderStatusCode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 15;
+export type OrderStatusCode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 15 | 14 | 16 | 17;
 export type Order = {
   order_id: string;
   reference_no: string;
@@ -175,6 +175,9 @@ export const ORDER_STATUS_TO_KEY: Record<OrderStatusCode, ShipmentStatus> = {
   11: "no_answer",
   12: "phone_off",
   15: "postponed",
+  14: "unsafe_area",
+  16: "outside_governorate",
+  17: "wrong_phone",
 };
 
 export const ORDER_STATUS_OPTIONS = [
@@ -191,7 +194,9 @@ export const ORDER_STATUS_OPTIONS = [
   { value: "11", label: "لا يوجد رد", code: 11 },
   { value: "12", label: "الهاتف مغلق", code: 12 },
   { value: "15", label: "مؤجل", code: 15 },
-
+  { value: "14", label: "منطقة غير آمنة", code: 14 },
+  { value: "16", label: "خارج المحافظة", code: 16 },
+  { value: "17", label: "رقم الهاتف خاطئ", code: 17 },
   // Special case: has a return record
   { value: "returned", label: "مرتجع", code: null },
 ] as const;

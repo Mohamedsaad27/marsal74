@@ -468,8 +468,10 @@ function UsersPage() {
       variant: "destructive",
       onConfirm: async () => {
         setConfirmAction(null);
+
         try {
-          await Promise.all([...selectedIds].map((id) => usersApi.delete(id)));
+          await usersApi.bulkDelete([...selectedIds]);
+
           toast.success("تم حذف المستخدمين المحددين");
           setSelectedIds(new Set());
           await fetchUsers();
@@ -699,8 +701,17 @@ function UsersPage() {
           ],
         }))}
         selectedIds={selectedIds}
-        onToggleSelect={toggleSelect}
-        onToggleSelectAll={toggleSelectAll}
+        onToggleSelect={(id) => {
+          setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+          });
+        }}
+        onToggleSelectAll={(ids) =>
+          setSelectedIds((prev) => (prev.size === ids.length ? new Set() : new Set(ids)))
+        }
         page={page}
         totalPages={lastPage}
         onPageChange={setPage}

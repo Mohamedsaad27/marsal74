@@ -22,6 +22,7 @@ import {
   fetchOrderStats,
   fetchOrders,
   updateOrderStatus,
+  bulkDeleteOrders,
 } from "@/lib/admin/orders-api";
 import type { AgentOption, CompanyOption, GovernorateOption } from "@/lib/admin/orders-api";
 import { ORDER_STATUS_OPTIONS, formatAmount, formatDateTime } from "@/lib/admin/orders-types";
@@ -44,6 +45,8 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ConfirmActionDialog } from "@/components/admin/ConfirmActionDialog";
+import { ConfirmAction } from "@/components/admin/use-admin-crud";
 
 export const Route = createFileRoute("/_authenticated/shipments/")({
   component: ShipmentsPage,
@@ -236,6 +239,7 @@ function ShipmentsPage() {
   const [companyOptions, setCompanyOptions] = useState<CompanyOption[]>([]);
   const [governorateOptions, setGovernorateOptions] = useState<GovernorateOption[]>([]);
   const [optionsLoading, setOptionsLoading] = useState(true);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
 
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [loadingStats, setLoadingStats] = useState(true);
@@ -392,18 +396,35 @@ function ShipmentsPage() {
 
   const handleExport = async () => {
     try {
-      const response = await exportOrdersExcel();
-      if (!response.isSuccess) throw new Error(response.message);
-      toast.success(`${response.message} — ${response.data.filename}`);
+      await exportOrdersExcel();
+      toast.success("تم تصدير الملف بنجاح");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "فشل التصدير");
     }
   };
-
   const kpiCounts = statsToKpiCounts(stats);
   const kpiActiveId = apiStatusToKpiBucket(statusFilter);
   const isLoading = loadingOrders || loadingStats;
+  const requestBulkDelete = () => {
+    setConfirmAction({
+      title: "حذف متعدد",
+      description: `سيتم حذف ${selectedIds.size} طلب. لا يمكن التراجع.`,
+      confirmLabel: "حذف الكل",
+      variant: "destructive",
+      onConfirm: async () => {
+        setConfirmAction(null);
 
+        try {
+          await bulkDeleteOrders([...selectedIds]);
+          toast.success("تم حذف الطلبات المحددة");
+          setSelectedIds(new Set());
+          await fetchOrders();
+        } catch (err) {
+          toast.error((err as Error).message ?? "فشل الحذف");
+        }
+      },
+    });
+  };
   return (
     <AppShell>
       <AdminPageHeader
@@ -412,6 +433,8 @@ function ShipmentsPage() {
         description="إدارة الطلبات — فلترة متقدمة، إنشاء يدوي، استيراد Excel، وتصدير"
         addLabel="طلب جديد"
         onAdd={() => setCreateOpen(true)}
+        selectedCount={selectedIds.size}
+        onBulkDelete={requestBulkDelete}
         showAdd={false}
         extra={
           <>
@@ -623,6 +646,7 @@ function ShipmentsPage() {
         onSave={handleStatusChange}
         loading={saving}
       />
+      <ConfirmActionDialog action={confirmAction} onOpenChange={() => setConfirmAction(null)} />
     </AppShell>
   );
 }

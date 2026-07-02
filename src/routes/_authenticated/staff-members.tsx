@@ -353,6 +353,7 @@ function StaffMembersPage() {
         </div>
       ) : (
         <AdminDataTable
+          selectable={false}
           search={search}
           onSearchChange={(value) => {
             setSearch(value);

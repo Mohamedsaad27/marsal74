@@ -397,6 +397,7 @@ function CouriersPage() {
         </div>
       ) : (
         <AdminDataTable
+          selectable={false}
           search={search}
           onSearchChange={(v) => {
             setSearch(v);

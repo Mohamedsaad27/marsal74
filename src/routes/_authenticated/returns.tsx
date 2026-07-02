@@ -189,12 +189,6 @@ function ReturnsPage() {
         addLabel="تسجيل مرتجع"
         onAdd={() => toast.message("تسجيل مرتجع — واجهة تصميمية")}
         showAdd={false}
-        extra={
-          <Button variant="outline" className="rounded-xl" onClick={handleExport}>
-            <Download className="ms-2 h-4 w-4" />
-            تصدير التقرير
-          </Button>
-        }
       />
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -220,6 +214,7 @@ function ReturnsPage() {
         </div>
       ) : (
         <AdminDataTable
+          selectable={false}
           search={search}
           onSearchChange={(v) => {
             setSearch(v);

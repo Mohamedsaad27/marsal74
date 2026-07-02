@@ -14,7 +14,12 @@ export type ShipmentStatus =
   | "customer_cancelled"
   | "no_answer"
   | "phone_off"
-  | "postponed";
+  | "postponed"
+  | "unsafe_area"
+  | "outside_governorate"
+  | "wrong_phone"
+  | "returned";
+
 const map: Record<ShipmentStatus, { label: string; cls: string }> = {
   pending: {
     label: "بانتظار التوزيع",
@@ -79,6 +84,23 @@ const map: Record<ShipmentStatus, { label: string; cls: string }> = {
   postponed: {
     label: "مؤجل",
     cls: "bg-warning/15 text-warning ring-warning/25",
+  },
+
+  unsafe_area: {
+    label: "منطقة غير آمنة",
+    cls: "bg-destructive/10 text-destructive ring-destructive/20",
+  },
+  outside_governorate: {
+    label: "خارج المحافظة",
+    cls: "bg-muted text-muted-foreground ring-border",
+  },
+  wrong_phone: {
+    label: "رقم الهاتف خاطئ",
+    cls: "bg-muted text-muted-foreground ring-border",
+  },
+  returned: {
+    label: "تم الإرجاع",
+    cls: "bg-destructive/10 text-destructive ring-destructive/20",
   },
 };
 export function StatusBadge({ status }: { status?: ShipmentStatus }) {

@@ -269,6 +269,7 @@ function CollectionsPage() {
       </div>
 
       <AdminDataTable
+        selectable={false}
         search={searchInput}
         onSearchChange={(value) => setSearchInput(value)}
         searchPlaceholder="كود الطلب، المندوب، الشركة..."
