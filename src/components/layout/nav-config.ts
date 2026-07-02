@@ -21,6 +21,7 @@ import {
   UserCircle,
   FileBarChart,
   Activity,
+  MessageCircle,
 } from "lucide-react";
 import type { NavItem, NavSection } from "@/components/layout/SidebarNavGroup";
 
@@ -69,10 +70,10 @@ export const navOperationsCategories: NavCategory[] = [
     sections: [
       {
         title: "التواصل",
-        icon: MapPin,
+        icon: MessageCircle,
         items: [
           // { title: "التتبع المباشر", url: "/tracking", icon: MapPin },
-          { title: "المحادثات", url: "/chat", icon: MessageSquare },
+          { title: "المحادثات", url: "/chat", icon: MessageCircle },
         ],
       },
     ],

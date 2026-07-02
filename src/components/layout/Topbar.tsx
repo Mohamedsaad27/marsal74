@@ -232,7 +232,10 @@ export function Topbar() {
                     !n.is_read && "bg-primary/5",
                   )}
                   onSelect={(e) => e.preventDefault()} // keep open on click
-                  onClick={() => {
+                  onClick={(e) => {
+                    if (!n.is_read) {
+                      handleMarkRead(n.id, e);
+                    }
                     if (n.data?.order_id) {
                       goToOrder(n.data.order_id);
                       setOpen(false); // close dropdown
