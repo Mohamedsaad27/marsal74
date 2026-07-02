@@ -3,7 +3,7 @@ import { LogOut } from "lucide-react";
 import { useMemo } from "react";
 import { Logo } from "@/components/brand/Logo";
 import { SidebarNavGroup } from "@/components/layout/SidebarNavGroup";
-
+import logo from "@/assets/6.png";
 import {
   navDashboard,
   navOperationsCategories,
@@ -59,11 +59,7 @@ export function AppSidebar() {
           to="/"
           className="flex items-center justify-start gap-3 transition-opacity hover:opacity-90"
         >
-          <img
-            src="src/assets/6.png"
-            alt={"EXPRESS PRO"}
-            className="h-12 w-12 rounded-lg object-contain"
-          />
+          <img src={logo} alt={"EXPRESS PRO"} className="h-12 w-12 rounded-lg object-contain" />
           <h1 className="max-w-[180px] truncate text-lg font-bold tracking-tight text-sidebar-foreground">
             اكسبريس برو
           </h1>
