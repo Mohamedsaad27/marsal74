@@ -44,15 +44,6 @@ export interface ChatMessageType {
   label: string;
 }
 
-export interface ChatMessage {
-  id: string;
-  conversation_id: string;
-  sender: ChatMessageSender;
-  body: string;
-  type: ChatMessageType;
-  created_at: string;
-}
-
 interface PaginatedData<T> {
   items: T[];
   type: string;
@@ -132,3 +123,24 @@ export const adminChatApi = {
     );
   },
 };
+export interface ChatMessageAttachment {
+  media_file_id: string;
+  collection: string;
+  disk: string;
+  file_path: string;
+  file_size: number;
+  mime_type: string;
+  original_name: string;
+  url: string;
+  created_at: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  conversation_id: string;
+  sender: ChatMessageSender;
+  body: string | null;
+  type: ChatMessageType;
+  attachment?: ChatMessageAttachment;
+  created_at: string;
+}

@@ -1,12 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Input } from "@/components/ui/input";
-import { Search, Eye, Loader2 } from "lucide-react";
 import { adminChatApi, ChatConversation, ChatMessage } from "@/lib/admin/admin-chat.api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-
+import { Search, Eye, Loader2, CircleDot, Image as ImageIcon, X } from "lucide-react";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 export const Route = createFileRoute("/_authenticated/chat")({
   component: ChatPage,
 });
@@ -28,7 +27,12 @@ function formatSidebarTime(iso: string | null): string {
 function formatMessageTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
 }
-
+/** Assigns each of the two participants a consistent side + color for the whole thread. */
+function getSenderSide(conversation: ChatConversation, senderId: string): "a" | "b" {
+  const index = conversation.participants.findIndex((p) => p.user_id === senderId);
+  // Unknown sender (e.g. a system message) falls back to side "b".
+  return index === 0 ? "a" : "b";
+}
 /** The "other side" of the conversation, from the admin's point of view. */
 function getConversationTitle(
   conversation: ChatConversation,
@@ -37,7 +41,68 @@ function getConversationTitle(
   const other = conversation.participants.find((p) => p.user_id !== currentUserId);
   return other?.name ?? conversation.order.company_name ?? conversation.order.agent_name;
 }
+const MESSAGE_TYPE = {
+  TEXT: 1,
+  IMAGE: 2,
+  VOICE: 3,
+} as const;
 
+function MessageContent({ message }: { message: ChatMessage }) {
+  const { type, attachment, body } = message;
+
+  if (type.code === MESSAGE_TYPE.IMAGE && attachment) {
+    return <MessageImage attachment={attachment} />;
+  }
+
+  if (type.code === MESSAGE_TYPE.VOICE && attachment) {
+    return (
+      <audio controls preload="none" className="h-9 w-56 max-w-full">
+        <source src={attachment.url} type={attachment.mime_type} />
+        متصفحك لا يدعم تشغيل الرسائل الصوتية
+      </audio>
+    );
+  }
+
+  return <p>{body}</p>;
+}
+
+function MessageImage({ attachment }: { attachment: NonNullable<ChatMessage["attachment"]> }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)} className="block">
+        <img
+          src={attachment.url}
+          alt={attachment.original_name}
+          className="max-h-56 w-full rounded-lg object-cover"
+          loading="lazy"
+        />
+      </button>
+
+      {open && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setOpen(false)}
+        >
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="absolute top-4 left-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <img
+            src={attachment.url}
+            alt={attachment.original_name}
+            className="max-h-[85vh] max-w-[90vw] rounded-lg object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+    </>
+  );
+}
 function ChatPage() {
   const { user: currentUser, hydrated } = useCurrentUser();
   const currentUserId = currentUser?.user_id ?? null;
@@ -66,15 +131,60 @@ function ChatPage() {
     [conversations, activeId],
   );
 
-  const messagesQuery = useQuery({
+  const messagesQuery = useInfiniteQuery({
     queryKey: ["admin-chat-messages", activeId],
-    queryFn: () => adminChatApi.listMessages(activeId as string, { per_page: 50 }),
+    queryFn: ({ pageParam = 1 }) =>
+      adminChatApi.listMessages(activeId as string, { page: pageParam, per_page: 30 }),
+    getNextPageParam: (lastPage) =>
+      lastPage.data.current_page < lastPage.data.last_page
+        ? lastPage.data.current_page + 1
+        : undefined,
+    initialPageParam: 1,
     enabled: hydrated && !!activeId,
     refetchInterval: 5000,
   });
 
-  const messages: ChatMessage[] = messagesQuery.data?.data.items ?? [];
+  const messages: ChatMessage[] = useMemo(() => {
+    const items = messagesQuery.data?.pages.flatMap((p) => p.data.items) ?? [];
+    return [...items].sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    );
+  }, [messagesQuery.data]);
 
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const prevScrollHeightRef = useRef<number>(0);
+  const latestMessageIdRef = useRef<string | null>(null);
+
+  // Jump to the latest message when opening/switching a conversation,
+  // or when a brand-new message arrives at the bottom (not when older ones load).
+  useEffect(() => {
+    const newestId = messages[messages.length - 1]?.id ?? null;
+    const isNewIncoming = newestId !== null && newestId !== latestMessageIdRef.current;
+    latestMessageIdRef.current = newestId;
+
+    if (isNewIncoming) {
+      messagesEndRef.current?.scrollIntoView({ block: "end" });
+    }
+  }, [activeId, messages]);
+
+  // Preserve scroll position after older messages are prepended.
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el || messagesQuery.isFetchingNextPage) return;
+    if (prevScrollHeightRef.current) {
+      el.scrollTop += el.scrollHeight - prevScrollHeightRef.current;
+      prevScrollHeightRef.current = 0;
+    }
+  }, [messages, messagesQuery.isFetchingNextPage]);
+
+  function handleThreadScroll(e: React.UIEvent<HTMLDivElement>) {
+    const el = e.currentTarget;
+    if (el.scrollTop < 80 && messagesQuery.hasNextPage && !messagesQuery.isFetchingNextPage) {
+      prevScrollHeightRef.current = el.scrollHeight;
+      messagesQuery.fetchNextPage();
+    }
+  }
   if (!hydrated) {
     return (
       <AppShell>
@@ -177,41 +287,46 @@ function ChatPage() {
                 </div>
               </div>
 
-              <div className="flex-1 space-y-3 overflow-y-auto bg-muted/30 p-5">
+              <div
+                ref={scrollContainerRef}
+                onScroll={handleThreadScroll}
+                className="flex-1 space-y-3 overflow-y-auto bg-muted/30 p-5"
+              >
+                {messagesQuery.isFetchingNextPage && (
+                  <div className="flex justify-center py-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                )}{" "}
                 {messagesQuery.isLoading && (
                   <div className="flex h-full items-center justify-center text-muted-foreground">
                     <Loader2 className="h-5 w-5 animate-spin" />
                   </div>
                 )}
-
                 {messagesQuery.isError && (
                   <div className="p-4 text-center text-sm text-destructive">
                     تعذّر تحميل الرسائل
                   </div>
                 )}
-
                 {!messagesQuery.isLoading &&
+                  activeConversation &&
                   messages.map((m) => {
-                    const isMe = m.sender.id === currentUserId;
+                    const side = getSenderSide(activeConversation, m.sender.id);
+                    const isA = side === "a";
                     return (
-                      <div key={m.id} className={`flex ${isMe ? "justify-start" : "justify-end"}`}>
+                      <div key={m.id} className={`flex ${isA ? "justify-end" : "justify-start"}`}>
                         <div
                           className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm shadow-soft ${
-                            isMe
-                              ? "rounded-bl-sm gradient-brand text-primary-foreground"
-                              : "rounded-br-sm bg-card text-foreground"
+                            isA ? "bg-blue-950 text-slate-300" : "bg-slate-200 text-slate-500"
                           }`}
                         >
-                          {!isMe && (
-                            <p className="mb-0.5 text-[11px] font-bold opacity-70">
-                              {m.sender.name}
-                            </p>
-                          )}
-                          <p>{m.body}</p>
                           <p
-                            className={`mt-1 text-[10px] ${
-                              isMe ? "text-white/70" : "text-muted-foreground"
-                            }`}
+                            className={`mb-0.5 text-[11px] font-bold ${isA ? "text-white/80" : "text-gray/80"}`}
+                          >
+                            {m.sender.name}
+                          </p>
+                          <MessageContent message={m} />
+                          <p
+                            className={`mt-1 text-[10px] ${isA ? "text-white/80" : "text-slate-500"}`}
                           >
                             {formatMessageTime(m.created_at)}
                           </p>
@@ -219,6 +334,7 @@ function ChatPage() {
                       </div>
                     );
                   })}
+                <div ref={messagesEndRef} />
               </div>
 
               {/* Admin is view-only — no composer */}
