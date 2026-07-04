@@ -65,7 +65,7 @@ function DepartmentsPage() {
     try {
       const response = await fetchDepartments(
         search,
-        statusFilter === "all" ? undefined : statusFilter === "active",
+        statusFilter === "all" ? undefined : statusFilter === "active" ? true : false,
         page,
       );
 
@@ -123,7 +123,7 @@ function DepartmentsPage() {
       return (
         d.name_ar.toLowerCase().includes(q) ||
         d.name_en.toLowerCase().includes(q) ||
-        d.description.toLowerCase().includes(q)
+        (d.description ?? "").toLowerCase().includes(q)
       );
     });
   }, [items, search, statusFilter]);
@@ -149,7 +149,7 @@ function DepartmentsPage() {
       id: d.id,
       name_ar: d.name_ar,
       name_en: d.name_en,
-      description: d.description,
+      description: d?.description ?? "",
       manager_id: d.manager?.id ?? "",
       is_active: d.is_active,
     });
@@ -304,10 +304,10 @@ function DepartmentsPage() {
               <p
                 key="description"
                 className="max-w-xs text-sm leading-relaxed text-muted-foreground"
-                title={d.description}
+                title={d.description ?? undefined}
               >
-                {d.description.length > 72
-                  ? `${d.description.slice(0, 72)}…`
+                {(d.description?.length ?? 0) > 72
+                  ? `${d.description!.slice(0, 72)}…`
                   : d.description || "—"}
               </p>,
               <span key="members" className="tabular-nums font-semibold">

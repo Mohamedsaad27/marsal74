@@ -9,7 +9,7 @@ export interface Department {
   id: string;
   name_ar: string;
   name_en: string;
-  description: string;
+  description: string | null;
   manager: DepartmentManager | null;
   is_active: boolean;
   staff_count: number;
