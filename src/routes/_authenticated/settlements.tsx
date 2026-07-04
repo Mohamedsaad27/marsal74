@@ -288,6 +288,7 @@ function SettlementsPage() {
       </span>,
       <SettlementStatusBadge key="status" status={item.settlement_status} />,
       <RowActions
+        module="settlements"
         key="actions"
         extra={[
           {
@@ -325,6 +326,7 @@ function SettlementsPage() {
   return (
     <AppShell>
       <AdminPageHeader
+        module="settlements"
         title="التسويات المالية"
         tableName="settlements"
         description="تسويات المناديب والشركات للفترات المحددة — مسودة → معتمدة → مدفوعة"

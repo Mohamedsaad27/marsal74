@@ -234,6 +234,7 @@ function ApprovalsPage() {
   return (
     <AppShell>
       <AdminPageHeader
+        module="approvalRequests"
         title="طلبات الموافقة"
         tableName="approval_requests"
         description="تعديل الأسعار، رسوم الشحن، والتحصيل الجزئي — مع مهلة انتهاء وسجل مراجعة"
@@ -364,6 +365,7 @@ function ApprovalsPage() {
               ),
               <ApprovalStatusBadge key="status" status={item.approval_status} />,
               <RowActions
+                module="approvalRequests"
                 key="actions"
                 // onEdit={() => openDetail(item)}
                 // onDelete={() => toast.message("حذف الطلب — غير متاح")}

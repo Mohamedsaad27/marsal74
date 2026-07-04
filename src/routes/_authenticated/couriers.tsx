@@ -363,6 +363,7 @@ function CouriersPage() {
   return (
     <AppShell>
       <AdminPageHeader
+        module="deliveryAgents"
         title="مناديب التوصيل"
         tableName="مناديب التوصيل"
         description="إدارة المناديب وحساباتهم ومناطقهم وإعدادات العمولة والتسلسل الإشرافي"
@@ -557,6 +558,7 @@ function CouriersPage() {
 
                 /* actions */
                 <RowActions
+                  module="deliveryAgents"
                   key="actions"
                   isActive={agent.is_available}
                   activeLabel="تعيين غير متاح"

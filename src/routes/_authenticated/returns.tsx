@@ -183,6 +183,7 @@ function ReturnsPage() {
   return (
     <AppShell>
       <AdminPageHeader
+        module="returns"
         title="المرتجعات"
         tableName="returns"
         description="تتبع المرتجعات من المندوب → الإدارة → شركة الشحن"
@@ -293,6 +294,7 @@ function ReturnsPage() {
               </span>,
               <ReturnStatusBadge key="status" status={item.return_status} />,
               <RowActions
+                module="returns"
                 key="actions"
                 onEdit={() => {
                   setActiveItem(item);

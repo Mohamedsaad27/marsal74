@@ -433,6 +433,7 @@ function ShipmentsPage() {
   return (
     <AppShell>
       <AdminPageHeader
+        module="orders"
         title="الطلبات"
         tableName="orders"
         description="إدارة الطلبات — فلترة متقدمة، إنشاء يدوي، استيراد Excel، وتصدير"
@@ -574,6 +575,7 @@ function ShipmentsPage() {
               {formatDateTime(item.order.created_at)}
             </span>,
             <RowActions
+              module="orders"
               key="actions"
               // onEdit={() => goToOrder(item.order.order_id)}
               // onDelete={() => toast.message("حذف الطلب — واجهة تصميمية")}

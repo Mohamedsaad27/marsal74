@@ -230,6 +230,7 @@ function CitiesPage() {
   return (
     <AppShell>
       <AdminPageHeader
+        module="governorates"
         title="المدن"
         tableName="المدن"
         description="إدارة المدن "
@@ -319,6 +320,7 @@ function CitiesPage() {
 
             <AdminStatusBadge key="status" variant={activeBadge(item.is_active)} />,
             <RowActions
+              module="governorates"
               key="actions"
               isActive={item.is_active === true}
               activeLabel="تعطيل"

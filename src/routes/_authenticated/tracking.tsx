@@ -25,15 +25,37 @@ function TrackingPage() {
         <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-soft lg:col-span-2">
           {/* Map placeholder */}
           <div className="relative h-[520px] w-full bg-gradient-to-br from-[oklch(0.93_0.03_240)] to-[oklch(0.88_0.04_250)]">
-            <svg className="absolute inset-0 h-full w-full opacity-50" viewBox="0 0 400 400" fill="none">
+            <svg
+              className="absolute inset-0 h-full w-full opacity-50"
+              viewBox="0 0 400 400"
+              fill="none"
+            >
               <defs>
                 <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="oklch(0.7 0.05 250)" strokeWidth="0.5" />
+                  <path
+                    d="M 40 0 L 0 0 0 40"
+                    fill="none"
+                    stroke="oklch(0.7 0.05 250)"
+                    strokeWidth="0.5"
+                  />
                 </pattern>
               </defs>
               <rect width="100%" height="100%" fill="url(#grid)" />
-              <path d="M 50 200 Q 150 100 250 220 T 380 180" stroke="oklch(0.55 0.24 265)" strokeWidth="3" strokeDasharray="6 4" fill="none" />
-              <path d="M 80 320 Q 180 280 280 340" stroke="oklch(0.55 0.24 265)" strokeWidth="3" strokeDasharray="6 4" fill="none" opacity="0.6" />
+              <path
+                d="M 50 200 Q 150 100 250 220 T 380 180"
+                stroke="oklch(0.55 0.24 265)"
+                strokeWidth="3"
+                strokeDasharray="6 4"
+                fill="none"
+              />
+              <path
+                d="M 80 320 Q 180 280 280 340"
+                stroke="oklch(0.55 0.24 265)"
+                strokeWidth="3"
+                strokeDasharray="6 4"
+                fill="none"
+                opacity="0.6"
+              />
             </svg>
 
             {[
@@ -54,7 +76,8 @@ function TrackingPage() {
 
             <div className="absolute right-4 top-4 rounded-xl bg-card/90 px-3 py-2 text-xs font-semibold shadow-elevated backdrop-blur">
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-success" /> مباشر — 4 مناديب نشطون
+                <span className="h-2 w-2 animate-pulse rounded-full bg-success" /> مباشر — 4 مناديب
+                نشطون
               </span>
             </div>
           </div>
@@ -64,7 +87,10 @@ function TrackingPage() {
           <h3 className="text-base font-bold">المناديب النشطون</h3>
           <ul className="mt-4 space-y-3">
             {liveCouriers.map((c) => (
-              <li key={c.shipment} className="rounded-xl border border-border p-3 hover:border-primary/40 hover:bg-accent/40">
+              <li
+                key={c.shipment}
+                className="rounded-xl border border-border p-3 hover:border-primary/40 hover:bg-accent/40"
+              >
                 <div className="flex items-center gap-2.5">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-brand text-sm font-bold text-white">
                     {c.name.charAt(0)}
@@ -73,7 +99,9 @@ function TrackingPage() {
                     <p className="truncate text-sm font-semibold">{c.name}</p>
                     <p className="font-mono text-[11px] text-primary">#{c.shipment}</p>
                   </div>
-                  <span className="rounded-md bg-success/10 px-2 py-0.5 text-[11px] font-bold text-success">{c.eta}</span>
+                  <span className="rounded-md bg-success/10 px-2 py-0.5 text-[11px] font-bold text-success">
+                    {c.eta}
+                  </span>
                 </div>
                 <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
                   <MapPin className="h-3 w-3" /> {c.city}

@@ -327,6 +327,7 @@ function StaffMembersPage() {
   return (
     <AppShell>
       <AdminPageHeader
+        module="staffMembers"
         title="أعضاء الفريق"
         tableName="أعضاء الفريق"
         description="موظفو المنصة الداخليون — القسم، المسمى، والملاحظات"
@@ -437,6 +438,7 @@ function StaffMembersPage() {
               </div>,
               <AdminStatusBadge key="status" variant={activeBadge(member.is_active)} />,
               <RowActions
+                module="staffMembers"
                 key="actions"
                 isActive={member.is_active === true}
                 activeLabel="تعطيل"

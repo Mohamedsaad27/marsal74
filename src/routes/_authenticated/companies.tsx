@@ -305,6 +305,7 @@ function ShippingCompaniesPage() {
   return (
     <AppShell>
       <AdminPageHeader
+        module="shippingCompanies"
         title="شركات الشحن"
         tableName="شركات الشحن"
         description="إدارة شركات الشحن — البيانات، العمولة، والحالة"
@@ -424,6 +425,7 @@ function ShippingCompaniesPage() {
 
             // Actions
             <RowActions
+              module="shippingCompanies"
               key="actions"
               isActive={company.is_active}
               activeLabel="تعطيل"

@@ -2,12 +2,16 @@ import type { NavItem, NavSection } from "@/components/layout/SidebarNavGroup";
 import type { NavCategory } from "@/components/layout/nav-config";
 
 /**
- * Maps a route's url to the permission(s) required to view it.
- * - string: user needs this exact permission
- * - string[]: user needs at least ONE of these permissions
- * - omitted: route is always visible to any authenticated user
+ * Maps each route to the permission(s) required to enter it.
+ * Using the `.view` permission per module — a user with e.g. `settlements.view`
+ * can see the settlements page; without it, both the sidebar link AND
+ * the route itself are blocked.
+ *
+ * string[]  -> user needs at least ONE of these
+ * omitted   -> always accessible to any authenticated user
  */
-const ROUTE_PERMISSIONS: Record<string, string | string[]> = {
+export const ROUTE_PERMISSIONS: Record<string, string | string[]> = {
+  "/": "dashboard.view",
   "/shipments": "orders.view",
   "/approvals": "approval_requests.view",
   "/returns": "returns.view",
@@ -24,16 +28,25 @@ const ROUTE_PERMISSIONS: Record<string, string | string[]> = {
   "/notifications": "notifications.view",
   "/audit-log": "audit_logs.view",
   "/settings": "settings.view",
-  // "/", "/profile" intentionally omitted — always visible
+  "/reports": "reports.view",
+  "/chat": "chat.view",
+  "/tracking": "orders.view",
+  // "/", "/profile", "/change-password" intentionally omitted — always visible
 };
 
-export function canAccessRoute(url: string, permissions: string[]): boolean {
-  const required = ROUTE_PERMISSIONS[url];
-  if (!required) return true; // no restriction configured -> visible to all
-
+export function hasPermission(permissions: string[], required: string | string[]): boolean {
   const permSet = new Set(permissions);
   return Array.isArray(required) ? required.some((p) => permSet.has(p)) : permSet.has(required);
 }
+
+export function canAccessRoute(pathname: string, permissions: string[]): boolean {
+  const matchedKey = Object.keys(ROUTE_PERMISSIONS).find(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
+  if (!matchedKey) return true;
+  return hasPermission(permissions, ROUTE_PERMISSIONS[matchedKey]);
+}
+/* ---------- Sidebar filtering (same as before) ---------- */
 
 export function filterItems(items: NavItem[], permissions: string[]): NavItem[] {
   return items.filter((item) => canAccessRoute(item.url, permissions));
@@ -41,24 +54,18 @@ export function filterItems(items: NavItem[], permissions: string[]): NavItem[] 
 
 export function filterSection(section: NavSection, permissions: string[]): NavSection | null {
   const items = filterItems(section.items, permissions);
-  if (items.length === 0) return null;
-  return { ...section, items };
+  return items.length ? { ...section, items } : null;
 }
 
 export function filterSections(sections: NavSection[], permissions: string[]): NavSection[] {
-  return sections
-    .map((s) => filterSection(s, permissions))
-    .filter((s): s is NavSection => s !== null);
+  return sections.map((s) => filterSection(s, permissions)).filter((s): s is NavSection => !!s);
 }
 
 export function filterCategory(category: NavCategory, permissions: string[]): NavCategory | null {
   const sections = filterSections(category.sections, permissions);
-  if (sections.length === 0) return null;
-  return { ...category, sections };
+  return sections.length ? { ...category, sections } : null;
 }
 
 export function filterCategories(categories: NavCategory[], permissions: string[]): NavCategory[] {
-  return categories
-    .map((c) => filterCategory(c, permissions))
-    .filter((c): c is NavCategory => c !== null);
+  return categories.map((c) => filterCategory(c, permissions)).filter((c): c is NavCategory => !!c);
 }

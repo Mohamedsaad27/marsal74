@@ -208,6 +208,7 @@ function GovernoratesPage() {
   return (
     <AppShell>
       <AdminPageHeader
+        module="governorates"
         title="المحافظات"
         tableName="المحافظات"
         description="إدارة المحافظات "
@@ -299,6 +300,7 @@ function GovernoratesPage() {
             <AdminStatusBadge key="status" variant={activeBadge(item.is_active)} />,
             <RowActions
               key="actions"
+              module="governorates"
               isActive={item.is_active === true}
               activeLabel="تعطيل"
               inactiveLabel="تفعيل"

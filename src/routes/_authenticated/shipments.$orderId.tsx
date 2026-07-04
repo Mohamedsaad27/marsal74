@@ -9,7 +9,7 @@ import { OrderStatusTimeline } from "@/components/admin/OrderStatusTimeline";
 import { OrderWaybillDialog } from "@/components/admin/OrderWaybillDialog";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { assignOrderAgent, fetchOrderById, updateOrderStatus } from "@/lib/admin/orders-api";
-import type { OrderDetail, OrderListItem } from "@/lib/admin/orders-types";
+import type { OrderDetail, OrderListItem, OrderStatusPayload } from "@/lib/admin/orders-types";
 import {
   approvalLabel,
   formatAmount,
@@ -132,10 +132,10 @@ function OrderDetailPage() {
     }
   };
 
-  const handleStatusChange = async (status: number, note: string) => {
+  const handleStatusChange = async (payload: OrderStatusPayload) => {
     setSaving(true);
     try {
-      const response = await updateOrderStatus(orderId, status, note);
+      const response = await updateOrderStatus(orderId, payload);
       if (!response.isSuccess) throw new Error(response.message);
       toast.success(response.message);
       setStatusOpen(false);

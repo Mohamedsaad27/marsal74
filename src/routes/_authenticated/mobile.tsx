@@ -1,5 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Home, Package, MapPin, User, Bell, ChevronLeft, CheckCircle2, Truck, QrCode } from "lucide-react";
+import {
+  Home,
+  Package,
+  MapPin,
+  User,
+  Bell,
+  ChevronLeft,
+  CheckCircle2,
+  Truck,
+  QrCode,
+} from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 
 export const Route = createFileRoute("/_authenticated/mobile")({
@@ -8,7 +18,10 @@ export const Route = createFileRoute("/_authenticated/mobile")({
 
 function MobilePreview() {
   return (
-    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-[oklch(0.95_0.02_265)] to-[oklch(0.9_0.04_265)] px-6 py-12">
+    <div
+      dir="rtl"
+      className="min-h-screen bg-gradient-to-br from-[oklch(0.95_0.02_265)] to-[oklch(0.9_0.04_265)] px-6 py-12"
+    >
       <div className="mx-auto max-w-7xl">
         <div className="mb-10 text-center">
           <Logo variant="wordmark" className="mx-auto justify-center" />
@@ -17,9 +30,15 @@ function MobilePreview() {
         </div>
 
         <div className="grid gap-8 md:grid-cols-3">
-          <Phone label="الرئيسية"><HomeScreen /></Phone>
-          <Phone label="تفاصيل الشحنة"><ShipmentScreen /></Phone>
-          <Phone label="الملف الشخصي"><ProfileScreen /></Phone>
+          <Phone label="الرئيسية">
+            <HomeScreen />
+          </Phone>
+          <Phone label="تفاصيل الشحنة">
+            <ShipmentScreen />
+          </Phone>
+          <Phone label="الملف الشخصي">
+            <ProfileScreen />
+          </Phone>
         </div>
       </div>
     </div>
@@ -54,11 +73,22 @@ function HomeScreen() {
         </div>
         <div className="mt-5 rounded-2xl bg-white/15 p-4 backdrop-blur">
           <p className="text-xs opacity-80">شحنات اليوم</p>
-          <p className="mt-1 text-3xl font-extrabold">12 <span className="text-sm opacity-80">شحنة نشطة</span></p>
+          <p className="mt-1 text-3xl font-extrabold">
+            12 <span className="text-sm opacity-80">شحنة نشطة</span>
+          </p>
           <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
-            <div className="rounded-lg bg-white/15 py-2"><p className="font-bold text-base">8</p><p className="opacity-80">منتظرة</p></div>
-            <div className="rounded-lg bg-white/15 py-2"><p className="font-bold text-base">3</p><p className="opacity-80">جارية</p></div>
-            <div className="rounded-lg bg-white/15 py-2"><p className="font-bold text-base">1</p><p className="opacity-80">مؤجلة</p></div>
+            <div className="rounded-lg bg-white/15 py-2">
+              <p className="font-bold text-base">8</p>
+              <p className="opacity-80">منتظرة</p>
+            </div>
+            <div className="rounded-lg bg-white/15 py-2">
+              <p className="font-bold text-base">3</p>
+              <p className="opacity-80">جارية</p>
+            </div>
+            <div className="rounded-lg bg-white/15 py-2">
+              <p className="font-bold text-base">1</p>
+              <p className="opacity-80">مؤجلة</p>
+            </div>
           </div>
         </div>
       </div>
@@ -74,12 +104,19 @@ function HomeScreen() {
             <li key={s.id} className="rounded-2xl border border-border bg-card p-3 shadow-soft">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-xs font-bold text-primary">#{s.id}</span>
-                <span className="rounded-full bg-info/10 px-2 py-0.5 text-[10px] font-bold text-info">قيد التوصيل</span>
+                <span className="rounded-full bg-info/10 px-2 py-0.5 text-[10px] font-bold text-info">
+                  قيد التوصيل
+                </span>
               </div>
-              <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="h-3 w-3" />{s.to}</p>
+              <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+                <MapPin className="h-3 w-3" />
+                {s.to}
+              </p>
               <div className="mt-2 flex items-center justify-between border-t border-border pt-2">
                 <span className="text-sm font-bold">{s.price} ر.س</span>
-                <button className="rounded-lg gradient-brand px-3 py-1 text-[11px] font-bold text-white">عرض</button>
+                <button className="rounded-lg gradient-brand px-3 py-1 text-[11px] font-bold text-white">
+                  عرض
+                </button>
               </div>
             </li>
           ))}
@@ -134,9 +171,13 @@ function ShipmentScreen() {
               { t: "تم التسليم", time: "—", done: false },
             ].map((m, i) => (
               <div key={i} className="flex items-center gap-3">
-                <CheckCircle2 className={`h-5 w-5 ${m.done ? "text-success" : "text-muted-foreground/40"}`} />
+                <CheckCircle2
+                  className={`h-5 w-5 ${m.done ? "text-success" : "text-muted-foreground/40"}`}
+                />
                 <div className="flex-1">
-                  <p className={`text-sm ${m.done ? "font-semibold" : "text-muted-foreground"}`}>{m.t}</p>
+                  <p className={`text-sm ${m.done ? "font-semibold" : "text-muted-foreground"}`}>
+                    {m.t}
+                  </p>
                 </div>
                 <span className="text-[11px] text-muted-foreground">{m.time}</span>
               </div>
@@ -179,11 +220,13 @@ function ProfileScreen() {
         </div>
 
         <ul className="mt-5 divide-y divide-border rounded-2xl border border-border bg-card shadow-soft">
-          {["معلوماتي", "سجل الشحنات", "المحفظة", "الإشعارات", "المساعدة", "تسجيل الخروج"].map((t) => (
-            <li key={t} className="flex items-center justify-between p-4 text-sm font-semibold">
-              {t} <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-            </li>
-          ))}
+          {["معلوماتي", "سجل الشحنات", "المحفظة", "الإشعارات", "المساعدة", "تسجيل الخروج"].map(
+            (t) => (
+              <li key={t} className="flex items-center justify-between p-4 text-sm font-semibold">
+                {t} <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+              </li>
+            ),
+          )}
         </ul>
       </div>
 
@@ -203,7 +246,10 @@ function BottomNav({ active }: { active: string }) {
     <div className="border-t border-border bg-card px-4 py-2">
       <div className="flex items-center justify-around">
         {items.map((it) => (
-          <button key={it.k} className={`flex flex-col items-center gap-0.5 px-3 py-1.5 ${active === it.k ? "text-primary" : "text-muted-foreground"}`}>
+          <button
+            key={it.k}
+            className={`flex flex-col items-center gap-0.5 px-3 py-1.5 ${active === it.k ? "text-primary" : "text-muted-foreground"}`}
+          >
             <it.i className="h-5 w-5" />
             <span className="text-[10px] font-semibold">{it.l}</span>
           </button>

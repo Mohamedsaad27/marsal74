@@ -258,6 +258,7 @@ export default function AuditLogPage() {
   return (
     <AppShell>
       <AdminPageHeader
+        module="auditLogs"
         title="سجل النشاط"
         tableName="سجل النشاط"
         description="جميع العمليات الحساسة على المنصة مع إمكانية البحث والتصفية"

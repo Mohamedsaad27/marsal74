@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
+import { usePermissions } from "@/hooks/usePermissions";
+import type { PermissionModule } from "@/lib/auth/permission-keys";
 
 type Props = {
+  module: PermissionModule; // NEW
   title: string;
   tableName: string;
   description: string;
@@ -14,6 +17,7 @@ type Props = {
 };
 
 export function AdminPageHeader({
+  module,
   title,
   tableName,
   description,
@@ -24,6 +28,11 @@ export function AdminPageHeader({
   onBulkDelete,
   extra,
 }: Props) {
+  const { canDo } = usePermissions();
+
+  const canAdd = showAdd && canDo(module, "create" as never);
+  const canBulkDelete = selectedCount > 0 && onBulkDelete && canDo(module, "delete" as never);
+
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div>
@@ -35,7 +44,7 @@ export function AdminPageHeader({
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {extra}
-        {selectedCount > 0 && onBulkDelete && (
+        {canBulkDelete && (
           <Button
             variant="outline"
             size="sm"
@@ -46,7 +55,7 @@ export function AdminPageHeader({
             حذف ({selectedCount})
           </Button>
         )}
-        {showAdd && (
+        {canAdd && (
           <Button className="rounded-xl gradient-brand shadow-glow" onClick={onAdd}>
             <Plus className="ml-1.5 h-4 w-4" />
             {addLabel}

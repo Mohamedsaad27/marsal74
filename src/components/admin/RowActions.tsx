@@ -7,18 +7,29 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Pencil, Trash2, Power, MapPin, Eye } from "lucide-react";
+import { usePermissions } from "@/hooks/usePermissions";
+import type { PermissionModule } from "@/lib/auth/permission-keys";
+
+type ExtraAction = {
+  label: string;
+  icon?: React.ReactNode;
+  onClick: () => void;
+  action?: string; // action key within the module, e.g. "assign" — omit = always visible
+};
 
 type Props = {
+  module: PermissionModule; // NEW — one prop for the whole row's permission context
   onEdit?: () => void;
   onDelete?: () => void;
   onToggleActive?: () => void;
   activeLabel?: string;
   inactiveLabel?: string;
   isActive?: boolean;
-  extra?: { label: string; icon?: React.ReactNode; onClick: () => void }[];
+  extra?: ExtraAction[];
 };
 
 export function RowActions({
+  module,
   onEdit,
   onDelete,
   onToggleActive,
@@ -27,6 +38,15 @@ export function RowActions({
   isActive = true,
   extra = [],
 }: Props) {
+  const { canDo } = usePermissions();
+
+  const showEdit = onEdit && canDo(module, "update" as never);
+  const showDelete = onDelete && canDo(module, "delete" as never);
+  const showToggle = onToggleActive && canDo(module, "toggle" as never);
+  const visibleExtra = extra.filter((e) => !e.action || canDo(module, e.action as never));
+
+  if (!showEdit && !showDelete && !showToggle && visibleExtra.length === 0) return null;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -36,11 +56,11 @@ export function RowActions({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="start" className="rounded-xl" dir="rtl">
-        {onEdit && (
+        {showEdit && (
           <DropdownMenuItem
-            onSelect={(event) => {
-              event.preventDefault();
-              onEdit();
+            onSelect={(e) => {
+              e.preventDefault();
+              onEdit!();
             }}
           >
             <Pencil className="ml-2 h-4 w-4" />
@@ -48,11 +68,11 @@ export function RowActions({
           </DropdownMenuItem>
         )}
 
-        {extra.map((e) => (
+        {visibleExtra.map((e) => (
           <DropdownMenuItem
             key={e.label}
-            onSelect={(event) => {
-              event.preventDefault();
+            onSelect={(ev) => {
+              ev.preventDefault();
               e.onClick();
             }}
           >
@@ -61,11 +81,11 @@ export function RowActions({
           </DropdownMenuItem>
         ))}
 
-        {onToggleActive && (
+        {showToggle && (
           <DropdownMenuItem
-            onSelect={(event) => {
-              event.preventDefault();
-              onToggleActive();
+            onSelect={(e) => {
+              e.preventDefault();
+              onToggleActive!();
             }}
           >
             <Power className="ml-2 h-4 w-4" />
@@ -73,14 +93,14 @@ export function RowActions({
           </DropdownMenuItem>
         )}
 
-        {onDelete && (
+        {showDelete && (
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-destructive focus:text-destructive"
-              onSelect={(event) => {
-                event.preventDefault();
-                onDelete();
+              onSelect={(e) => {
+                e.preventDefault();
+                onDelete!();
               }}
             >
               <Trash2 className="ml-2 h-4 w-4" />

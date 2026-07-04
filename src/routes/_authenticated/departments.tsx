@@ -222,6 +222,7 @@ function DepartmentsPage() {
   return (
     <AppShell>
       <AdminPageHeader
+        module="departments"
         title="الأقسام"
         tableName="الأقسام"
         description="إدارة الأقسام الداخلية للمنصة — الاسم، الرمز، والمسؤول"
@@ -314,6 +315,7 @@ function DepartmentsPage() {
               </span>,
               <AdminStatusBadge key="status" variant={activeBadge(d.is_active)} />,
               <RowActions
+                module="departments"
                 key="actions"
                 isActive={d.is_active === true}
                 activeLabel="تعطيل"

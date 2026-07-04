@@ -233,6 +233,7 @@ function CollectionsPage() {
   return (
     <AppShell>
       <AdminPageHeader
+        module="collections"
         title="التحصيلات"
         tableName="collections"
         description="عمليات التحصيل من العميل — COD / رسوم شحن / جزئي + استلام النقد من المناديب"
@@ -360,6 +361,7 @@ function CollectionsPage() {
               {formatDateTime(item.collected_at)}
             </span>,
             <RowActions
+              module="collections"
               key="actions"
               extra={[
                 {

@@ -151,6 +151,7 @@ function NotificationsPage() {
   return (
     <AppShell>
       <AdminPageHeader
+        module="notifications"
         title="الإشعارات"
         tableName="notifications"
         description="صندوق الوارد  — شحنات، تحصيلات، موافقات، وتسويات"

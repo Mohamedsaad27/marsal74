@@ -528,6 +528,7 @@ function UsersPage() {
   return (
     <AppShell>
       <AdminPageHeader
+        module="users"
         title="المستخدمون"
         tableName="المستخدمون"
         description="إدارة الحسابات والأدوار والصلاحيات المباشرة"
@@ -682,6 +683,7 @@ function UsersPage() {
             <AdminStatusBadge key="status" variant={activeBadge(u.is_active ? true : false)} />,
 
             <RowActions
+              module="users"
               key="actions"
               isActive={u.is_active}
               onEdit={() => openEdit(u)}

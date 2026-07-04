@@ -139,6 +139,7 @@ function RolesPage() {
   return (
     <AppShell>
       <AdminPageHeader
+        module="roles"
         title="الأدوار"
         tableName="الأدوار"
         description="إدارة الأدوار وصلاحياتها مع التسميات العربية لكل صلاحية"
@@ -182,6 +183,7 @@ function RolesPage() {
                 onClick={() => openRoleDialog(role)}
               />,
               <RowActions
+                module="roles"
                 key="actions"
                 onEdit={() => openRoleDialog(role)}
                 onDelete={() => requestDelete(role)}
