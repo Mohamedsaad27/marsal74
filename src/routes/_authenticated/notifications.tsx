@@ -67,24 +67,40 @@ function NotificationsPage() {
   });
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(1);
-  const loadNotifications = useCallback(async (p = 1) => {
+  const [total, setTotal] = useState(0);
+
+  const [fullyLoaded, setFullyLoaded] = useState(false);
+
+  const loadNotifications = useCallback(async () => {
     setLoading(true);
+    let currentPage = 1;
+    let allItems: NotificationRecord[] = [];
+    let more = true;
+    let latestKpis = null;
+
     try {
-      const response = await fetchNotifications(p);
-      if (!response.isSuccess) throw new Error(response.message);
-      setKpis({
-        ...response.data.kpis,
-        settlements: response.data.kpis.settlements ?? 0,
-      });
-      setHasMore(response.data.has_more);
-      setPage(response.data.current_page);
-      setItems((prev) => (p === 1 ? response.data.items : [...prev, ...response.data.items]));
+      while (more) {
+        const response = await fetchNotifications(currentPage, 15);
+        if (!response.isSuccess) throw new Error(response.message);
+        allItems = [...allItems, ...response.data.items];
+        latestKpis = response.data.kpis;
+        more = response.data.has_more;
+        currentPage = response.data.current_page + 1;
+      }
+      setItems(allItems);
+      if (latestKpis) {
+        setKpis({ ...latestKpis, settlements: latestKpis.settlements ?? 0 });
+      }
+      setTotal(allItems.length);
+      setFullyLoaded(true);
+      setHasMore(false);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "فشل تحميل الإشعارات");
     } finally {
       setLoading(false);
     }
   }, []);
+
   useEffect(() => {
     void loadNotifications();
   }, [loadNotifications]);
@@ -103,6 +119,7 @@ function NotificationsPage() {
     try {
       await markNotificationRead(id);
       setItems((list) => list.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+      setKpis((prev) => ({ ...prev, unread: Math.max(0, prev.unread - 1) }));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "فشل التحديث");
     }
@@ -230,9 +247,9 @@ function NotificationsPage() {
 
           <Tabs value={readTab} onValueChange={(v) => setReadTab(v as typeof readTab)} dir="rtl">
             <TabsList className="mb-4 h-10 w-full justify-start rounded-xl bg-muted/50 p-1 sm:w-auto">
-              <TabsTrigger value="all">الكل ({items.length})</TabsTrigger>
+              <TabsTrigger value="all">الكل ({total})</TabsTrigger>
               <TabsTrigger value="unread">غير مقروءة ({kpis.unread})</TabsTrigger>
-              <TabsTrigger value="read">مقروءة ({items.length - kpis.unread})</TabsTrigger>
+              <TabsTrigger value="read">مقروءة ({total - kpis.unread})</TabsTrigger>
             </TabsList>
 
             <TabsContent value={readTab} className="mt-0 space-y-2">
@@ -252,18 +269,18 @@ function NotificationsPage() {
               )}
             </TabsContent>
           </Tabs>
-          {hasMore && (
-            <div className="flex justify-center pt-4">
-              <Button
-                variant="outline"
-                onClick={() => loadNotifications(page + 1)}
-                disabled={loading}
-                className="rounded-xl"
-              >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "تحميل المزيد"}
-              </Button>
-            </div>
-          )}
+          {/* {hasMore && (
+            // <div className="flex justify-center pt-4">
+            //   <Button
+            //     variant="outline"
+            //     onClick={() => loadNotifications(page + 1)}
+            //     disabled={loading}
+            //     className="rounded-xl"
+            //   >
+            //     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "تحميل المزيد"}
+            //   </Button>
+            // </div>
+          )} */}
         </TabsContent>
       </Tabs>
     </AppShell>

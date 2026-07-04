@@ -68,7 +68,6 @@ export const PAYMENT_METHOD_OPTIONS = [
   { value: "bank_transfer", label: "تحويل بنكي" },
   { value: "cash", label: "نقداً" },
   { value: "instapay", label: "InstaPay" },
-  { value: "check", label: "شيك" },
 ];
 
 export function settlementTypeLabel(type: SettlementTypeCode): string {
