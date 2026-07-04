@@ -109,18 +109,18 @@ export const navLocations: NavSection = {
   ],
 };
 
-// export const navReports: NavSection = {
-//   title: "التقارير",
-//   icon: FileBarChart,
-//   items: [
-//     { title: "نظرة عامة", url: "/reports", icon: FileBarChart },
-//     { title: "تقرير الطلبات", url: "/reports/shipments", icon: Package },
-//     { title: "تقرير التحصيلات", url: "/reports/collections", icon: Wallet },
-//     { title: "تقرير التسويات", url: "/reports/settlements", icon: Scale },
-//     { title: "تقرير المناديب", url: "/reports/couriers", icon: Truck },
-//     { title: "تقرير شركات الشحن", url: "/reports/companies", icon: Building2 },
-//   ],
-// };
+export const navReports: NavSection = {
+  title: "التقارير",
+  icon: FileBarChart,
+  items: [
+    { title: "نظرة عامة", url: "/reports", icon: FileBarChart },
+    { title: "تقرير الطلبات", url: "/reports/shipments", icon: Package },
+    { title: "تقرير التحصيلات", url: "/reports/collections", icon: Wallet },
+    { title: "تقرير التسويات", url: "/reports/settlements", icon: Scale },
+    { title: "تقرير المناديب", url: "/reports/couriers", icon: Truck },
+    { title: "تقرير شركات الشحن", url: "/reports/companies", icon: Building2 },
+  ],
+};
 
 export const navSystem: NavItem[] = [
   { title: "الإشعارات", url: "/notifications", icon: Bell },
@@ -129,4 +129,4 @@ export const navSystem: NavItem[] = [
   { title: "الإعدادات", url: "/settings", icon: Settings },
 ];
 
-export const navSections: NavSection[] = [navLogistics, navAccess, navLocations];
+export const navSections: NavSection[] = [navLogistics, navAccess, navLocations, navReports];
