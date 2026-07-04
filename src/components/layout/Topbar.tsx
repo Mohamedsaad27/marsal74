@@ -182,9 +182,12 @@ export function Topbar() {
             </Button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end" className="w-[360px] rounded-2xl p-2 shadow-elevated">
-            {/* Header */}
-            <DropdownMenuLabel className="flex items-center justify-between px-2 py-1.5">
+          <DropdownMenuContent
+            align="end"
+            className="w-[360px] rounded-2xl p-2 shadow-elevated max-h-[480px] flex flex-col overflow-hidden"
+          >
+            {/* Header — sticky, not part of scroll area */}
+            <DropdownMenuLabel className="flex items-center justify-between px-2 py-1.5 shrink-0">
               <div className="flex items-center gap-2">
                 <span className="text-base font-bold">الإشعارات</span>
                 {unread > 0 && (
@@ -211,78 +214,82 @@ export function Topbar() {
               )}
             </DropdownMenuLabel>
 
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="shrink-0" />
 
-            {/* Body */}
-            {loading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              </div>
-            ) : items.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-8 text-muted-foreground">
-                <BellOff className="h-8 w-8 opacity-40" />
-                <p className="text-sm">لا توجد إشعارات</p>
-              </div>
-            ) : (
-              items.map((n) => (
-                <DropdownMenuItem
-                  key={n.id}
-                  className={cn(
-                    "flex items-start gap-3 rounded-xl p-3 focus:bg-accent",
-                    !n.is_read && "bg-primary/5",
-                  )}
-                  onSelect={(e) => e.preventDefault()} // keep open on click
-                  onClick={(e) => {
-                    if (!n.is_read) {
-                      handleMarkRead(n.id, e);
-                    }
-                    if (n.data?.order_id) {
-                      goToOrder(n.data.order_id);
-                      setOpen(false); // close dropdown
-                    }
-                  }}
-                >
-                  <span
+            {/* Body — only this scrolls */}
+            <div className="flex-1 overflow-y-auto">
+              {loading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : items.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 py-8 text-muted-foreground">
+                  <BellOff className="h-8 w-8 opacity-40" />
+                  <p className="text-sm">لا توجد إشعارات</p>
+                </div>
+              ) : (
+                items.map((n) => (
+                  <DropdownMenuItem
+                    key={n.id}
                     className={cn(
-                      "mt-1.5 h-2 w-2 shrink-0 rounded-full",
-                      !n.is_read
-                        ? (typeDotColor[n.type.code] ?? "bg-primary")
-                        : "bg-muted-foreground/30",
+                      "flex items-start gap-3 rounded-xl p-3 focus:bg-accent",
+                      !n.is_read && "bg-primary/5",
                     )}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p
+                    onSelect={(e) => e.preventDefault()}
+                    onClick={(e) => {
+                      if (!n.is_read) {
+                        handleMarkRead(n.id, e);
+                      }
+                      if (n.data?.order_id) {
+                        goToOrder(n.data.order_id);
+                        setOpen(false);
+                      }
+                    }}
+                  >
+                    <span
                       className={cn(
-                        "truncate text-sm",
-                        !n.is_read ? "font-semibold" : "font-normal text-muted-foreground",
+                        "mt-1.5 h-2 w-2 shrink-0 rounded-full",
+                        !n.is_read
+                          ? (typeDotColor[n.type.code] ?? "bg-primary")
+                          : "bg-muted-foreground/30",
                       )}
-                    >
-                      {n.title_ar}
-                    </p>
-                    <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{n.body_ar}</p>
-                    <div className="mt-1.5 flex items-center gap-2">
-                      <span className="text-[11px] text-muted-foreground">
-                        {formatRelativeTime(n.created_at)}
-                      </span>
-                      {!n.is_read && (
-                        <button
-                          className="text-[11px] text-primary hover:underline"
-                          onClick={(e) => handleMarkRead(n.id, e)}
-                        >
-                          تعليم كمقروء
-                        </button>
-                      )}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className={cn(
+                          "truncate text-sm",
+                          !n.is_read ? "font-semibold" : "font-normal text-muted-foreground",
+                        )}
+                      >
+                        {n.title_ar}
+                      </p>
+                      <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                        {n.body_ar}
+                      </p>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <span className="text-[11px] text-muted-foreground">
+                          {formatRelativeTime(n.created_at)}
+                        </span>
+                        {!n.is_read && (
+                          <button
+                            className="text-[11px] text-primary hover:underline"
+                            onClick={(e) => handleMarkRead(n.id, e)}
+                          >
+                            تعليم كمقروء
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </DropdownMenuItem>
-              ))
-            )}
+                  </DropdownMenuItem>
+                ))
+              )}
+            </div>
 
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="shrink-0" />
 
-            {/* Footer */}
+            {/* Footer — sticky, not part of scroll area */}
             <DropdownMenuItem
-              className="justify-center rounded-xl p-0 focus:bg-transparent"
+              className="justify-center rounded-xl p-0 focus:bg-transparent shrink-0"
               asChild
             >
               <Link
