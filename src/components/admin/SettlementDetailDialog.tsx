@@ -47,7 +47,7 @@ export function SettlementDetailDialog({
       open={open}
       onOpenChange={onOpenChange}
       title={`تسوية ${item.settlement_ref}`}
-      description="settlements — تفاصيل التسوية والتحصيلات المرتبطة"
+      description="تسويات — تفاصيل التسوية والتحصيلات المرتبطة"
       icon={Scale}
       size="2xl"
       footer={
@@ -86,20 +86,20 @@ export function SettlementDetailDialog({
 
         <div className="grid gap-3 sm:grid-cols-2 text-sm">
           {[
-            ["settlement_ref", item.settlement_ref],
-            ["settlement_type", settlementTypeLabel(item.settlement_type)],
-            ["settlement_status", settlementStatusLabel(item.settlement_status)],
-            ["party", settlementPartyName(item)],
-            ["initiated_by", item.initiated_by_name],
-            ["period_from", formatDate(item.period_from)],
-            ["period_to", formatDate(item.period_to)],
-            ["total_collections", `${formatAmount(item.total_collections)} ج.م`],
-            ["total_commissions", `${formatAmount(item.total_commissions)} ج.م`],
-            ["net_amount", `${formatAmount(item.net_amount)} ج.م`],
-            ["payment_method", paymentMethodLabel(item.payment_method)],
-            ["payment_reference", item.payment_reference ?? "—"],
-            ["paid_at", formatDateTime(item.paid_at)],
-            ["created_at", formatDateTime(item.created_at)],
+            ["كود التسوية", item.settlement_ref],
+            ["نوع التسوية", settlementTypeLabel(item.settlement_type)],
+            ["حالة التسوية", settlementStatusLabel(item.settlement_status)],
+            ["الطرف", settlementPartyName(item)],
+            ["تم الإنشاء بواسطة", item.initiated_by_name],
+            ["الفترة من", formatDate(item.period_from)],
+            ["الفترة إلى", formatDate(item.period_to)],
+            ["إجمالي التحصيلات", `${formatAmount(item.total_collections)} ج.م`],
+            ["إجمالي العمولات", `${formatAmount(item.total_commissions)} ج.م`],
+            ["المبلغ الصافي", `${formatAmount(item.net_amount)} ج.م`],
+            ["طريقة الدفع", paymentMethodLabel(item.payment_method)],
+            ["مرجع الدفع", item.payment_reference ?? "—"],
+            ["تاريخ الدفع", formatDateTime(item.paid_at)],
+            ["تاريخ الإنشاء", formatDateTime(item.created_at)],
           ].map(([label, value]) => (
             <div key={label} className="rounded-xl border border-border/70 bg-muted/20 p-3">
               <p className="text-xs font-bold text-muted-foreground">{label}</p>
@@ -108,7 +108,7 @@ export function SettlementDetailDialog({
           ))}
           {item.notes && (
             <div className="sm:col-span-2 rounded-xl border border-border/70 bg-muted/20 p-3">
-              <p className="text-xs font-bold text-muted-foreground">notes</p>
+              <p className="text-xs font-bold text-muted-foreground">ملاحظات</p>
               <p className="mt-1">{item.notes}</p>
             </div>
           )}
