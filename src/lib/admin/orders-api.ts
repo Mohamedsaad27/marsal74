@@ -9,6 +9,7 @@ import type {
   CreateOrderPayload,
   OrderDetail,
   OrderListItem,
+  OrderStatusPayload,
 } from "@/lib/admin/orders-types";
 
 // ─── HTTP helper ──────────────────────────────────────────────────────────────
@@ -239,12 +240,11 @@ export async function assignOrderAgent(
 
 export async function updateOrderStatus(
   orderId: string,
-  status: number,
-  note?: string,
+  payload: OrderStatusPayload,
 ): Promise<ApiResponse<null>> {
   return apiFetch<ApiResponse<null>>(`/admin/orders/${orderId}/status`, {
     method: "PATCH",
-    body: JSON.stringify({ status, note }),
+    body: JSON.stringify(payload),
   });
 }
 

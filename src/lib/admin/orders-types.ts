@@ -5,7 +5,14 @@ export type ApiResponse<T> = {
   message: string;
   data: T;
 };
-
+export type OrderStatusPayload = {
+  status_id: number;
+  notes: string;
+  collected_amount?: number;
+  collection_type?: number;
+  new_cod_amount?: number;
+  postponed_date?: string;
+};
 /** orders.status — TINYINT 1–12 */
 export type OrderStatusCode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 15 | 14 | 16 | 17;
 export type Order = {

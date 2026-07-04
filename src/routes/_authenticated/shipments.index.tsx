@@ -25,7 +25,12 @@ import {
   bulkDeleteOrders,
 } from "@/lib/admin/orders-api";
 import type { AgentOption, CompanyOption, GovernorateOption } from "@/lib/admin/orders-api";
-import { ORDER_STATUS_OPTIONS, formatAmount, formatDateTime } from "@/lib/admin/orders-types";
+import {
+  ORDER_STATUS_OPTIONS,
+  formatAmount,
+  formatDateTime,
+  OrderStatusPayload,
+} from "@/lib/admin/orders-types";
 import type { ApiOrderStats, CreateOrderPayload, OrderListItem } from "@/lib/admin/orders-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -377,11 +382,11 @@ function ShipmentsPage() {
     }
   };
 
-  const handleStatusChange = async (status: number, note: string) => {
+  const handleStatusChange = async (payload: OrderStatusPayload) => {
     if (!activeOrder) return;
     setSaving(true);
     try {
-      const response = await updateOrderStatus(activeOrder.order.order_id, status, note);
+      const response = await updateOrderStatus(activeOrder.order.order_id, payload);
       if (!response.isSuccess) throw new Error(response.message);
       toast.success(response.message);
       setStatusOpen(false);
@@ -586,14 +591,14 @@ function ShipmentsPage() {
                     setAssignOpen(true);
                   },
                 },
-                // {
-                //   label: "تغيير الحالة",
-                //   icon: <RefreshCw className="ml-2 h-4 w-4" />,
-                //   onClick: () => {
-                //     setActiveOrder(item);
-                //     setStatusOpen(true);
-                //   },
-                // },
+                {
+                  label: "تغيير الحالة",
+                  icon: <RefreshCw className="ml-2 h-4 w-4" />,
+                  onClick: () => {
+                    setActiveOrder(item);
+                    setStatusOpen(true);
+                  },
+                },
               ]}
             />,
           ],
