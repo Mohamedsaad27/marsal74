@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ReportPageTemplate } from "@/components/reports/ReportPageTemplate";
 import { Truck, UserCheck, Package, Wallet } from "lucide-react";
 
-export const Route = createFileRoute("/reports/couriers")({
+export const Route = createFileRoute("/_authenticated/reports/couriers")({
   component: CouriersReportPage,
 });
 

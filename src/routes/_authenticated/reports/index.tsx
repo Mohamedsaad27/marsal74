@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell";
 import { Package, Wallet, Scale, Truck, Building2, FileBarChart } from "lucide-react";
 
-export const Route = createFileRoute("/reports/")({
+export const Route = createFileRoute("/_authenticated/reports/")({
   component: ReportsHubPage,
 });
 

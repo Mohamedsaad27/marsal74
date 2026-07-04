@@ -11,7 +11,12 @@ import {
 } from "@/components/ui/select";
 import { Download, FileSpreadsheet, Search, type LucideIcon } from "lucide-react";
 
-type Kpi = { label: string; value: string; icon: LucideIcon; tone?: "primary" | "success" | "warning" | "info" };
+type Kpi = {
+  label: string;
+  value: string;
+  icon: LucideIcon;
+  tone?: "primary" | "success" | "warning" | "info";
+};
 
 type Row = Record<string, string | number>;
 
@@ -31,7 +36,8 @@ export function ReportPageTemplate({ title, description, tableName, kpis, column
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight md:text-3xl">{title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            تقرير <code className="rounded bg-muted px-1 text-[10px]">{tableName}</code> — {description}
+            تقرير <code className="rounded bg-muted px-1 text-[10px]">{tableName}</code> —{" "}
+            {description}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -39,10 +45,10 @@ export function ReportPageTemplate({ title, description, tableName, kpis, column
             <Download className="ml-1.5 h-4 w-4" />
             تصدير PDF
           </Button>
-          <Button className="rounded-xl gradient-brand shadow-glow">
+          {/* <Button className="rounded-xl gradient-brand shadow-glow">
             <FileSpreadsheet className="ml-1.5 h-4 w-4" />
             تصدير Excel
-          </Button>
+          </Button> */}
         </div>
       </div>
 

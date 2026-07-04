@@ -113,7 +113,7 @@ export const navReports: NavSection = {
   title: "التقارير",
   icon: FileBarChart,
   items: [
-    { title: "نظرة عامة", url: "/reports", icon: FileBarChart },
+    // { title: "نظرة عامة", url: "/reports", icon: FileBarChart },
     { title: "تقرير الطلبات", url: "/reports/shipments", icon: Package },
     { title: "تقرير التحصيلات", url: "/reports/collections", icon: Wallet },
     { title: "تقرير التسويات", url: "/reports/settlements", icon: Scale },

@@ -13,13 +13,7 @@ import { Route as UnauthorizedRouteImport } from './routes/unauthorized'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
-import { Route as ReportsIndexRouteImport } from './routes/reports/index'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as ReportsShipmentsRouteImport } from './routes/reports/shipments'
-import { Route as ReportsSettlementsRouteImport } from './routes/reports/settlements'
-import { Route as ReportsCouriersRouteImport } from './routes/reports/couriers'
-import { Route as ReportsCompaniesRouteImport } from './routes/reports/companies'
-import { Route as ReportsCollectionsRouteImport } from './routes/reports/collections'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedTrackingRouteImport } from './routes/_authenticated/tracking'
 import { Route as AuthenticatedStaffMembersRouteImport } from './routes/_authenticated/staff-members'
@@ -42,7 +36,13 @@ import { Route as AuthenticatedChangePasswordRouteImport } from './routes/_authe
 import { Route as AuthenticatedAuditLogRouteImport } from './routes/_authenticated/audit-log'
 import { Route as AuthenticatedApprovalsRouteImport } from './routes/_authenticated/approvals'
 import { Route as AuthenticatedShipmentsIndexRouteImport } from './routes/_authenticated/shipments.index'
+import { Route as AuthenticatedReportsIndexRouteImport } from './routes/_authenticated/reports/index'
 import { Route as AuthenticatedShipmentsOrderIdRouteImport } from './routes/_authenticated/shipments.$orderId'
+import { Route as AuthenticatedReportsShipmentsRouteImport } from './routes/_authenticated/reports/shipments'
+import { Route as AuthenticatedReportsSettlementsRouteImport } from './routes/_authenticated/reports/settlements'
+import { Route as AuthenticatedReportsCouriersRouteImport } from './routes/_authenticated/reports/couriers'
+import { Route as AuthenticatedReportsCompaniesRouteImport } from './routes/_authenticated/reports/companies'
+import { Route as AuthenticatedReportsCollectionsRouteImport } from './routes/_authenticated/reports/collections'
 
 const UnauthorizedRoute = UnauthorizedRouteImport.update({
   id: '/unauthorized',
@@ -63,40 +63,10 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ReportsIndexRoute = ReportsIndexRouteImport.update({
-  id: '/reports/',
-  path: '/reports/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
-} as any)
-const ReportsShipmentsRoute = ReportsShipmentsRouteImport.update({
-  id: '/reports/shipments',
-  path: '/reports/shipments',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReportsSettlementsRoute = ReportsSettlementsRouteImport.update({
-  id: '/reports/settlements',
-  path: '/reports/settlements',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReportsCouriersRoute = ReportsCouriersRouteImport.update({
-  id: '/reports/couriers',
-  path: '/reports/couriers',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReportsCompaniesRoute = ReportsCompaniesRouteImport.update({
-  id: '/reports/companies',
-  path: '/reports/companies',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReportsCollectionsRoute = ReportsCollectionsRouteImport.update({
-  id: '/reports/collections',
-  path: '/reports/collections',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
   id: '/users',
@@ -216,11 +186,47 @@ const AuthenticatedShipmentsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedShipmentsRoute,
   } as any)
+const AuthenticatedReportsIndexRoute =
+  AuthenticatedReportsIndexRouteImport.update({
+    id: '/reports/',
+    path: '/reports/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedShipmentsOrderIdRoute =
   AuthenticatedShipmentsOrderIdRouteImport.update({
     id: '/$orderId',
     path: '/$orderId',
     getParentRoute: () => AuthenticatedShipmentsRoute,
+  } as any)
+const AuthenticatedReportsShipmentsRoute =
+  AuthenticatedReportsShipmentsRouteImport.update({
+    id: '/reports/shipments',
+    path: '/reports/shipments',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedReportsSettlementsRoute =
+  AuthenticatedReportsSettlementsRouteImport.update({
+    id: '/reports/settlements',
+    path: '/reports/settlements',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedReportsCouriersRoute =
+  AuthenticatedReportsCouriersRouteImport.update({
+    id: '/reports/couriers',
+    path: '/reports/couriers',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedReportsCompaniesRoute =
+  AuthenticatedReportsCompaniesRouteImport.update({
+    id: '/reports/companies',
+    path: '/reports/companies',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedReportsCollectionsRoute =
+  AuthenticatedReportsCollectionsRouteImport.update({
+    id: '/reports/collections',
+    path: '/reports/collections',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -249,13 +255,13 @@ export interface FileRoutesByFullPath {
   '/staff-members': typeof AuthenticatedStaffMembersRoute
   '/tracking': typeof AuthenticatedTrackingRoute
   '/users': typeof AuthenticatedUsersRoute
-  '/reports/collections': typeof ReportsCollectionsRoute
-  '/reports/companies': typeof ReportsCompaniesRoute
-  '/reports/couriers': typeof ReportsCouriersRoute
-  '/reports/settlements': typeof ReportsSettlementsRoute
-  '/reports/shipments': typeof ReportsShipmentsRoute
-  '/reports/': typeof ReportsIndexRoute
+  '/reports/collections': typeof AuthenticatedReportsCollectionsRoute
+  '/reports/companies': typeof AuthenticatedReportsCompaniesRoute
+  '/reports/couriers': typeof AuthenticatedReportsCouriersRoute
+  '/reports/settlements': typeof AuthenticatedReportsSettlementsRoute
+  '/reports/shipments': typeof AuthenticatedReportsShipmentsRoute
   '/shipments/$orderId': typeof AuthenticatedShipmentsOrderIdRoute
+  '/reports/': typeof AuthenticatedReportsIndexRoute
   '/shipments/': typeof AuthenticatedShipmentsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -282,14 +288,14 @@ export interface FileRoutesByTo {
   '/staff-members': typeof AuthenticatedStaffMembersRoute
   '/tracking': typeof AuthenticatedTrackingRoute
   '/users': typeof AuthenticatedUsersRoute
-  '/reports/collections': typeof ReportsCollectionsRoute
-  '/reports/companies': typeof ReportsCompaniesRoute
-  '/reports/couriers': typeof ReportsCouriersRoute
-  '/reports/settlements': typeof ReportsSettlementsRoute
-  '/reports/shipments': typeof ReportsShipmentsRoute
   '/': typeof AuthenticatedIndexRoute
-  '/reports': typeof ReportsIndexRoute
+  '/reports/collections': typeof AuthenticatedReportsCollectionsRoute
+  '/reports/companies': typeof AuthenticatedReportsCompaniesRoute
+  '/reports/couriers': typeof AuthenticatedReportsCouriersRoute
+  '/reports/settlements': typeof AuthenticatedReportsSettlementsRoute
+  '/reports/shipments': typeof AuthenticatedReportsShipmentsRoute
   '/shipments/$orderId': typeof AuthenticatedShipmentsOrderIdRoute
+  '/reports': typeof AuthenticatedReportsIndexRoute
   '/shipments': typeof AuthenticatedShipmentsIndexRoute
 }
 export interface FileRoutesById {
@@ -319,14 +325,14 @@ export interface FileRoutesById {
   '/_authenticated/staff-members': typeof AuthenticatedStaffMembersRoute
   '/_authenticated/tracking': typeof AuthenticatedTrackingRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
-  '/reports/collections': typeof ReportsCollectionsRoute
-  '/reports/companies': typeof ReportsCompaniesRoute
-  '/reports/couriers': typeof ReportsCouriersRoute
-  '/reports/settlements': typeof ReportsSettlementsRoute
-  '/reports/shipments': typeof ReportsShipmentsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
-  '/reports/': typeof ReportsIndexRoute
+  '/_authenticated/reports/collections': typeof AuthenticatedReportsCollectionsRoute
+  '/_authenticated/reports/companies': typeof AuthenticatedReportsCompaniesRoute
+  '/_authenticated/reports/couriers': typeof AuthenticatedReportsCouriersRoute
+  '/_authenticated/reports/settlements': typeof AuthenticatedReportsSettlementsRoute
+  '/_authenticated/reports/shipments': typeof AuthenticatedReportsShipmentsRoute
   '/_authenticated/shipments/$orderId': typeof AuthenticatedShipmentsOrderIdRoute
+  '/_authenticated/reports/': typeof AuthenticatedReportsIndexRoute
   '/_authenticated/shipments/': typeof AuthenticatedShipmentsIndexRoute
 }
 export interface FileRouteTypes {
@@ -362,8 +368,8 @@ export interface FileRouteTypes {
     | '/reports/couriers'
     | '/reports/settlements'
     | '/reports/shipments'
-    | '/reports/'
     | '/shipments/$orderId'
+    | '/reports/'
     | '/shipments/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -390,14 +396,14 @@ export interface FileRouteTypes {
     | '/staff-members'
     | '/tracking'
     | '/users'
+    | '/'
     | '/reports/collections'
     | '/reports/companies'
     | '/reports/couriers'
     | '/reports/settlements'
     | '/reports/shipments'
-    | '/'
-    | '/reports'
     | '/shipments/$orderId'
+    | '/reports'
     | '/shipments'
   id:
     | '__root__'
@@ -426,14 +432,14 @@ export interface FileRouteTypes {
     | '/_authenticated/staff-members'
     | '/_authenticated/tracking'
     | '/_authenticated/users'
-    | '/reports/collections'
-    | '/reports/companies'
-    | '/reports/couriers'
-    | '/reports/settlements'
-    | '/reports/shipments'
     | '/_authenticated/'
-    | '/reports/'
+    | '/_authenticated/reports/collections'
+    | '/_authenticated/reports/companies'
+    | '/_authenticated/reports/couriers'
+    | '/_authenticated/reports/settlements'
+    | '/_authenticated/reports/shipments'
     | '/_authenticated/shipments/$orderId'
+    | '/_authenticated/reports/'
     | '/_authenticated/shipments/'
   fileRoutesById: FileRoutesById
 }
@@ -442,12 +448,6 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
-  ReportsCollectionsRoute: typeof ReportsCollectionsRoute
-  ReportsCompaniesRoute: typeof ReportsCompaniesRoute
-  ReportsCouriersRoute: typeof ReportsCouriersRoute
-  ReportsSettlementsRoute: typeof ReportsSettlementsRoute
-  ReportsShipmentsRoute: typeof ReportsShipmentsRoute
-  ReportsIndexRoute: typeof ReportsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -480,54 +480,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/reports/': {
-      id: '/reports/'
-      path: '/reports'
-      fullPath: '/reports/'
-      preLoaderRoute: typeof ReportsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated/': {
       id: '/_authenticated/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
-    }
-    '/reports/shipments': {
-      id: '/reports/shipments'
-      path: '/reports/shipments'
-      fullPath: '/reports/shipments'
-      preLoaderRoute: typeof ReportsShipmentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reports/settlements': {
-      id: '/reports/settlements'
-      path: '/reports/settlements'
-      fullPath: '/reports/settlements'
-      preLoaderRoute: typeof ReportsSettlementsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reports/couriers': {
-      id: '/reports/couriers'
-      path: '/reports/couriers'
-      fullPath: '/reports/couriers'
-      preLoaderRoute: typeof ReportsCouriersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reports/companies': {
-      id: '/reports/companies'
-      path: '/reports/companies'
-      fullPath: '/reports/companies'
-      preLoaderRoute: typeof ReportsCompaniesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reports/collections': {
-      id: '/reports/collections'
-      path: '/reports/collections'
-      fullPath: '/reports/collections'
-      preLoaderRoute: typeof ReportsCollectionsRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/users': {
       id: '/_authenticated/users'
@@ -683,12 +641,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShipmentsIndexRouteImport
       parentRoute: typeof AuthenticatedShipmentsRoute
     }
+    '/_authenticated/reports/': {
+      id: '/_authenticated/reports/'
+      path: '/reports'
+      fullPath: '/reports/'
+      preLoaderRoute: typeof AuthenticatedReportsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/shipments/$orderId': {
       id: '/_authenticated/shipments/$orderId'
       path: '/$orderId'
       fullPath: '/shipments/$orderId'
       preLoaderRoute: typeof AuthenticatedShipmentsOrderIdRouteImport
       parentRoute: typeof AuthenticatedShipmentsRoute
+    }
+    '/_authenticated/reports/shipments': {
+      id: '/_authenticated/reports/shipments'
+      path: '/reports/shipments'
+      fullPath: '/reports/shipments'
+      preLoaderRoute: typeof AuthenticatedReportsShipmentsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/reports/settlements': {
+      id: '/_authenticated/reports/settlements'
+      path: '/reports/settlements'
+      fullPath: '/reports/settlements'
+      preLoaderRoute: typeof AuthenticatedReportsSettlementsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/reports/couriers': {
+      id: '/_authenticated/reports/couriers'
+      path: '/reports/couriers'
+      fullPath: '/reports/couriers'
+      preLoaderRoute: typeof AuthenticatedReportsCouriersRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/reports/companies': {
+      id: '/_authenticated/reports/companies'
+      path: '/reports/companies'
+      fullPath: '/reports/companies'
+      preLoaderRoute: typeof AuthenticatedReportsCompaniesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/reports/collections': {
+      id: '/_authenticated/reports/collections'
+      path: '/reports/collections'
+      fullPath: '/reports/collections'
+      preLoaderRoute: typeof AuthenticatedReportsCollectionsRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
   }
 }
@@ -732,6 +732,12 @@ interface AuthenticatedRouteChildren {
   AuthenticatedTrackingRoute: typeof AuthenticatedTrackingRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedReportsCollectionsRoute: typeof AuthenticatedReportsCollectionsRoute
+  AuthenticatedReportsCompaniesRoute: typeof AuthenticatedReportsCompaniesRoute
+  AuthenticatedReportsCouriersRoute: typeof AuthenticatedReportsCouriersRoute
+  AuthenticatedReportsSettlementsRoute: typeof AuthenticatedReportsSettlementsRoute
+  AuthenticatedReportsShipmentsRoute: typeof AuthenticatedReportsShipmentsRoute
+  AuthenticatedReportsIndexRoute: typeof AuthenticatedReportsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -757,6 +763,12 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedTrackingRoute: AuthenticatedTrackingRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedReportsCollectionsRoute: AuthenticatedReportsCollectionsRoute,
+  AuthenticatedReportsCompaniesRoute: AuthenticatedReportsCompaniesRoute,
+  AuthenticatedReportsCouriersRoute: AuthenticatedReportsCouriersRoute,
+  AuthenticatedReportsSettlementsRoute: AuthenticatedReportsSettlementsRoute,
+  AuthenticatedReportsShipmentsRoute: AuthenticatedReportsShipmentsRoute,
+  AuthenticatedReportsIndexRoute: AuthenticatedReportsIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -768,12 +780,6 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   UnauthorizedRoute: UnauthorizedRoute,
-  ReportsCollectionsRoute: ReportsCollectionsRoute,
-  ReportsCompaniesRoute: ReportsCompaniesRoute,
-  ReportsCouriersRoute: ReportsCouriersRoute,
-  ReportsSettlementsRoute: ReportsSettlementsRoute,
-  ReportsShipmentsRoute: ReportsShipmentsRoute,
-  ReportsIndexRoute: ReportsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

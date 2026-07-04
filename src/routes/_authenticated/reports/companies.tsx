@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ReportPageTemplate } from "@/components/reports/ReportPageTemplate";
 import { Building2, Package, Wallet, TrendingUp } from "lucide-react";
 
-export const Route = createFileRoute("/reports/companies")({
+export const Route = createFileRoute("/_authenticated/reports/companies")({
   component: CompaniesReportPage,
 });
 
@@ -20,8 +20,22 @@ function CompaniesReportPage() {
       ]}
       columns={["الشركة", "طلبات نشطة", "العمولة", "الرصيد", "الحالة", "الفترة"]}
       rows={[
-        { الشركة: "أرامكس مصر", "طلبات نشطة": "142", العمولة: "12%", الرصيد: "48200.50", الحالة: "نشطة", الفترة: "مايو 2026" },
-        { الشركة: "سمسا للشحن", "طلبات نشطة": "98", العمولة: "10%", الرصيد: "32540.00", الحالة: "نشطة", الفترة: "مايو 2026" },
+        {
+          الشركة: "أرامكس مصر",
+          "طلبات نشطة": "142",
+          العمولة: "12%",
+          الرصيد: "48200.50",
+          الحالة: "نشطة",
+          الفترة: "مايو 2026",
+        },
+        {
+          الشركة: "سمسا للشحن",
+          "طلبات نشطة": "98",
+          العمولة: "10%",
+          الرصيد: "32540.00",
+          الحالة: "نشطة",
+          الفترة: "مايو 2026",
+        },
       ]}
     />
   );
