@@ -10,8 +10,8 @@ const todayISO = () => new Date().toISOString().slice(0, 10);
 export function useReportData<TItem, TSummary>(config: ReportConfig<TItem, TSummary>) {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [dateFrom, setDateFrom] = useState(DEFAULT_DATE_FROM);
-  const [dateTo, setDateTo] = useState(todayISO());
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const debouncedSearch = useDebounce(search, 400);
 
   const query = useQuery({
