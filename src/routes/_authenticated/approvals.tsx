@@ -236,7 +236,7 @@ function ApprovalsPage() {
       <AdminPageHeader
         module="approvalRequests"
         title="طلبات الموافقة"
-        tableName="approval_requests"
+        tableName="طلبات الموافقة"
         description="تعديل الأسعار، رسوم الشحن، والتحصيل الجزئي — مع مهلة انتهاء وسجل مراجعة"
         addLabel="طلب جديد"
         showAdd={false}

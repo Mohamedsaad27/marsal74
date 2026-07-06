@@ -235,7 +235,7 @@ function CollectionsPage() {
       <AdminPageHeader
         module="collections"
         title="التحصيلات"
-        tableName="collections"
+        tableName="التحصيلات"
         description="عمليات التحصيل من العميل — COD / رسوم شحن / جزئي + استلام النقد من المناديب"
         addLabel="تسجيل تحصيل"
         onAdd={() => toast.message("تسجيل تحصيل — واجهة تصميمية")}

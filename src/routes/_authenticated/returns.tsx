@@ -185,7 +185,7 @@ function ReturnsPage() {
       <AdminPageHeader
         module="returns"
         title="المرتجعات"
-        tableName="returns"
+        tableName="المرتجعات"
         description="تتبع المرتجعات من المندوب → الإدارة → شركة الشحن"
         addLabel="تسجيل مرتجع"
         onAdd={() => toast.message("تسجيل مرتجع — واجهة تصميمية")}

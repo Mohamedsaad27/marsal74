@@ -328,7 +328,7 @@ function SettlementsPage() {
       <AdminPageHeader
         module="settlements"
         title="التسويات المالية"
-        tableName="settlements"
+        tableName="التسويات"
         description="تسويات المناديب والشركات للفترات المحددة — مسودة → معتمدة → مدفوعة"
         addLabel="إنشاء تسوية"
         showAdd={!isCompanyView}

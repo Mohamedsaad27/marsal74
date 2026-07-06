@@ -435,7 +435,7 @@ function ShipmentsPage() {
       <AdminPageHeader
         module="orders"
         title="الطلبات"
-        tableName="orders"
+        tableName="الطلبات"
         description="إدارة الطلبات — فلترة متقدمة، إنشاء يدوي، استيراد Excel، وتصدير"
         addLabel="طلب جديد"
         onAdd={() => setCreateOpen(true)}
