@@ -25,7 +25,7 @@ export interface ChatParticipant {
 export interface ChatConversation {
   id: string;
   order_id: string;
-  order: ChatOrderSummary;
+  order: ChatOrderSummary | null;
   type: ChatConversationType;
   participants: ChatParticipant[];
   messages_count?: number;

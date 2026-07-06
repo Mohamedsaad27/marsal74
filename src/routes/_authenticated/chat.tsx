@@ -34,12 +34,18 @@ function getSenderSide(conversation: ChatConversation, senderId: string): "a" | 
   return index === 0 ? "a" : "b";
 }
 /** The "other side" of the conversation, from the admin's point of view. */
+/** The "other side" of the conversation, from the admin's point of view. */
 function getConversationTitle(
   conversation: ChatConversation,
   currentUserId: string | null,
 ): string {
   const other = conversation.participants.find((p) => p.user_id !== currentUserId);
-  return other?.name ?? conversation.order.company_name ?? conversation.order.agent_name;
+  return (
+    other?.name ??
+    conversation.order?.company_name ??
+    conversation.order?.agent_name ??
+    "محادثة محذوفة الطلب"
+  );
 }
 const MESSAGE_TYPE = {
   TEXT: 1,
@@ -250,7 +256,7 @@ function ChatPage() {
                           </span>
                         </div>
                         <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                          {c.order.reference_code} · {c.type.label}
+                          {c.order?.reference_code} · {c.type.label}
                         </p>
                       </div>
                       {!!c.messages_count && (
@@ -280,8 +286,9 @@ function ChatPage() {
                       {getConversationTitle(activeConversation, currentUserId)}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {activeConversation.order.reference_code} —{" "}
-                      {activeConversation.order.company_name}
+                      {activeConversation.order
+                        ? `${activeConversation.order.reference_code} — ${activeConversation.order.company_name}`
+                        : "تم حذف الطلب المرتبط بهذه المحادثة"}
                     </p>
                   </div>
                 </div>
