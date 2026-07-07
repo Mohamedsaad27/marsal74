@@ -66,7 +66,7 @@ export function AgentCreateDialog({ open, onOpenChange, onSave, loading }: Props
   const [nationalId, setNationalId] = useState("");
   const [vehicleType, setVehicleType] = useState<string>("1");
   const [plateNumber, setPlateNumber] = useState("");
-
+  const [commissionValue, setCommissionValue] = useState<number | undefined>(0);
   // agent-only: supervisor
   const [supervisorAgentId, setSupervisorAgentId] = useState("");
 
@@ -130,6 +130,7 @@ export function AgentCreateDialog({ open, onOpenChange, onSave, loading }: Props
       setNationalId("");
       setVehicleType("1");
       setPlateNumber("");
+      setCommissionValue(0);
       setSupervisorAgentId("");
       setSelectedRole("");
     }
@@ -160,8 +161,10 @@ export function AgentCreateDialog({ open, onOpenChange, onSave, loading }: Props
         role: "delivery_agent",
         profile: {
           national_id: nationalId,
-          vehicle_type: Number(vehicleType) as 1 | 2 | 3 | 4 | 5,
+          vehicle_type: Number(vehicleType) as 1 | 2,
           vehicle_plate_number: plateNumber,
+          commission_type: 2,
+          commission_value: commissionValue || 0,
         },
       };
     } else if (mode === "agent") {
@@ -172,8 +175,10 @@ export function AgentCreateDialog({ open, onOpenChange, onSave, loading }: Props
         profile: {
           supervisor_agent_id: supervisorAgentId,
           national_id: nationalId,
-          vehicle_type: Number(vehicleType) as 1 | 2 | 3 | 4 | 5,
+          vehicle_type: Number(vehicleType) as 1 | 2,
           vehicle_plate_number: plateNumber,
+          commission_type: 2,
+          commission_value: commissionValue || 0,
         },
       };
     } else {
@@ -183,6 +188,8 @@ export function AgentCreateDialog({ open, onOpenChange, onSave, loading }: Props
         role: selectedRole ? [selectedRole] : [],
         profile: {
           ...(supervisorAgentId ? { supervisor_agent_id: supervisorAgentId } : {}),
+          commission_type: 2,
+          commission_value: 0,
         },
       };
     }
@@ -276,6 +283,13 @@ export function AgentCreateDialog({ open, onOpenChange, onSave, loading }: Props
         dir="ltr"
         value={plateNumber}
         onChange={(e) => setPlateNumber(e.target.value)}
+      />
+      <FormInput
+        label="العمولة"
+        required
+        dir="ltr"
+        value={commissionValue?.toString() ?? ""}
+        onChange={(e) => setCommissionValue(Number(e.target.value) || undefined)}
       />
     </div>
   );

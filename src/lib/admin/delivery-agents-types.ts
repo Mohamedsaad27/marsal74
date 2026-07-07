@@ -159,6 +159,8 @@ export interface CreateSupervisorAgentPayload {
     national_id: string;
     vehicle_type: VehicleType;
     vehicle_plate_number: string;
+    commission_type: CommissionType;
+    commission_value: number;
   };
   address: CreateAgentAddress;
 }
@@ -176,6 +178,8 @@ export interface CreateRegularAgentPayload {
     national_id: string;
     vehicle_type: VehicleType;
     vehicle_plate_number: string;
+    commission_type: CommissionType;
+    commission_value: number;
   };
   address: CreateAgentAddress;
 }

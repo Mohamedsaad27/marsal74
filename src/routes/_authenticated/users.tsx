@@ -144,6 +144,7 @@ function UsersPage() {
   const [fieldNationalId, setFieldNationalId] = useState("");
   const [fieldVehicleType, setFieldVehicleType] = useState("1");
   const [fieldPlateNumber, setFieldPlateNumber] = useState("");
+  const [commissionValue, setCommissionValue] = useState<number | undefined>(0);
   const [fieldSupervisorId, setFieldSupervisorId] = useState("");
   const [hasSupervisor, setHasSupervisor] = useState(false);
 
@@ -314,6 +315,7 @@ function UsersPage() {
     setFieldNationalId("");
     setFieldVehicleType("1");
     setFieldPlateNumber("");
+    setCommissionValue(0);
     setFieldSupervisorId("");
     setHasSupervisor(false);
     setForm({
@@ -373,6 +375,8 @@ function UsersPage() {
           national_id: fieldNationalId,
           vehicle_type: Number(fieldVehicleType) as 1 | 2 | 3 | 4 | 5,
           vehicle_plate_number: fieldPlateNumber,
+          commission_type: 2,
+          commission_value: commissionValue || 0,
         };
       }
       return {};
@@ -875,6 +879,13 @@ function UsersPage() {
                 dir="ltr"
                 value={fieldPlateNumber}
                 onChange={(e) => setFieldPlateNumber(e.target.value)}
+              />
+              <FormInput
+                label="العمولة"
+                required
+                dir="ltr"
+                value={commissionValue?.toString() ?? ""}
+                onChange={(e) => setCommissionValue(Number(e.target.value) || undefined)}
               />
             </>
           )}

@@ -76,6 +76,17 @@ interface EditForm {
   national_id: string;
   vehicle_type: number;
   vehicle_plate_number: string;
+  commission_type?: number;
+  commission_value?: number;
+  // address fields — flattened from the default address (or first)
+  // we don't support editing multiple addresses in the edit form, only the default
+  // so we only need to keep one address in the form state
+  // (the backend will update the default address and leave others untouched)
+  // see also: CreateDeliveryAgentPayload.address
+  // and: UpdateUserPayload.address
+  // and: ApiDeliveryAgentItem.addresses
+  // and: CreateAgentAddress
+  // and: ApiAddress
   // default address fields
   city_id: string;
   address_line: string;
@@ -97,6 +108,8 @@ function agentToEditForm(agent: DeliveryAgent): EditForm {
     national_id: agent.national_id,
     vehicle_type: agent.vehicle_type,
     vehicle_plate_number: agent.vehicle_plate_number,
+    commission_type: agent.commission_type,
+    commission_value: agent.commission_value,
     city_id: addr?.city_id ?? "",
     address_line: addr?.address_line ?? "",
     street: addr?.street ?? "",
@@ -291,6 +304,8 @@ function CouriersPage() {
           national_id: editForm.national_id,
           vehicle_type: editForm.vehicle_type,
           vehicle_plate_number: editForm.vehicle_plate_number,
+          commission_type: editForm.commission_type,
+          commission_value: editForm.commission_value,
         },
         address: {
           city_id: editForm.city_id || "",
@@ -655,6 +670,16 @@ function CouriersPage() {
               label="لوحة المركبة"
               value={editForm.vehicle_plate_number}
               onChange={(e) => setEditForm({ ...editForm, vehicle_plate_number: e.target.value })}
+            />
+            <FormInput
+              label="العمولة"
+              value={editForm.commission_value?.toString() ?? ""}
+              onChange={(e) =>
+                setEditForm({
+                  ...editForm,
+                  commission_value: Number(e.target.value) || undefined,
+                })
+              }
             />
             <FormInput
               label="البريد الإلكتروني"
