@@ -55,7 +55,9 @@ import {
   Printer,
   Scale,
   Tag,
+  X,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/_authenticated/settlements")({
   component: SettlementsPage,
@@ -112,7 +114,8 @@ function SettlementsPage() {
   const [searchInput, setSearchInput] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [periodFilter, setPeriodFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [companyPortalId, setCompanyPortalId] = useState(MOCK_COMPANY_PORTAL_ID);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -134,10 +137,11 @@ function SettlementsPage() {
       search: search.trim() || undefined,
       type: typeFilter,
       status: statusFilter,
-      period: periodFilter,
+      date_from: dateFrom || undefined,
+      date_to: dateTo || undefined,
       companyId: isCompanyView ? companyPortalId : undefined,
     }),
-    [page, search, typeFilter, statusFilter, periodFilter, isCompanyView, companyPortalId],
+    [page, search, typeFilter, statusFilter, dateFrom, dateTo, isCompanyView, companyPortalId],
   );
 
   const loadData = useCallback(
@@ -429,10 +433,7 @@ function SettlementsPage() {
               setTypeFilter(v);
               setPage(1);
             },
-            options: [
-              { value: "all", label: "الكل" },
-              ...SETTLEMENT_TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
-            ],
+            options: [...SETTLEMENT_TYPE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))],
             allLabel: "كل الأنواع",
           },
           {
@@ -445,29 +446,25 @@ function SettlementsPage() {
               setPage(1);
             },
             options: [
-              { value: "all", label: "الكل" },
               ...SETTLEMENT_STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
             ],
             allLabel: "كل الحالات",
           },
-          {
-            id: "period",
-            label: "الفترة",
-            icon: Calendar,
-            value: periodFilter,
-            onChange: (v) => {
-              setPeriodFilter(v);
-              setPage(1);
-            },
-            options: [
-              { value: "all", label: "الكل" },
-              { value: "month", label: "هذا الشهر" },
-              { value: "last_month", label: "الشهر الماضي" },
-              { value: "quarter", label: "آخر 90 يوم" },
-            ],
-            allLabel: "كل الفترات",
-          },
         ]}
+        extraFilters={
+          <DateRangePill
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onDateFromChange={(v) => {
+              setDateFrom(v);
+              setPage(1);
+            }}
+            onDateToChange={(v) => {
+              setDateTo(v);
+              setPage(1);
+            }}
+          />
+        }
         columns={tableColumns}
         rows={tableRows}
         selectedIds={selectedIds}
@@ -530,5 +527,70 @@ function SettlementsPage() {
       <SettlementStatementDialog open={printOpen} onOpenChange={setPrintOpen} item={activeItem} />
       <ConfirmActionDialog action={confirmAction} onOpenChange={() => setConfirmAction(null)} />
     </AppShell>
+  );
+}
+function DateRangePill({
+  dateFrom,
+  dateTo,
+  onDateFromChange,
+  onDateToChange,
+}: {
+  dateFrom: string;
+  dateTo: string;
+  onDateFromChange: (v: string) => void;
+  onDateToChange: (v: string) => void;
+}) {
+  const isActive = !!(dateFrom || dateTo);
+  return (
+    <div
+      className={cn(
+        "flex h-10 items-stretch overflow-hidden rounded-xl border bg-background shadow-sm transition-colors",
+        isActive ? "border-primary/40 ring-1 ring-primary/10" : "border-input",
+      )}
+    >
+      <div className="flex shrink-0 items-center gap-1.5 border-s border-border bg-muted/50 px-3">
+        <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-xs font-bold text-muted-foreground">التاريخ</span>
+      </div>
+      <div className="flex items-center gap-1.5 border-s border-border/60 px-2">
+        <span className="text-[11px] text-muted-foreground">من</span>
+        <Input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => onDateFromChange(e.target.value)}
+          max={dateTo || undefined}
+          className={cn(
+            "h-7 w-32 rounded-lg border-0 bg-transparent px-1 text-xs shadow-none focus-visible:ring-0",
+            isActive && dateFrom && "font-semibold text-primary",
+          )}
+        />
+      </div>
+      <div className="flex items-center gap-1.5 border-s border-border/60 px-2">
+        <span className="text-[11px] text-muted-foreground">إلى</span>
+        <Input
+          type="date"
+          value={dateTo}
+          onChange={(e) => onDateToChange(e.target.value)}
+          min={dateFrom || undefined}
+          className={cn(
+            "h-7 w-32 rounded-lg border-0 bg-transparent px-1 text-xs shadow-none focus-visible:ring-0",
+            isActive && dateTo && "font-semibold text-primary",
+          )}
+        />
+      </div>
+      {isActive && (
+        <button
+          type="button"
+          onClick={() => {
+            onDateFromChange("");
+            onDateToChange("");
+          }}
+          className="flex items-center border-s border-border/60 px-2 text-muted-foreground transition-colors hover:text-destructive"
+          aria-label="مسح التاريخ"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      )}
+    </div>
   );
 }

@@ -71,7 +71,8 @@ export type FetchSettlementsParams = {
   search?: string;
   type?: string; // "1" | "2" | "all"
   status?: string; // "1" | "2" | "3" | "all"
-  period?: string; // "month" | "last_month" | "quarter" | "all"
+  date_from?: string; // Y-m-d
+  date_to?: string; // Y-m-d
   companyId?: string; // for company-portal tab
 };
 
@@ -91,7 +92,8 @@ export async function fetchSettlements(
   if (params.search) qs.set("search", params.search);
   if (params.type && params.type !== "all") qs.set("settlement_type", params.type);
   if (params.status && params.status !== "all") qs.set("status", params.status);
-  if (params.period && params.period !== "all") qs.set("period", params.period);
+  if (params.date_from) qs.set("date_from", params.date_from);
+  if (params.date_to) qs.set("date_to", params.date_to);
   if (params.companyId) qs.set("shipping_company_id", params.companyId);
 
   const res = await apiFetch<PaginatedApiResponse<SettlementApiItem>>(`${BASE}?${qs.toString()}`);

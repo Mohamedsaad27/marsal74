@@ -109,7 +109,7 @@ function LoginPage() {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="name@marsal.io"
+                      placeholder="name@express.io"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       autoComplete="email"

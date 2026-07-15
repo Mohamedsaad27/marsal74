@@ -35,7 +35,6 @@ type WireListResponse = {
   };
 };
 
-
 // ─── Normaliser ───────────────────────────────────────────────────────────────
 
 function normaliseCollection(w: WireCollection): CollectionRecord {
