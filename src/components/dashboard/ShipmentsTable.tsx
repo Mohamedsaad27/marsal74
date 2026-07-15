@@ -122,7 +122,7 @@ export function ShipmentsTable() {
               ? "جاري التحديث..."
               : error
                 ? "تعذّر تحديث البيانات" // subtle, doesn't blow up the UI
-                : `آخر ${data?.meta.per_page ?? 15} طلب`}
+                : formatOrderCount(data?.meta.total ?? 15)}
           </p>
         </div>
         <div className="relative w-72">
@@ -214,4 +214,10 @@ export function ShipmentsTable() {
       </div>
     </div>
   );
+}
+function formatOrderCount(count: number): string {
+  if (count === 1) return "آخر طلب";
+  if (count === 2) return "آخر طلبين";
+  if (count >= 3 && count <= 10) return `آخر ${count} طلبات`;
+  return `آخر ${count} طلب`;
 }
