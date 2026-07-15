@@ -7,6 +7,8 @@ import { apiFetch } from "@/lib/admin/users.api";
 import { PROFILE_BASE_URL } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { ORDER_STATUS_TO_KEY, type OrderStatusCode } from "@/lib/admin/orders-types";
+
 type RecentOrdersResponse = {
   isSuccess: boolean;
   message: string;
@@ -63,22 +65,6 @@ async function getRecentOrders(search: string) {
   return response;
 }
 
-function mapStatus(status: number): ShipmentStatus {
-  switch (status) {
-    case 1:
-      return "pending";
-
-    case 2:
-      return "in_delivery";
-
-    case 3:
-      return "delivered";
-
-    default:
-      return "pending";
-  }
-}
-
 export function ShipmentsTable() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -106,7 +92,7 @@ export function ShipmentsTable() {
       original_amount: Number(order.original_amount).toFixed(2),
       collected_amount:
         order.collected_amount == null ? "—" : Number(order.collected_amount).toFixed(2),
-      status: mapStatus(order.status),
+      status: ORDER_STATUS_TO_KEY[order.status as OrderStatusCode] ?? "pending",
       created_at: order.created_at,
     })) ?? [];
 

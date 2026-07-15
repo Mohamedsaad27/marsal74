@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { apiFetch } from "@/lib/admin/users.api";
+// src/hooks/useCurrentUser.ts
+import { useSyncExternalStore } from "react";
+import { getCurrentUser as readCurrentUser } from "@/lib/auth/Auth.api";
 
 type CurrentUser = {
   user_id: string;
@@ -11,7 +12,11 @@ type CurrentUser = {
   is_active: boolean;
   staff_member: {
     id: string;
-    department: string;
+    department: {
+      id: string;
+      name_ar: string;
+      name_en: string;
+    } | null;
     job_title: string;
     notes: string | null;
     created_at: string;
@@ -24,22 +29,29 @@ type CurrentUser = {
   permissions: string[];
 };
 
-type MeResponse = {
-  isSuccess: boolean;
-  message: string;
-  data: CurrentUser;
-};
+const listeners = new Set<() => void>();
+
+let cachedSnapshot: CurrentUser | null = readCurrentUser() as CurrentUser | null;
+
+export function notifyUserChanged() {
+  cachedSnapshot = readCurrentUser() as CurrentUser | null; // re-parse ONCE here
+  listeners.forEach((l) => l());
+}
+
+function subscribe(callback: () => void) {
+  listeners.add(callback);
+  return () => listeners.delete(callback);
+}
+
+function getSnapshot() {
+  return cachedSnapshot;
+}
+
+function getServerSnapshot() {
+  return null;
+}
 
 export function useCurrentUser() {
-  const [user, setUser] = useState<CurrentUser | null>(null);
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    apiFetch<MeResponse>("/auth/me")
-      .then(({ data }) => setUser(data))
-      .catch(() => setUser(null))
-      .finally(() => setHydrated(true));
-  }, []);
-
-  return { user, hydrated };
+  const user = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  return { user, hydrated: true };
 }

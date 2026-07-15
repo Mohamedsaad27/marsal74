@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Logo } from "@/components/brand/Logo";
 import { login, saveSession } from "../lib/auth/Auth.api";
+import { notifyUserChanged } from "@/hooks/useCurrentUser";
 import loginHero from "@/login.png";
 
 export const Route = createFileRoute("/login")({
@@ -46,6 +47,7 @@ function LoginPage() {
     try {
       const data = await login(email.trim(), password);
       saveSession(data, remember);
+      notifyUserChanged();
       navigate({ to: "/" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "حدث خطأ غير متوقع");

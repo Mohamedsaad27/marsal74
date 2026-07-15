@@ -1,6 +1,7 @@
 import { User } from "../types/Auth";
 import { BASE_URL } from "../utils";
 import { safeStorage } from "../utils";
+import { notifyUserChanged } from "@/hooks/useCurrentUser";
 export interface LoginResponse {
   access_token: string;
   token_type: string;
@@ -59,6 +60,7 @@ export async function logout(): Promise<void> {
   }
 
   clearSession();
+  notifyUserChanged();
   location.href = "/login";
 }
 

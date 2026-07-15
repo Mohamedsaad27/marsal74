@@ -73,12 +73,12 @@ const map: Record<ShipmentStatus, { label: string; cls: string }> = {
 
   no_answer: {
     label: "لا يوجد رد",
-    cls: "bg-muted text-muted-foreground ring-border",
+    cls: "bg-destructive/10 text-destructive ring-destructive/20",
   },
 
   phone_off: {
     label: "الهاتف مغلق",
-    cls: "bg-muted text-muted-foreground ring-border",
+    cls: "bg-destructive/10 text-destructive ring-destructive/20",
   },
 
   postponed: {
@@ -88,15 +88,15 @@ const map: Record<ShipmentStatus, { label: string; cls: string }> = {
 
   unsafe_area: {
     label: "منطقة غير آمنة",
-    cls: "bg-destructive/10 text-destructive ring-destructive/20",
+    cls: "bg-warning/15 text-warning ring-warning/25",
   },
   outside_governorate: {
     label: "خارج المحافظة",
-    cls: "bg-muted text-muted-foreground ring-border",
+    cls: "bg-warning/15 text-warning ring-warning/25",
   },
   wrong_phone: {
     label: "رقم الهاتف خاطئ",
-    cls: "bg-muted text-muted-foreground ring-border",
+    cls: "bg-destructive/10 text-destructive ring-destructive/20",
   },
   returned: {
     label: "تم الإرجاع",
