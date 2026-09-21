@@ -50,7 +50,7 @@ export async function fetchUnreadCount(): Promise<number> {
     headers: authHeaders(),
   });
   const json = await res.json();
-  return json?.data?.unread ?? 0;
+  return json?.data?.unread_count ?? 0;
 }
 
 // ─── Mark Single as Read ────────────────────────────────────────────────────
