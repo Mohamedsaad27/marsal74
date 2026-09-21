@@ -33,7 +33,7 @@ type ShippingCompanyFormState = {
 
   company_name: string;
   commercial_reg: string;
-
+  commission_value: string;
   city_id: string;
   address_line: string;
   landmark: string;
@@ -53,7 +53,7 @@ function emptyForm(): ShippingCompanyFormState {
 
     company_name: "",
     commercial_reg: "",
-
+    commission_value: "",
     city_id: "",
     address_line: "",
     landmark: "",
@@ -158,6 +158,7 @@ function ShippingCompaniesPage() {
       password: "",
       company_name: company.shipping_company.company_name,
       commercial_reg: company.shipping_company.commercial_reg ?? "",
+      commission_value: company.shipping_company.commission_value ?? "",
       is_active: company.is_active,
       city_id: company.addresses[0]?.city_id ?? "",
       address_line: company.addresses[0]?.address_line ?? "",
@@ -200,6 +201,7 @@ function ShippingCompaniesPage() {
           profile: {
             company_name: form.company_name.trim(),
             commercial_reg: form.commercial_reg.trim(),
+            commission_value: form.commission_value.trim(),
           },
 
           address: {
@@ -226,6 +228,9 @@ function ShippingCompaniesPage() {
             company_name: form.company_name.trim(),
             ...(form.commercial_reg.trim() && {
               commercial_reg: form.commercial_reg.trim(),
+            }),
+            ...(form.commission_value.trim() && {
+              commission_value: form.commission_value.trim(),
             }),
           },
 
@@ -489,7 +494,6 @@ function ShippingCompaniesPage() {
           <FormInput
             label="البريد الإلكتروني"
             type="email"
-            required
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
             dir="ltr"
@@ -517,6 +521,14 @@ function ShippingCompaniesPage() {
             label="السجل التجاري"
             value={form.commercial_reg}
             onChange={(e) => setForm({ ...form, commercial_reg: e.target.value })}
+            dir="ltr"
+            className={dialogMode === "edit" ? "sm:col-span-2" : ""}
+          />
+          <FormInput
+            label="قيمة عمولة النظام"
+            required
+            value={form.commission_value}
+            onChange={(e) => setForm({ ...form, commission_value: e.target.value })}
             dir="ltr"
             className={dialogMode === "edit" ? "sm:col-span-2" : ""}
           />

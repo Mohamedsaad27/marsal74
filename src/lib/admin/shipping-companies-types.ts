@@ -2,6 +2,7 @@ export interface ShippingCompanyProfile {
   id: string;
   company_name: string;
   commercial_reg: string | null;
+  commission_value: string;
   logo_url: string | null;
   commission: {
     type: {
@@ -65,6 +66,7 @@ export interface CreateShippingCompanyPayload {
   profile: {
     company_name: string;
     commercial_reg?: string;
+    commission_value: string;
   };
   address: {
     city_id: string;
