@@ -235,7 +235,6 @@ export function AgentCreateDialog({ open, onOpenChange, onSave, loading }: Props
       />
       <FormInput
         label="البريد الإلكتروني"
-        required
         type="email"
         dir="ltr"
         value={user.email}
