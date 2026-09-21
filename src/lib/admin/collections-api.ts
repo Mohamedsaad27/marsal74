@@ -14,8 +14,9 @@ type WireCollection = {
   company: { id: string; name: string };
   collection_type: { code: number; label: string };
   collected_amount: string;
-  commission_amount: string;
-  net_due: string;
+  agent_commission_amount: string;
+  company_net_due: string;
+  agent_net_due: string;
   cash_received_at: string | null;
   settlement_id: string | null;
   collected_at: string;
@@ -48,8 +49,9 @@ function normaliseCollection(w: WireCollection): CollectionRecord {
     company_name: w.company.name,
     collection_type: w.collection_type.code as 1 | 2 | 3,
     collected_amount: parseFloat(w.collected_amount),
-    commission_amount: parseFloat(w.commission_amount),
-    net_due_company: parseFloat(w.net_due),
+    agent_commission_amount: parseFloat(w.agent_commission_amount),
+    company_net_due: parseFloat(w.company_net_due),
+    agent_net_due: parseFloat(w.agent_net_due),
     is_settled: w.settlement_id !== null ? 1 : 0,
     cash_received_by_admin: w.cash_received_at !== null ? 1 : 0,
     cash_received_at: w.cash_received_at,
@@ -127,8 +129,14 @@ type WireStatsResponse = {
   message: string;
   data: {
     total_collected: string;
-    total_commissions: string;
-    net_due_to_companies: string;
+    total_agent_commission_amount: string;
+    total_agent_net_due: string;
+    total_system_commission_amount: string;
+    total_company_net_due: string;
+    agent_to_system_amount: string;
+    system_to_agent_amount: string;
+    system_to_company_amount: string;
+    company_to_system_amount: string;
     pending_cash_count: number;
   };
 };
@@ -141,13 +149,14 @@ type CollectionStatsData = {
 
 export async function fetchCollectionStats(): Promise<ApiResponse<CollectionStatsData>> {
   const wire = await apiFetch<WireStatsResponse>("/admin/collections/stats");
+
   return {
     isSuccess: wire.isSuccess,
     message: wire.message,
     data: {
       totalCollected: parseFloat(wire.data.total_collected) || 0,
-      totalCommission: parseFloat(wire.data.total_commissions) || 0,
-      totalNetDue: parseFloat(wire.data.net_due_to_companies) || 0,
+      totalCommission: parseFloat(wire.data.total_system_commission_amount) || 0,
+      totalNetDue: parseFloat(wire.data.total_company_net_due) || 0,
       pendingHandoff: wire.data.pending_cash_count ?? 0,
     },
   };
@@ -184,11 +193,11 @@ export async function exportCollections(): Promise<ApiResponse<{ filename: strin
 
 export function computeCollectionKpis(items: CollectionRecord[]) {
   const totalCollected = items.reduce((s, i) => s + i.collected_amount, 0);
-  const totalCommission = items.reduce((s, i) => s + i.commission_amount, 0);
-  const totalNetDue = items.reduce((s, i) => s + i.net_due_company, 0);
+  const totalCommission = items.reduce((s, i) => s + i.agent_commission_amount, 0);
+  const totalNetDue = items.reduce((s, i) => s + i.company_net_due, 0);
   const settledNet = items
     .filter((i) => i.is_settled === 1)
-    .reduce((s, i) => s + i.net_due_company, 0);
+    .reduce((s, i) => s + i.company_net_due, 0);
   const pendingHandoff = items.filter((i) => i.cash_received_by_admin === 0).length;
   return {
     totalCollected,
@@ -209,8 +218,8 @@ export function computeAgentSummaries(items: CollectionRecord[]): AgentCollectio
     if (ex) {
       ex.collections_count += 1;
       ex.total_collected += item.collected_amount;
-      ex.total_commission += item.commission_amount;
-      ex.total_net_due += item.net_due_company;
+      ex.total_commission += item.agent_commission_amount;
+      ex.total_net_due += item.company_net_due;
       ex.pending_handoff += pending;
       ex.pending_handoff_amount += pendingAmount;
     } else {
@@ -219,8 +228,8 @@ export function computeAgentSummaries(items: CollectionRecord[]): AgentCollectio
         agent_name: item.agent_name,
         collections_count: 1,
         total_collected: item.collected_amount,
-        total_commission: item.commission_amount,
-        total_net_due: item.net_due_company,
+        total_commission: item.agent_commission_amount,
+        total_net_due: item.company_net_due,
         pending_handoff: pending,
         pending_handoff_amount: pendingAmount,
       });

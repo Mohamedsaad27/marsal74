@@ -333,10 +333,10 @@ function CollectionsPage() {
               {formatAmount(item.collected_amount)}
             </span>,
             <span key="commission" className="tabular-nums text-muted-foreground">
-              −{formatAmount(item.commission_amount)}
+              −{formatAmount(item.agent_commission_amount)}
             </span>,
             <span key="net" className="font-bold tabular-nums">
-              {formatAmount(item.net_due_company)}{" "}
+              {formatAmount(item.agent_net_due)}
               <span className="text-[10px] font-normal text-muted-foreground">ج.م</span>
             </span>,
             item.cash_received_by_admin === 1 ? (

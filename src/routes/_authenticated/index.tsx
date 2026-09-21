@@ -7,11 +7,14 @@ import { ShipmentsTable } from "@/components/dashboard/ShipmentsTable";
 import { Button } from "@/components/ui/button";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useDashboard } from "@/hooks/useDashboard";
+import { useNavigate } from "@tanstack/react-router";
+
 export const Route = createFileRoute("/_authenticated/")({
   component: DashboardPage,
 });
 
 function DashboardPage() {
+  const navigate = useNavigate();
   const { user, hydrated } = useCurrentUser();
   const initial = hydrated ? (user?.name?.[0] ?? "") : "";
   const { summary, collections, performance, avgDelivery, topAgentsData, isLoading } =
@@ -67,8 +70,8 @@ function DashboardPage() {
 
         <KpiCard
           label="صافي مستحق للشركات"
-          value={`${(summary?.net_balance_companies ?? 0).toLocaleString()} ج.م`}
-          delta={summary?.net_balance_change_percent ?? 0}
+          value={`${(summary?.system_payable_to_companies ?? 0).toLocaleString()} ج.م`}
+          delta={summary?.system_payable_to_companies_change_percent ?? 0}
           hint="هذا الشهر"
           icon={Wallet}
           tone="warning"
@@ -191,15 +194,23 @@ function DashboardPage() {
 
         <div className="rounded-2xl border border-border bg-gradient-to-br from-primary to-[oklch(0.55_0.24_265)] p-5 text-primary-foreground shadow-glow">
           <p className="text-xs font-medium opacity-80">رصيد التحصيلات المستحقة</p>
+
           <p className="mt-1 text-3xl font-extrabold">
-            {(collections?.total_pending ?? 0).toLocaleString()}
+            {(collections?.system_payable_to_companies ?? 0).toLocaleString()}
             <span className="text-base font-medium opacity-80">
               {" "}
               {collections?.currency ?? "ج.م"}
             </span>
           </p>
-          <p className="mt-2 text-xs opacity-70">من {collections?.company_count ?? 0} شركة شحن</p>{" "}
-          <Button className="mt-4 w-full rounded-xl bg-white/15 backdrop-blur hover:bg-white/25 text-white border-0">
+
+          <p className="mt-2 text-xs opacity-70">
+            من {collections?.creditor_company_count ?? 0} شركة شحن
+          </p>
+
+          <Button
+            onClick={() => navigate({ to: "/settlements" })}
+            className="mt-4 w-full rounded-xl bg-white/15 backdrop-blur hover:bg-white/25 text-white border-0"
+          >
             مراجعة التسويات
           </Button>
         </div>

@@ -17,8 +17,9 @@ export type CollectionRecord = {
   company_name: string;
   collection_type: CollectionTypeCode;
   collected_amount: number;
-  commission_amount: number;
-  net_due_company: number;
+  agent_commission_amount: number;
+  company_net_due: number;
+  agent_net_due: number;
   is_settled: 0 | 1;
   cash_received_by_admin: 0 | 1;
   cash_received_at: string | null;

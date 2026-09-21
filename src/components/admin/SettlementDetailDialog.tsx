@@ -157,10 +157,10 @@ export function SettlementDetailDialog({
                       </td>
                       <td className="px-4 py-3 tabular-nums">{formatAmount(c.collected_amount)}</td>
                       <td className="px-4 py-3 tabular-nums text-muted-foreground">
-                        −{formatAmount(c.commission_amount)}
+                        −{formatAmount(c.agent_commission_amount)}
                       </td>
                       <td className="px-4 py-3 font-semibold tabular-nums">
-                        {formatAmount(c.net_due_company)}
+                        {formatAmount(c.company_net_due)}
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground">
                         {formatCollectionDate(c.collected_at)}

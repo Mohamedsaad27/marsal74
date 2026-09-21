@@ -8,12 +8,19 @@ type DashboardSummaryResponse = {
   data: {
     total_orders: number;
     total_orders_change_percent: number | null;
+
     in_delivery: number;
     in_delivery_label: string;
+
     delivered_this_week: number;
     delivered_change_percent: number | null;
-    net_balance_companies: number;
-    net_balance_change_percent: number | null;
+
+    signed_company_balance: number;
+    system_payable_to_companies: number;
+    companies_payable_to_system: number;
+
+    system_payable_to_companies_change_percent: number | null;
+    companies_payable_to_system_change_percent: number | null;
   };
 };
 
@@ -21,9 +28,12 @@ type CollectionsBalanceResponse = {
   isSuccess: boolean;
   message: string;
   data: {
-    total_pending: number;
+    signed_company_balance: number;
+    system_payable_to_companies: number;
+    companies_payable_to_system: number;
     currency: string;
-    company_count: number;
+    creditor_company_count: number;
+    debtor_company_count: number;
   };
 };
 
