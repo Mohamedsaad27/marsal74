@@ -21,7 +21,7 @@ export const shippingCompaniesReportConfig: ReportConfig<
     { label: "الشركات النشطة", value: s.active_companies, icon: CheckCircle2, tone: "success" },
     {
       label: "إجمالي الرصيد",
-      value: Number(s.total_balance),
+      value: Number(s.signed_total_balance),
       icon: Wallet,
       tone: "warning",
     },
@@ -41,7 +41,7 @@ export const shippingCompaniesReportConfig: ReportConfig<
     phone: item.phone,
     orders: item.metrics.total_orders,
     collected: Number(item.metrics.total_collected_amount),
-    net_due: Number(item.metrics.total_net_due),
+    net_due: Number(item.metrics.total_system_commission_amount),
     balance: Number(item.balance),
     status: item.is_active ? "نشطة" : "غير نشطة",
   }),

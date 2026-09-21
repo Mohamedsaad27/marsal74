@@ -2,10 +2,10 @@
 export interface CollectionSummary {
   total_collections: number;
   total_collected_amount: string;
-  total_commission_amount: string;
+  total_system_commission_amount: string;
   total_net_due: string;
   pending_cash_count: number;
-  settled_count: number;
+  fully_settled_count: number;
 }
 
 export interface CollectionItem {
@@ -16,7 +16,7 @@ export interface CollectionItem {
   collection_type: { code: number; label: string };
   collected_amount: string;
   commission_amount: string;
-  net_due: string;
+  agent_net_due: string;
   cash_received_at: string | null;
   settlement_id: string | null;
   collected_at: string;

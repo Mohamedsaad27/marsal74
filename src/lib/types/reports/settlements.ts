@@ -1,9 +1,9 @@
 // types/reports/settlements.ts
 export interface SettlementSummary {
   total_settlements: number;
-  total_collections: number;
-  total_commissions: number;
-  net_amount: number;
+  agent_to_system_amount: number;
+  total_agent_commission_amount: number;
+  total_system_commission_amount: number;
 }
 
 export interface SettlementItem {

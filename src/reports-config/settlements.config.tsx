@@ -14,19 +14,19 @@ export const settlementsReportConfig: ReportConfig<SettlementItem, SettlementSum
     { label: "إجمالي التسويات", value: s.total_settlements, icon: Wallet, tone: "primary" },
     {
       label: "إجمالي التحصيلات",
-      value: s.total_collections,
+      value: s.agent_to_system_amount,
       icon: Banknote,
       tone: "success",
     },
     {
       label: "إجمالي العمولات",
-      value: s.total_commissions,
+      value: s.total_agent_commission_amount,
       icon: Percent,
       tone: "warning",
     },
     {
       label: "الصافي",
-      value: s.net_amount,
+      value: s.total_system_commission_amount,
       icon: CheckCircle2,
       tone: "info",
     },

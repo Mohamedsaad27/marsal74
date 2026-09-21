@@ -15,7 +15,7 @@ export const deliveryAgentsReportConfig: ReportConfig<DeliveryAgentItem, Deliver
     { label: "المتاحون", value: s.available_agents, icon: UserCheck, tone: "success" },
     {
       label: "إجمالي الرصيد",
-      value: Number(s.total_balance),
+      value: Number(s.agent_owes_system_amount),
       icon: Wallet,
       tone: "warning",
     },

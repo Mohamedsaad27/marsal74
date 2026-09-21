@@ -2,7 +2,7 @@
 export interface DeliveryAgentSummary {
   total_agents: number;
   available_agents: number;
-  total_balance: string;
+  agent_owes_system_amount: string;
   total_orders: number;
   total_collected_amount: string;
 }
