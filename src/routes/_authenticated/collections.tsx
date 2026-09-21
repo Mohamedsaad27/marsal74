@@ -156,6 +156,13 @@ function CollectionsPage() {
     totalCommission: 0,
     totalNetDue: 0,
     pendingHandoff: 0,
+    totalAgentCommission: 0,
+    totalAgentNetDue: 0,
+    totalAgentToSystem: 0,
+    totalSystemToAgent: 0,
+    totalSystemToCompany: 0,
+    totalCompanyToSystem: 0,
+    totalrevenue: 0,
   });
 
   // Load agent options once
@@ -242,10 +249,22 @@ function CollectionsPage() {
         showAdd={false}
       />
 
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <KpiCard
           label="إجمالي المحصّل"
           value={`${formatAmount(kpiData.totalCollected)} ج.م`}
+          icon={Wallet}
+          tone="primary"
+        />
+        <KpiCard
+          label="إجمالي عمولات المناديب"
+          value={`${formatAmount(kpiData.totalAgentCommission)} ج.م`}
+          icon={Wallet}
+          tone="primary"
+        />
+        <KpiCard
+          label="إجمالي الصافي المستحق من المناديب"
+          value={`${formatAmount(kpiData.totalAgentNetDue)} ج.م`}
           icon={Wallet}
           tone="primary"
         />
@@ -262,8 +281,8 @@ function CollectionsPage() {
           tone="success"
         />
         <KpiCard
-          label="بانتظار استلام النقد"
-          value={String(kpiData.pendingHandoff)}
+          label="صافي ربح النظام"
+          value={`${formatAmount(kpiData.totalrevenue)} ج.م`}
           icon={CheckCircle2}
           tone="warning"
         />

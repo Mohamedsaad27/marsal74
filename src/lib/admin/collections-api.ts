@@ -145,6 +145,13 @@ type CollectionStatsData = {
   totalCommission: number;
   totalNetDue: number;
   pendingHandoff: number;
+  totalAgentCommission: number;
+  totalAgentNetDue: number;
+  totalAgentToSystem: number;
+  totalSystemToAgent: number;
+  totalSystemToCompany: number;
+  totalCompanyToSystem: number;
+  totalrevenue: number;
 };
 
 export async function fetchCollectionStats(): Promise<ApiResponse<CollectionStatsData>> {
@@ -158,6 +165,15 @@ export async function fetchCollectionStats(): Promise<ApiResponse<CollectionStat
       totalCommission: parseFloat(wire.data.total_system_commission_amount) || 0,
       totalNetDue: parseFloat(wire.data.total_company_net_due) || 0,
       pendingHandoff: wire.data.pending_cash_count ?? 0,
+      totalAgentCommission: parseFloat(wire.data.total_agent_commission_amount) || 0,
+      totalAgentNetDue: parseFloat(wire.data.total_agent_net_due) || 0,
+      totalAgentToSystem: parseFloat(wire.data.agent_to_system_amount) || 0,
+      totalSystemToAgent: parseFloat(wire.data.system_to_agent_amount) || 0,
+      totalSystemToCompany: parseFloat(wire.data.system_to_company_amount) || 0,
+      totalCompanyToSystem: parseFloat(wire.data.company_to_system_amount) || 0,
+      totalrevenue:
+        (parseFloat(wire.data.total_system_commission_amount) || 0) -
+        (parseFloat(wire.data.total_agent_commission_amount) || 0),
     },
   };
 }
