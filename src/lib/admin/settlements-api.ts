@@ -7,7 +7,6 @@ import type {
   SettlementApiItem,
   SettlementRecord,
   SettlementTypeCode,
-  StatsApiResponse,
 } from "@/lib/admin/settlements-types";
 import { normaliseSettlement } from "@/lib/admin/settlements-types";
 import { BASE_URL } from "../utils";
@@ -36,6 +35,25 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 
 // ─── KPI stats ─────────────────────────────────────────────────────────────
 
+type SettlementStatsGroup = {
+  settlements_count: number;
+  agent_to_system_amount: string;
+  system_to_agent_amount: string;
+  system_to_company_amount: string;
+  company_to_system_amount: string;
+  no_payment_count: number;
+};
+
+type StatsApiResponse = {
+  isSuccess: boolean;
+  message: string;
+  data: {
+    all: SettlementStatsGroup;
+    pending_approval: SettlementStatsGroup;
+    approved_unpaid: SettlementStatsGroup;
+    paid_this_month: SettlementStatsGroup;
+  };
+};
 export type SettlementKpis = {
   total: number;
   totalNet: number;
@@ -46,20 +64,39 @@ export type SettlementKpis = {
   approvedCount: number;
   paidCount: number;
 };
+const getNetAmount = (group: SettlementStatsGroup) => {
+  const agentToSystem = parseFloat(group.agent_to_system_amount) || 0;
+  const systemToAgent = parseFloat(group.system_to_agent_amount) || 0;
+  const systemToCompany = parseFloat(group.system_to_company_amount) || 0;
+  const companyToSystem = parseFloat(group.company_to_system_amount) || 0;
 
+  return agentToSystem + systemToAgent + systemToCompany + companyToSystem;
+};
 export async function fetchSettlementStats(): Promise<SettlementKpis> {
   const res = await apiFetch<StatsApiResponse>(`${BASE}/stats`);
-  if (!res.isSuccess) throw new Error(res.message);
+
+  if (!res.isSuccess) {
+    throw new Error(res.message);
+  }
+
   const d = res.data;
+
   return {
-    total: 0, // not in stats response; will be filled from list total
-    totalNet: parseFloat(d.total_amount),
-    draftNet: parseFloat(d.pending_approval),
-    approvedNet: parseFloat(d.approved_unpaid),
-    paidThisMonth: parseFloat(d.paid_this_month),
-    draftCount: 0,
-    approvedCount: 0,
-    paidCount: 0,
+    total: d.all.settlements_count,
+
+    totalNet: getNetAmount(d.all),
+
+    draftNet: getNetAmount(d.pending_approval),
+
+    approvedNet: getNetAmount(d.approved_unpaid),
+
+    paidThisMonth: getNetAmount(d.paid_this_month),
+
+    draftCount: d.pending_approval.settlements_count,
+
+    approvedCount: d.approved_unpaid.settlements_count,
+
+    paidCount: d.paid_this_month.settlements_count,
   };
 }
 
