@@ -56,26 +56,14 @@ type StatsApiResponse = {
 };
 export type SettlementKpis = {
   totalCount: number;
-
-  agentToSystemAmount: number;
-  systemToAgentAmount: number;
-  systemToCompanyAmount: number;
-  companyToSystemAmount: number;
-
   pendingApprovalCount: number;
   approvedUnpaidCount: number;
-  paidThisMonthCount: number;
 
-  noPaymentCount: number;
+  totalIn: number;
+  totalOut: number;
+  netMovement: number;
 };
-const getNetAmount = (group: SettlementStatsGroup) => {
-  const agentToSystem = parseFloat(group.agent_to_system_amount) || 0;
-  const systemToAgent = parseFloat(group.system_to_agent_amount) || 0;
-  const systemToCompany = parseFloat(group.system_to_company_amount) || 0;
-  const companyToSystem = parseFloat(group.company_to_system_amount) || 0;
 
-  return agentToSystem + systemToAgent + systemToCompany + companyToSystem;
-};
 export async function fetchSettlementStats(): Promise<SettlementKpis> {
   const res = await apiFetch<StatsApiResponse>(`${BASE}/stats`);
 
@@ -83,21 +71,29 @@ export async function fetchSettlementStats(): Promise<SettlementKpis> {
     throw new Error(res.message);
   }
 
-  const d = res.data;
+  const { all, pending_approval, approved_unpaid } = res.data;
+
+  const agentToSystem = parseFloat(all.agent_to_system_amount) || 0;
+
+  const companyToSystem = parseFloat(all.company_to_system_amount) || 0;
+
+  const systemToAgent = parseFloat(all.system_to_agent_amount) || 0;
+
+  const systemToCompany = parseFloat(all.system_to_company_amount) || 0;
+
+  const totalIn = agentToSystem + companyToSystem;
+  const totalOut = systemToAgent + systemToCompany;
 
   return {
-    totalCount: d.all.settlements_count,
+    totalCount: all.settlements_count,
 
-    agentToSystemAmount: parseFloat(d.all.agent_to_system_amount) || 0,
-    systemToAgentAmount: parseFloat(d.all.system_to_agent_amount) || 0,
-    systemToCompanyAmount: parseFloat(d.all.system_to_company_amount) || 0,
-    companyToSystemAmount: parseFloat(d.all.company_to_system_amount) || 0,
+    pendingApprovalCount: pending_approval.settlements_count,
 
-    pendingApprovalCount: d.pending_approval.settlements_count,
-    approvedUnpaidCount: d.approved_unpaid.settlements_count,
-    paidThisMonthCount: d.paid_this_month.settlements_count,
+    approvedUnpaidCount: approved_unpaid.settlements_count,
 
-    noPaymentCount: d.all.no_payment_count,
+    totalIn,
+    totalOut,
+    netMovement: totalIn - totalOut,
   };
 }
 

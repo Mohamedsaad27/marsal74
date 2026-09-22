@@ -57,6 +57,8 @@ import {
   Scale,
   Tag,
   X,
+  CircleArrowUp,
+  CircleArrowDown,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -94,14 +96,11 @@ function SettlementStatusBadge({ status }: { status: SettlementRecord["settlemen
 
 const EMPTY_KPIS: SettlementKpis = {
   totalCount: 0,
-  agentToSystemAmount: 0,
-  systemToAgentAmount: 0,
-  systemToCompanyAmount: 0,
-  companyToSystemAmount: 0,
+  totalIn: 0,
+  totalOut: 0,
+  netMovement: 0,
   pendingApprovalCount: 0,
   approvedUnpaidCount: 0,
-  paidThisMonthCount: 0,
-  noPaymentCount: 0,
 };
 
 const PAGE_SIZE = 20;
@@ -399,38 +398,38 @@ function SettlementsPage() {
         />
 
         <KpiCard
-          label="مستحقات المناديب للنظام"
-          value={`${formatAmount(kpis.agentToSystemAmount)} ج.م`}
-          icon={CircleDollarSign}
-          tone="primary"
-        />
-
-        <KpiCard
-          label="مستحقات النظام للشركات"
-          value={`${formatAmount(kpis.systemToCompanyAmount)} ج.م`}
-          icon={Building2}
-          tone="info"
-        />
-
-        <KpiCard
-          label="تسويات بانتظار الاعتماد"
+          label="بانتظار الموافقة"
           value={kpis.pendingApprovalCount.toLocaleString("ar-EG")}
           icon={Hourglass}
           tone="warning"
         />
 
         <KpiCard
-          label="تسويات معتمدة بانتظار الدفع"
+          label="معتمدة ولم تُدفع"
           value={kpis.approvedUnpaidCount.toLocaleString("ar-EG")}
           icon={FileCheck2}
           tone="info"
         />
 
         <KpiCard
-          label="التسويات المدفوعة هذا الشهر"
-          value={kpis.paidThisMonthCount.toLocaleString("ar-EG")}
-          icon={CircleCheck}
+          label="إجمالي الداخل للنظام"
+          value={`${formatAmount(kpis.totalIn)} ج.م`}
+          icon={CircleArrowDown}
           tone="success"
+        />
+
+        <KpiCard
+          label="إجمالي الخارج من النظام"
+          value={`${formatAmount(kpis.totalOut)} ج.م`}
+          icon={CircleArrowUp}
+          tone="warning"
+        />
+
+        <KpiCard
+          label="صافي حركة النظام"
+          value={`${formatAmount(kpis.netMovement)} ج.م`}
+          icon={CircleDollarSign}
+          tone={kpis.netMovement >= 0 ? "success" : "warning"}
         />
       </div>
 
