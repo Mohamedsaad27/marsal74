@@ -392,21 +392,21 @@ function SettlementsPage() {
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <KpiCard
           label="إجمالي التسويات"
-          value={kpis.totalCount.toLocaleString("ar-EG")}
+          value={kpis.totalCount.toLocaleString("en-US")}
           icon={Scale}
           tone="primary"
         />
 
         <KpiCard
           label="بانتظار الموافقة"
-          value={kpis.pendingApprovalCount.toLocaleString("ar-EG")}
+          value={kpis.pendingApprovalCount.toLocaleString("en-US")}
           icon={Hourglass}
           tone="warning"
         />
 
         <KpiCard
           label="معتمدة ولم تُدفع"
-          value={kpis.approvedUnpaidCount.toLocaleString("ar-EG")}
+          value={kpis.approvedUnpaidCount.toLocaleString("en-US")}
           icon={FileCheck2}
           tone="info"
         />
