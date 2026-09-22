@@ -48,6 +48,7 @@ import {
   Calendar,
   CircleDollarSign,
   Download,
+  CircleCheck,
   Eye,
   FileCheck2,
   Hourglass,
@@ -92,14 +93,15 @@ function SettlementStatusBadge({ status }: { status: SettlementRecord["settlemen
 }
 
 const EMPTY_KPIS: SettlementKpis = {
-  total: 0,
-  totalNet: 0,
-  draftNet: 0,
-  approvedNet: 0,
-  paidThisMonth: 0,
-  draftCount: 0,
-  approvedCount: 0,
-  paidCount: 0,
+  totalCount: 0,
+  agentToSystemAmount: 0,
+  systemToAgentAmount: 0,
+  systemToCompanyAmount: 0,
+  companyToSystemAmount: 0,
+  pendingApprovalCount: 0,
+  approvedUnpaidCount: 0,
+  paidThisMonthCount: 0,
+  noPaymentCount: 0,
 };
 
 const PAGE_SIZE = 20;
@@ -388,29 +390,46 @@ function SettlementsPage() {
         </TabsContent>
       </Tabs>
 
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <KpiCard
           label="إجمالي التسويات"
-          value={`${formatAmount(kpis.totalNet)} ج.م`}
+          value={kpis.totalCount.toLocaleString("ar-EG")}
           icon={Scale}
           tone="primary"
         />
+
         <KpiCard
-          label="بانتظار الاعتماد"
-          value={`${formatAmount(kpis.draftNet)} ج.م`}
+          label="مستحقات المناديب للنظام"
+          value={`${formatAmount(kpis.agentToSystemAmount)} ج.م`}
+          icon={CircleDollarSign}
+          tone="primary"
+        />
+
+        <KpiCard
+          label="مستحقات النظام للشركات"
+          value={`${formatAmount(kpis.systemToCompanyAmount)} ج.م`}
+          icon={Building2}
+          tone="info"
+        />
+
+        <KpiCard
+          label="تسويات بانتظار الاعتماد"
+          value={kpis.pendingApprovalCount.toLocaleString("ar-EG")}
           icon={Hourglass}
           tone="warning"
         />
+
         <KpiCard
-          label="معتمدة (لم تُدفع)"
-          value={`${formatAmount(kpis.approvedNet)} ج.م`}
+          label="تسويات معتمدة بانتظار الدفع"
+          value={kpis.approvedUnpaidCount.toLocaleString("ar-EG")}
           icon={FileCheck2}
           tone="info"
         />
+
         <KpiCard
-          label="مدفوعة هذا الشهر"
-          value={`${formatAmount(kpis.paidThisMonth)} ج.م`}
-          icon={CircleDollarSign}
+          label="التسويات المدفوعة هذا الشهر"
+          value={kpis.paidThisMonthCount.toLocaleString("ar-EG")}
+          icon={CircleCheck}
           tone="success"
         />
       </div>

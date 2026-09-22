@@ -257,22 +257,16 @@ function CollectionsPage() {
           tone="primary"
         />
         <KpiCard
-          label="إجمالي عمولات المناديب"
-          value={`${formatAmount(kpiData.totalAgentCommission)} ج.م`}
-          icon={Wallet}
-          tone="primary"
-        />
-        <KpiCard
           label="إجمالي الصافي المستحق من المناديب"
           value={`${formatAmount(kpiData.totalAgentNetDue)} ج.م`}
           icon={Wallet}
           tone="primary"
         />
         <KpiCard
-          label="عمولات النظام"
-          value={`${formatAmount(kpiData.totalCommission)} ج.م`}
-          icon={Coins}
-          tone="info"
+          label="إجمالي عمولات المناديب"
+          value={`${formatAmount(kpiData.totalAgentCommission)} ج.م`}
+          icon={Wallet}
+          tone="primary"
         />
         <KpiCard
           label="صافي مستحق للشركات"
@@ -280,6 +274,13 @@ function CollectionsPage() {
           icon={Banknote}
           tone="success"
         />
+        <KpiCard
+          label="عمولات النظام"
+          value={`${formatAmount(kpiData.totalCommission)} ج.م`}
+          icon={Coins}
+          tone="info"
+        />
+
         <KpiCard
           label="صافي ربح النظام"
           value={`${formatAmount(kpiData.totalrevenue)} ج.م`}

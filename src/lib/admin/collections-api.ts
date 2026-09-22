@@ -138,6 +138,7 @@ type WireStatsResponse = {
     system_to_company_amount: string;
     company_to_system_amount: string;
     pending_cash_count: number;
+    system_net_profit: string;
   };
 };
 type CollectionStatsData = {
@@ -171,9 +172,7 @@ export async function fetchCollectionStats(): Promise<ApiResponse<CollectionStat
       totalSystemToAgent: parseFloat(wire.data.system_to_agent_amount) || 0,
       totalSystemToCompany: parseFloat(wire.data.system_to_company_amount) || 0,
       totalCompanyToSystem: parseFloat(wire.data.company_to_system_amount) || 0,
-      totalrevenue:
-        (parseFloat(wire.data.total_system_commission_amount) || 0) -
-        (parseFloat(wire.data.total_agent_commission_amount) || 0),
+      totalrevenue: parseFloat(wire.data.system_net_profit) || 0,
     },
   };
 }

@@ -55,14 +55,18 @@ type StatsApiResponse = {
   };
 };
 export type SettlementKpis = {
-  total: number;
-  totalNet: number;
-  draftNet: number;
-  approvedNet: number;
-  paidThisMonth: number;
-  draftCount: number;
-  approvedCount: number;
-  paidCount: number;
+  totalCount: number;
+
+  agentToSystemAmount: number;
+  systemToAgentAmount: number;
+  systemToCompanyAmount: number;
+  companyToSystemAmount: number;
+
+  pendingApprovalCount: number;
+  approvedUnpaidCount: number;
+  paidThisMonthCount: number;
+
+  noPaymentCount: number;
 };
 const getNetAmount = (group: SettlementStatsGroup) => {
   const agentToSystem = parseFloat(group.agent_to_system_amount) || 0;
@@ -82,21 +86,18 @@ export async function fetchSettlementStats(): Promise<SettlementKpis> {
   const d = res.data;
 
   return {
-    total: d.all.settlements_count,
+    totalCount: d.all.settlements_count,
 
-    totalNet: getNetAmount(d.all),
+    agentToSystemAmount: parseFloat(d.all.agent_to_system_amount) || 0,
+    systemToAgentAmount: parseFloat(d.all.system_to_agent_amount) || 0,
+    systemToCompanyAmount: parseFloat(d.all.system_to_company_amount) || 0,
+    companyToSystemAmount: parseFloat(d.all.company_to_system_amount) || 0,
 
-    draftNet: getNetAmount(d.pending_approval),
+    pendingApprovalCount: d.pending_approval.settlements_count,
+    approvedUnpaidCount: d.approved_unpaid.settlements_count,
+    paidThisMonthCount: d.paid_this_month.settlements_count,
 
-    approvedNet: getNetAmount(d.approved_unpaid),
-
-    paidThisMonth: getNetAmount(d.paid_this_month),
-
-    draftCount: d.pending_approval.settlements_count,
-
-    approvedCount: d.approved_unpaid.settlements_count,
-
-    paidCount: d.paid_this_month.settlements_count,
+    noPaymentCount: d.all.no_payment_count,
   };
 }
 
@@ -227,18 +228,18 @@ export function getLinkedCollections(_settlement: SettlementRecord): CollectionR
 }
 
 /** @deprecated use fetchSettlementStats() — kept so old call sites compile */
-export function computeSettlementKpis(_items: SettlementRecord[]) {
-  return {
-    total: 0,
-    totalNet: 0,
-    draftNet: 0,
-    approvedNet: 0,
-    paidThisMonth: 0,
-    draftCount: 0,
-    approvedCount: 0,
-    paidCount: 0,
-  };
-}
+// export function computeSettlementKpis(_items: SettlementRecord[]) {
+//   return {
+//     total: 0,
+//     totalNet: 0,
+//     draftNet: 0,
+//     approvedNet: 0,
+//     paidThisMonth: 0,
+//     draftCount: 0,
+//     approvedCount: 0,
+//     paidCount: 0,
+//   };
+// }
 
 export function filterByPeriod(items: SettlementRecord[], _periodFilter: string) {
   return items; // now handled server-side
