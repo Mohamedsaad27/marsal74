@@ -254,7 +254,6 @@ function ReturnsPage() {
             },
           ]}
           columns={[
-            { key: "id", label: "المعرّف" },
             { key: "order", label: "الطلب" },
             { key: "agent", label: "المندوب" },
             { key: "company", label: "الشركة" },
@@ -268,11 +267,8 @@ function ReturnsPage() {
           rows={filtered.map((item) => ({
             id: item.return_id,
             cells: [
-              <span key="id" className="font-mono text-xs font-semibold text-primary">
-                {item.return_id}
-              </span>,
               <span key="order" className="font-mono text-[11px] text-muted-foreground">
-                {item.order_id}
+                {item.order_reference_code}
               </span>,
               item.agent_name,
               item.company_name,
@@ -296,12 +292,15 @@ function ReturnsPage() {
               <RowActions
                 module="returns"
                 key="actions"
-                onEdit={() => {
-                  setActiveItem(item);
-                  setDetailOpen(true);
-                }}
-                onDelete={() => toast.message("حذف المرتجع — واجهة تصميمية")}
                 extra={[
+                  {
+                    label: "تفاصيل المرتجع",
+                    icon: <Undo2 className="ml-2 h-4 w-4" />,
+                    onClick: () => {
+                      setActiveItem(item);
+                      setDetailOpen(true);
+                    },
+                  },
                   {
                     label: "عرض الطلب",
                     icon: <Eye className="ml-2 h-4 w-4" />,

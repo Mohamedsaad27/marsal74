@@ -21,7 +21,6 @@ export function ReturnDetailDialog({ open, onOpenChange, item }: Props) {
       title="تفاصيل المرتجع"
       description="returns — تفاصيل سجل المرتجع"
       icon={Undo2}
-      badge={item.return_id}
       size="lg"
       footer={
         <Button variant="outline" className="rounded-xl px-5" onClick={() => onOpenChange(false)}>
@@ -32,12 +31,9 @@ export function ReturnDetailDialog({ open, onOpenChange, item }: Props) {
       <div className="grid gap-3 sm:grid-cols-2 text-sm">
         {(
           [
-            ["المعرّف", item.return_id],
-            ["الطلب", item.order_id],
+            ["الطلب", item.order_reference_code],
             ["المندوب", item.agent_name],
-            ["معرّف المندوب", item.delivery_agent_id],
             ["الشركة", item.company_name],
-            ["معرّف الشركة", item.shipping_company_id],
             ["الكمية المرتجعة", String(item.returned_quantity)],
             ["سبب الإرجاع", item.return_reason],
             ["ملاحظات", item.notes ?? "—"],

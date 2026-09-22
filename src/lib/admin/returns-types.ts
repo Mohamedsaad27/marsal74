@@ -8,6 +8,25 @@ export type ApiResponse<T> = {
 
 export type ReturnStatusCode = 1 | 2 | 3;
 
+type StatusWire = { id: number; label: string; color: string };
+
+export type ReturnOrderWire = {
+  id: string;
+  reference_code: string;
+  reference_no: string;
+  status: StatusWire;
+  customer: {
+    name: string;
+    phone: string;
+    phone_alt: string | null;
+  };
+  address: {
+    governorate: string;
+    city: string | null;
+    address_line: string;
+  };
+};
+
 export type ReturnRecordWire = {
   id: string;
   order_id: string;
@@ -15,11 +34,24 @@ export type ReturnRecordWire = {
   returned_quantity: number;
   return_reason: string;
   notes: string | null;
+  order: ReturnOrderWire;
   agent: { id: string; name: string };
   company: { id: string; name: string };
   received_at: string | null;
   returned_to_company_at: string | null;
   created_at: string;
+};
+
+export type ReturnListWire = {
+  items: ReturnRecordWire[];
+  type: string;
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+  from: number;
+  to: number;
+  has_more: boolean;
 };
 
 export type ReturnStatsWire = {
@@ -34,6 +66,15 @@ export type ReturnStatsWire = {
 export type ReturnRecord = {
   return_id: string;
   order_id: string;
+  order_reference_code: string;
+  order_reference_no: string;
+  order_status_label: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_phone_alt: string | null;
+  governorate: string;
+  city: string | null;
+  address_line: string;
   return_status: ReturnStatusCode;
   returned_quantity: number;
   return_reason: string;
@@ -58,6 +99,15 @@ export function normaliseReturn(w: ReturnRecordWire): ReturnRecord {
   return {
     return_id: w.id,
     order_id: w.order_id,
+    order_reference_code: w.order.reference_code,
+    order_reference_no: w.order.reference_no,
+    order_status_label: w.order.status.label,
+    customer_name: w.order.customer.name,
+    customer_phone: w.order.customer.phone,
+    customer_phone_alt: w.order.customer.phone_alt,
+    governorate: w.order.address.governorate,
+    city: w.order.address.city,
+    address_line: w.order.address.address_line,
     return_status: w.return_status.id,
     returned_quantity: w.returned_quantity,
     return_reason: w.return_reason,
@@ -69,6 +119,15 @@ export function normaliseReturn(w: ReturnRecordWire): ReturnRecord {
     received_at: w.received_at,
     returned_to_company_at: w.returned_to_company_at,
     created_at: w.created_at,
+  };
+}
+
+export function normaliseReturnStats(w: ReturnStatsWire): ReturnKpis {
+  return {
+    total: w.total,
+    pending: w.pending,
+    received: w.received_by_admin,
+    sent: w.sent_to_company,
   };
 }
 
